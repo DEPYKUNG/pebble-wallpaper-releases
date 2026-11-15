@@ -1,0 +1,14 @@
+/.venv/
+/build/
+/outputs/
+/work/vendor/
+/work/update-loopback-*/
+/work/signing-*/
+**/__pycache__/
+.DS_Store
+.env*
+*.dmg
+*.p12
+*.pfx
+*.pem
+*.key
