@@ -10,6 +10,7 @@ from unittest.mock import patch
 from urllib.parse import urlsplit
 
 import dmgbuild
+from PIL import Image
 
 from installer_art import build_icon, make_background
 
@@ -71,6 +72,9 @@ app = staging / 'Pebble Wallpaper.app'
 contents = app / 'Contents'
 resources = contents / 'Resources'
 resources.mkdir(parents=True, exist_ok=True)
+# Solid native wallpapers used for the system menu bar tint.
+for preset, rgb in {'nord0': (46, 52, 64), 'nord3': (76, 86, 106)}.items():
+    Image.new('RGB', (64, 64), rgb).save(resources / f'desktop-base-{preset}.png')
 shutil.copytree(work / 'kubai-settings', resources / 'kubai-settings', dirs_exist_ok=True)
 binary = contents / 'MacOS' / 'Pebble'
 binary.parent.mkdir(exist_ok=True)

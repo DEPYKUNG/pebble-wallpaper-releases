@@ -42,6 +42,7 @@ static NSString *const SpeedPreference = @"WallpaperRotationSpeed";
 static const NSInteger TiltLimit = 30;
 static const NSInteger TiltPresets[] = {-30, -15, 0, 15, 30};
 static const double RotationRates[] = {.5, 1, 1.5, 2};
+static NSString *const OriginalDesktopImagesKey = @"OriginalDesktopImages";
 static NSString *const BackgroundPreference = @"WallpaperBackground";
 static const char *const BackgroundKeys[] = {"paper", "nord0", "nord3", "nord6"};
 static NSString *const BackgroundLabels[] = {@"纸白", @"深蓝灰", @"石板灰", @"雾白"};
@@ -625,7 +626,66 @@ static NSImage *PebbleMenuBarIcon(void) {
                                                 blue:(tone & 255) / 255.0 alpha:1];
 }
 
+// The system menu bar samples the native wallpaper underneath our desktop window.
+- (void)syncNativeDesktopBackground:(BOOL)restore {
+    if (self.testPreviewPath || self.shotPath) return;
+
+    NSString *staticPath = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
+    if (staticPath && [NSFileManager.defaultManager fileExistsAtPath:staticPath]) return;
+
+    NSString *preset = self.backgroundPreset;
+    NSURL *background = nil;
+    if (!restore && ([preset isEqualToString:@"nord0"] || [preset isEqualToString:@"nord3"])) {
+        background = [NSBundle.mainBundle URLForResource:[@"desktop-base-" stringByAppendingString:preset]
+                                           withExtension:@"png"];
+    }
+
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSMutableDictionary *originals = [[defaults dictionaryForKey:OriginalDesktopImagesKey] mutableCopy]
+        ?: [NSMutableDictionary dictionary];
+    NSWorkspace *workspace = NSWorkspace.sharedWorkspace;
+    for (NSScreen *screen in NSScreen.screens) {
+        NSNumber *display = screen.deviceDescription[@"NSScreenNumber"];
+        if (!display) continue;
+        NSString *key = display.stringValue;
+        NSURL *current = [workspace desktopImageURLForScreen:screen];
+        NSString *filename = current.lastPathComponent;
+        BOOL managed = [filename isEqualToString:@"desktop-base-nord0.png"] ||
+                       [filename isEqualToString:@"desktop-base-nord3.png"];
+        if (background) {
+            if ([current.path isEqualToString:background.path] || !current) continue;
+            if (!managed) {
+                NSDictionary *options = [workspace desktopImageOptionsForScreen:screen] ?: @{};
+                NSData *encodedOptions = [NSKeyedArchiver archivedDataWithRootObject:options
+                                                              requiringSecureCoding:YES error:nil];
+                originals[key] = @{@"url":current.absoluteString, @"options":encodedOptions ?: NSData.data};
+                [defaults setObject:originals forKey:OriginalDesktopImagesKey];
+            }
+            NSError *error = nil;
+            if (![workspace setDesktopImageURL:background forScreen:screen options:@{} error:&error]) {
+                NSLog(@"Could not synchronize wallpaper for display %@: %@", key, error.localizedDescription);
+            }
+        } else if (originals[key]) {
+            if (managed) {
+                NSDictionary *original = originals[key];
+                NSURL *url = [NSURL URLWithString:original[@"url"]];
+                NSSet *classes = [NSSet setWithArray:@[NSDictionary.class, NSString.class, NSNumber.class, NSColor.class]];
+                NSDictionary *options = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes
+                                                                           fromData:original[@"options"] error:nil] ?: @{};
+                if (!url || ![workspace setDesktopImageURL:url forScreen:screen options:options error:nil]) continue;
+            }
+            [originals removeObjectForKey:key];
+        }
+    }
+    [defaults setObject:originals forKey:OriginalDesktopImagesKey];
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification {
+    [self syncNativeDesktopBackground:YES];
+}
+
 - (void)refreshDisplays:(NSNotification *)notification {
+    [self syncNativeDesktopBackground:NO];
     NSString *staticPath = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
     BOOL staticMode = !self.testPreviewPath && staticPath &&
                       [NSFileManager.defaultManager fileExistsAtPath:staticPath];
@@ -811,6 +871,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     NSUInteger index = (NSUInteger)sender.tag;
     if (index >= BackgroundCount) return;
     self.backgroundPreset = @(BackgroundKeys[index]);
+    [self syncNativeDesktopBackground:NO];
     if (!self.testPreviewPath) {
         [NSUserDefaults.standardUserDefaults setObject:self.backgroundPreset forKey:BackgroundPreference];
     }
