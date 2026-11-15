@@ -1,35 +1,24 @@
-# Pebble Wallpaper for macOS
+# Pebble Wallpaper · 鹅卵石
 
-原生 AppKit 菜单栏应用，使用 WebKit 渲染动态壁纸。最低支持 **macOS 13.0**，构建同时包含 Apple Silicon 和 Intel 版本。
+<img src="work/app-icon.png" alt="Pebble Wallpaper 应用图标" width="96">
 
-[下载最新版](https://github.com/DEPYKUNG/pebble-wallpaper-releases/releases/latest)
+Pebble Wallpaper 是一款 Mac 动态壁纸应用。桌面上有一颗慢慢转动的鹅卵石。有的带条纹，有的还长着一张小脸。
 
-## 本地构建
+[下载 Pebble Wallpaper](https://github.com/DEPYKUNG/pebble-wallpaper-releases/releases/latest)
 
-需要 Mac、Xcode Command Line Tools 和 Python 3.9–3.13。在已登录桌面的 macOS 会话运行构建，自检会创建壁纸窗口。
+适用于 macOS 13 或更新版本。打开应用后，从菜单栏的鹅卵石图标进入设置。
 
-```sh
-xcode-select --install
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -r requirements.txt
-./fetch-sparkle.sh
-python work/package.py --app-only
-```
+## 玩这颗石头
 
-应用位于 `build/Pebble Wallpaper.app`。去掉 `--app-only` 可生成 DMG。不需要 Sparkle 时可以跳过下载，并运行 `python work/package.py --app-only --update-feed '' --update-key ''`。开发构建使用临时代码签名，无需证书或发布私钥。
+- **换一颗。** 点击桌面右下角的「重新抛」，或从菜单栏找回上一颗。
+- **调成喜欢的样子。** 挑选颜色、纹路和背景，决定要不要给石头一张脸。也可以调慢转速、改变倾斜角度，或让它停下来。
+- **把喜欢的留下。** 在「设置 → 收藏」里收好当前的石头，随时换回来。也可以把它设成静态壁纸，或存成图片给 Mac 和 iPhone 用。
+- **看看石头证。** 在设置里打开「石头证」，可以看到一颗石头和它的编号。
 
-- 菜单栏图标由 `work/Pebble.m` 中的 `PebbleMenuBarIcon` 绘制，使用单色鹅卵石轮廓和镂空双眼，由 AppKit 根据菜单栏背景着色。应用图标资源是 `work/app-icon.png`。
-- `work/original.html` 和 `work/original.js` 来自 [原作网页](https://painted-pebble.vercel.app/)。本仓库未发现随上游资源提供的再分发许可。Kubai 图标许可见 `work/kubai-settings/LICENSE.txt`。
-- 构建后自动运行应用的 `--verify` 自检。可另运行 `python work/update_loopback_test.py`，用临时密钥测试更新。已有环境的测试曾卡在安装器替换应用阶段。
+## 致谢
 
-## 发布和自动更新
+致敬镇长创作的网页作品《鹅卵石》。Pebble Wallpaper 把原作里「重新抛一颗」的乐趣带到了 Mac 桌面。 [体验原作《鹅卵石》](https://painted-pebble.vercel.app/)
 
-源码、安装包和 Sparkle 更新均在本仓库维护。已安装的应用从 [签名更新源](https://github.com/DEPYKUNG/pebble-wallpaper-releases/releases/latest/download/appcast.xml) 获取可更新版本。这个固定地址由 GitHub 重定向到 Latest release，应用显示的版本由 appcast 中的版本和构建号决定。
+感谢稚笔字体的创作者分享这款开源字体。 [稚笔字样册](https://www.zhibi.fun/#specimen-book)
 
-1. 递增 `work/update-release.json` 中的版本号和构建号。构建号必须高于已发布的版本。
-2. 在持有原 Sparkle 签名密钥的 macOS 钥匙串所在机器上运行 `python work/package.py`，再运行 `python work/release_update.py "build/Pebble Wallpaper.app" outputs --notes <发行说明文件>`。脚本会核对钥匙串密钥与应用内验证公钥是否匹配，并生成更新 ZIP 和签名 appcast。
-3. 在本仓库创建草稿 Release，标签使用 `v<版本号>-<构建号>`。上传同一构建的 DMG、ZIP 和 `appcast.xml`，再将 Release 发布为 Latest。
-4. 打开固定更新源地址，确认 appcast 声明本次发布的版本和构建号，且其中的 ZIP 地址可访问。
-
-如需为已发布的 DMG 补发自动更新，用该 DMG 中的应用生成签名产物。先将 ZIP 上传到现有 Release，再替换其 `appcast.xml`。私钥由发布机器的钥匙串保管。
+感谢 Kubai Icons 的作者和贡献者，应用的设置图标来自他们的作品。 [Kubai Icons](https://github.com/kubai087/kubai-icons)
