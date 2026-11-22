@@ -90,7 +90,7 @@ script = (work / 'original.js').read_text()
 icon = build_icon(work / 'app-icon.png', resources, staging)
 shutil.copyfile(work / 'refresh-label.png', resources / 'refresh-label.png')
 assert script.count('!document.hidden') == 1 and '</script' not in script.lower()
-script = script.replace('!document.hidden', '!window.pebblePaused&&!window.pebbleSmartPaused&&!(window.pebbleConfig||{}).staticPass&&!document.hidden')
+script = script.replace('!document.hidden', '!window.pebblePaused&&!window.pebbleSmartPaused&&!window.pebbleStaticPaused&&!(window.pebbleConfig||{}).staticPass&&!document.hidden')
 
 # The renderer picks a texture from this dictionary, so parse it once and feed both
 # the injected script and the menu. Hardcoding the list twice would let the menu

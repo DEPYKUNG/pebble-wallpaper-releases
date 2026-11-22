@@ -190,6 +190,7 @@ static NSImage *PebbleMenuBarIcon(void) {
 @property (strong) NSTextField *tiltValue;
 @property (strong) NSPopUpButton *speedPicker;
 @property BOOL paused;
+@property BOOL staticWallpaperMode;
 @property BOOL screenLocked;
 @property BOOL displaysAsleep;
 @property BOOL sessionInactive;
@@ -525,10 +526,10 @@ static NSImage *PebbleMenuBarIcon(void) {
     return [NSString stringWithFormat:@"window.pebbleConfig = window.pebbleConfig || {};"
             "window.pebbleConfig.texture = %@; window.pebbleConfig.palette = %@;"
             "window.pebbleConfig.faces = %@;"
-            "%@%@",
+            "window.pebbleStaticPaused = %@;%@%@",
             texture, palette,
             self.face ? [NSString stringWithFormat:@"'%@'", self.face] : @"null",
-            self.backgroundConfigScript, self.motionConfigScript];
+            self.staticWallpaperMode ? @"true" : @"false", self.backgroundConfigScript, self.motionConfigScript];
 }
 
 - (void)storeChoice:(NSString *)choice forKey:(NSString *)key {
@@ -577,6 +578,17 @@ static NSImage *PebbleMenuBarIcon(void) {
 }
 
 - (WKWebView *)newRendererWithConfig:(NSString *)config desktop:(BOOL)desktop {
+    if (self.testPreviewPath) {
+        // Count real animation interval callbacks only in --verify, including
+        // callbacks that would be invisible in a hidden desktop window.
+        config = [config stringByAppendingString:
+            @"window.pebbleVerifyIntervalTicks=0;window.pebbleVerifyIntervals=new Set();"
+             "{const start=window.setInterval.bind(window),stop=window.clearInterval.bind(window);"
+             "window.setInterval=(fn,ms,...args)=>{const id=start(()=>{"
+             "window.pebbleVerifyIntervalTicks++;fn(...args)},ms);"
+             "window.pebbleVerifyIntervals.add(id);return id};"
+             "window.clearInterval=id=>{window.pebbleVerifyIntervals.delete(id);stop(id)}};"];
+    }
     WKWebViewConfiguration *configuration = [WKWebViewConfiguration new];
     configuration.websiteDataStore = WKWebsiteDataStore.nonPersistentDataStore;
     // The first pebble is raised while the module loads, so the choice has to be
@@ -743,6 +755,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     NSString *staticPath = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
     BOOL staticMode = !self.testPreviewPath && staticPath &&
                       [NSFileManager.defaultManager fileExistsAtPath:staticPath];
+    self.staticWallpaperMode = staticMode;
     NSMutableSet<NSNumber *> *connected = [NSMutableSet set];
     for (NSScreen *screen in NSScreen.screens) {
         NSNumber *display = screen.deviceDescription[@"NSScreenNumber"];
@@ -792,6 +805,9 @@ static NSImage *PebbleMenuBarIcon(void) {
         [self.desktopControls[display] orderOut:nil];
         [self.desktopControls removeObjectForKey:display];
     }
+    // Explicitly stop/start animation timers when entering/leaving static mode.
+    // Hidden WebViews can stay alive for exports; visibility alone is not a pause.
+    [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
     [self rebuildRethrowMenu];
 }
 
@@ -1656,8 +1672,10 @@ static const NSInteger PassAuthorSeed = 13612;
 
 - (void)applyPauseTo:(WKWebView *)web {
     NSString *script = [NSString stringWithFormat:
-        @"window.pebblePaused = %@; %@ document.dispatchEvent(new Event('visibilitychange'));",
-        self.paused ? @"true" : @"false", self.smartPauseScript];
+        @"window.pebblePaused = %@; window.pebbleStaticPaused = %@; %@ "
+         "document.dispatchEvent(new Event('visibilitychange'));",
+        self.paused ? @"true" : @"false",
+        self.staticWallpaperMode ? @"true" : @"false", self.smartPauseScript];
     [web evaluateJavaScript:script completionHandler:nil];
 }
 
@@ -1954,8 +1972,59 @@ static const NSInteger PassAuthorSeed = 13612;
                 exit(9);
             }
             NSLog(@"Verified native PNG dimensions for all five iPhone export sizes.");
-            [self verifyRendererRecovery:web];
+            [self verifyStaticPause:web];
         }];
+}
+
+- (void)verifyStaticPause:(WKWebView *)web {
+    BOOL paused = self.paused, staticMode = self.staticWallpaperMode;
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSDictionary *arguments = [defaults volatileDomainForName:NSArgumentDomain];
+    NSMutableDictionary *testArguments = [arguments mutableCopy] ?: [NSMutableDictionary dictionary];
+    // Static pause must work even with smart pause disabled. This override is
+    // process-local and never changes the user's stored preference.
+    testArguments[SmartPauseDisabledKey] = @YES;
+    [defaults setVolatileDomain:testArguments forName:NSArgumentDomain];
+    [self verifyStaticPauseStep:0 web:web then:^{
+        [defaults setVolatileDomain:arguments ?: @{} forName:NSArgumentDomain];
+        self.paused = paused;
+        self.staticWallpaperMode = staticMode;
+        [self forEachRenderer:^(WKWebView *view) { [self applyPauseTo:view]; }];
+        NSLog(@"Static mode stops animation timers even with smart pause disabled; manual pause and exports verified.");
+        [self verifyRendererRecovery:web];
+    }];
+}
+
+- (void)verifyStaticPauseStep:(NSUInteger)step web:(WKWebView *)web then:(void (^)(void))next {
+    if (step == 3) { next(); return; }
+    self.staticWallpaperMode = step == 0;
+    self.paused = step == 1;
+    [self forEachRenderer:^(WKWebView *view) { [self applyPauseTo:view]; }];
+    [web callAsyncJavaScript:
+        @"const before=window.pebbleVerifyIntervalTicks;"
+         "await new Promise(resolve=>setTimeout(resolve,750));"
+         "let exported=true;"
+         "if(window.pebbleStaticPaused){const image=new Image();"
+         "image.src='data:image/png;base64,'+window.pebbleExport(128,80);await image.decode();"
+         "exported=image.naturalWidth===128&&image.naturalHeight===80;}"
+         "return {before,after:window.pebbleVerifyIntervalTicks,"
+         "active:window.pebbleVerifyIntervals.size,static:window.pebbleStaticPaused,"
+         "manual:window.pebblePaused,smart:window.pebbleSmartPaused,exported,"
+         "reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,hidden:document.hidden};"
+        arguments:@{} inFrame:nil inContentWorld:WKContentWorld.pageWorld
+        completionHandler:^(NSDictionary *result, NSError *error) {
+        BOOL stopped = step < 2 || [result[@"reduced"] boolValue] || [result[@"hidden"] boolValue];
+        BOOL ticksStopped = [result[@"before"] isEqual:result[@"after"]];
+        if (error || !result || [result[@"static"] boolValue] != (step == 0) ||
+            [result[@"manual"] boolValue] != (step == 1) || [result[@"smart"] boolValue] ||
+            ![result[@"exported"] boolValue] ||
+            (stopped ? (!ticksStopped || [result[@"active"] integerValue] != 0)
+                     : (ticksStopped || [result[@"active"] integerValue] != 1))) {
+            NSLog(@"Static pause verification failed at step %lu: %@ %@", (unsigned long)step, result, error);
+            exit(12);
+        }
+        [self verifyStaticPauseStep:step + 1 web:web then:next];
+    }];
 }
 
 // Exercise the production recovery path with the latest native settings, rather
