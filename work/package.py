@@ -46,6 +46,7 @@ parser.add_argument('--staging', type=Path, default=work.parent / 'build')
 parser.add_argument('--installer-output', type=Path)
 parser.add_argument('--app-only', action='store_true')
 parser.add_argument('--local-update-test', action='store_true')
+parser.add_argument('--test-identifier', default='app.painted-pebble.wallpaper.updatetest')
 args = parser.parse_args()
 
 if bool(args.update_feed) != bool(args.update_key):
@@ -63,6 +64,9 @@ if not re.fullmatch(r'\d+(?:\.\d+){1,2}', args.version) or not re.fullmatch(r'[1
     parser.error('Use a dotted release version and a positive integer build number')
 if args.local_update_test and not (args.app_only and args.update_feed):
     parser.error('--local-update-test requires --app-only and an update feed')
+
+if args.local_update_test and not re.fullmatch(r'app\.painted-pebble\.[a-z0-9.]+\.updatetest', args.test_identifier):
+    parser.error('Invalid isolated test bundle identifier')
 
 output = work.parent / 'outputs'
 output.mkdir(exist_ok=True)
@@ -444,7 +448,7 @@ with (contents / 'Info.plist').open('wb') as info:
         'CFBundleDisplayName': 'Pebble Wallpaper',
         'CFBundleName': 'Pebble Wallpaper',
         'CFBundleIconFile': icon.name,
-        'CFBundleIdentifier': 'app.painted-pebble.wallpaper' + ('.updatetest' if args.local_update_test else ''),
+        'CFBundleIdentifier': args.test_identifier if args.local_update_test else 'app.painted-pebble.wallpaper',
         'CFBundleExecutable': 'Pebble',
         'CFBundlePackageType': 'APPL',
         'CFBundleShortVersionString': args.version,

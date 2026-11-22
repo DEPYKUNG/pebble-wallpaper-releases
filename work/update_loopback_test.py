@@ -22,12 +22,9 @@ import sys
 from tempfile import mkdtemp
 import threading
 import time
+import uuid
 
-# Sparkle stages downloads under the test bundle's cache, keyed by bundle id
-# rather than by install path, so every run shares one directory. Leftovers from
-# an earlier run can block a later install and make this gate flaky, which is
-# worse than no gate: a release check that fails at random gets ignored.
-TEST_CACHE = Path.home() / 'Library/Caches/app.painted-pebble.wallpaper.updatetest'
+# Every integration run uses a unique bundle ID and cache to avoid stale installers.
 
 # Sparkle derives the public key from a 32-byte Curve25519 seed, and there is no
 # stdlib way to do that, so borrow the system Swift toolchain for the keypair.
@@ -47,6 +44,7 @@ parser.add_argument('--installed-build', default='8')
 parser.add_argument('--update-build', default='9')
 parser.add_argument('--timeout', type=float, default=180,
                     help='seconds to wait for the silent install to land')
+parser.add_argument('--install-mode', choices=('idle', 'settings'), default='settings')
 parser.add_argument('--keep', action='store_true',
                     help='leave the scratch directory and its log in place')
 args = parser.parse_args()
@@ -79,7 +77,9 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
-scratch = Path(mkdtemp(prefix='update-loopback-', dir=work))
+test_identifier = f'app.painted-pebble.test{uuid.uuid4().hex}.updatetest'
+TEST_CACHE = Path.home() / 'Library/Caches' / test_identifier
+scratch = Path(mkdtemp(prefix='pebble-update-loopback-'))
 installed = scratch / 'installed'
 staged = scratch / 'next'
 feed = scratch / 'feed'
@@ -105,7 +105,8 @@ try:
         ['swift', str(keygen), str(key_file)], text=True, timeout=180).strip()
 
     build = ['--app-only', '--local-update-test', '--update-feed', feed_url,
-             '--update-key', public_key, '--version', args.version]
+             '--update-key', public_key, '--version', args.version,
+             '--test-identifier', test_identifier]
     print(f'Building the installed build {args.installed_build}...')
     run(sys.executable, work / 'package.py', *build,
         '--build', args.installed_build, '--staging', installed)
@@ -128,7 +129,10 @@ try:
 
     print('Launching the installed build with an automatic background check...')
     with log.open('wb') as stream:
-        launched = subprocess.Popen([str(binary), '--check-for-updates'],
+        launch_args = [str(binary), '--check-for-updates']
+        if args.install_mode == 'settings':
+            launch_args.append('--defer-update-test')
+        launched = subprocess.Popen(launch_args,
                                     stdout=stream, stderr=stream)
 
     # Sparkle relaunches the app itself, so the replaced bundle on disk is the
@@ -171,5 +175,7 @@ if not replaced:
 if not passed:
     raise SystemExit(f'Build {args.update_build} was installed but the wallpaper '
                      'never relaunched, which would leave the desktop bare.')
+if args.install_mode == 'settings' and 'Update deferred while settings are open; closing settings now.' not in transcript:
+    raise SystemExit('The deferred-settings installation path was not exercised')
 print(f'Silent install and relaunch verified: '
       f'build {args.installed_build} -> {args.update_build}')
