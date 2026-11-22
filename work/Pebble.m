@@ -146,6 +146,14 @@ static NSImage *PebbleMenuBarIcon(void) {
 }
 @end
 
+@interface PebbleRendererRecovery : NSObject
+@property NSUInteger attempts;
+@property NSUInteger generation;
+@property BOOL pending;
+@end
+@implementation PebbleRendererRecovery
+@end
+
 @interface PebbleApp : NSObject <NSApplicationDelegate, WKNavigationDelegate, WKScriptMessageHandler
 #if __has_include(<Sparkle/Sparkle.h>)
     , SPUUpdaterDelegate
@@ -168,6 +176,10 @@ static NSImage *PebbleMenuBarIcon(void) {
 @property (strong) NSView *settingsBody;
 @property (strong) NSMutableArray<NSButton *> *sectionButtons;
 @property (strong) WKWebView *passRenderer;
+@property (strong) NSMapTable<WKWebView *, PebbleRendererRecovery *> *rendererRecovery;
+@property BOOL verifyingRecovery;
+@property NSUInteger recoveryVerificationStage;
+@property (copy) NSDictionary *recoveryExpectedHistory;
 @property (strong) NSPopUpButton *texturePopUp, *palettePopUp, *facePopUp;
 @property (strong) NSArray<NSView *> *panes;
 @property (strong) NSSwitch *rotationSwitch;
@@ -191,6 +203,7 @@ static NSImage *PebbleMenuBarIcon(void) {
 #if __has_include(<Sparkle/Sparkle.h>)
 @property (strong) SPUStandardUpdaterController *updaterController;
 @property (copy) void (^pendingInstall)(void);
+@property BOOL installationRequested;
 #endif
 @end
 
@@ -217,6 +230,7 @@ static NSImage *PebbleMenuBarIcon(void) {
                                        in:BackgroundKeys count:BackgroundCount] ?: @"paper";
     self.desktopWindows = [NSMutableDictionary dictionary];
     self.desktopControls = [NSMutableDictionary dictionary];
+    self.rendererRecovery = [NSMapTable weakToStrongObjectsMapTable];
     self.statusItem = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
     self.statusItem.button.image = PebbleMenuBarIcon();
     self.statusItem.button.toolTip = WallpaperTitle;
@@ -246,6 +260,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     }
     [self addItem:@"设为静态壁纸" action:@selector(setStaticWallpaper:) toMenu:wallpaper.submenu];
     [self addItem:@"恢复动态壁纸" action:@selector(resumeDynamicWallpaper:) toMenu:wallpaper.submenu];
+    [self addItem:@"恢复壁纸显示" action:@selector(reloadRenderers:) toMenu:menu];
     NSMenuItem *settingsItem = [self addItem:@"设置…" action:@selector(showSettings:) toMenu:menu];
     settingsItem.keyEquivalent = @",";
     [menu addItem:NSMenuItem.separatorItem];
@@ -303,21 +318,59 @@ static NSImage *PebbleMenuBarIcon(void) {
     // The wallpaper is a login agent that users never quit, so waiting for
     // termination could strand them on an old build for weeks. Install right
     // away instead; Sparkle relaunches the wallpaper with no interface shown.
-    self.pendingInstall = install;
-    [self installPendingUpdateIfIdle];
+    [self stageUpdateInstallation:install];
     return YES;
+}
+
+- (void)stageUpdateInstallation:(void (^)(void))install {
+    self.pendingInstall = install;
+    self.installationRequested = NO;
+#ifdef PEBBLE_UPDATE_TEST
+    if ([NSProcessInfo.processInfo.arguments containsObject:@"--defer-update-test"]) {
+        [self showSettings:nil];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
+                       dispatch_get_main_queue(), ^{
+            if (self.installationRequested || !self.pendingInstall) exit(11);
+            NSLog(@"Update deferred while settings are open; closing settings now.");
+            [self.settings close];
+        });
+    }
+#endif
+    // Sparkle may only use the handler after this delegate has returned YES.
+    dispatch_async(dispatch_get_main_queue(), ^{ [self installPendingUpdateIfIdle]; });
 }
 
 // Relaunching while the interactive window is open would discard it mid-use.
 - (void)installPendingUpdateIfIdle {
-    if (!self.pendingInstall || self.settings.isVisible) return;
+    if (!self.pendingInstall || self.installationRequested || self.settings.isVisible) return;
+    self.installationRequested = YES;
     void (^install)(void) = self.pendingInstall;
-    self.pendingInstall = nil;
     install();
+    // An application or system service can cancel termination. Keep the handler
+    // so closing settings or the next idle opportunity can retry, without looping.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC),
+                   dispatch_get_main_queue(), ^{
+        if (self.pendingInstall == install) self.installationRequested = NO;
+    });
+}
+
+- (void)resetPendingUpdate {
+    self.pendingInstall = nil;
+    self.installationRequested = NO;
 }
 
 - (void)updater:(SPUUpdater *)updater didAbortWithError:(NSError *)error {
+    [self resetPendingUpdate];
     NSLog(@"Update aborted: %@", error);
+}
+- (void)updater:(SPUUpdater *)updater didFinishUpdateCycleForUpdateCheck:(SPUUpdateCheck)check
+    error:(NSError *)error {
+    [self resetPendingUpdate];
+}
+
+- (void)settingsDidClose:(NSNotification *)notification {
+    // NSWindowWillClose arrives before isVisible changes.
+    dispatch_async(dispatch_get_main_queue(), ^{ [self installPendingUpdateIfIdle]; });
 }
 #endif
 
@@ -540,6 +593,7 @@ static NSImage *PebbleMenuBarIcon(void) {
         [configuration.userContentController addScriptMessageHandler:self name:@"pebbleHistory"];
     }
     WKWebView *web = [[WKWebView alloc] initWithFrame:NSZeroRect configuration:configuration];
+    [self.rendererRecovery setObject:[PebbleRendererRecovery new] forKey:web];
     web.navigationDelegate = self;
     NSURL *page = [NSBundle.mainBundle URLForResource:@"wallpaper" withExtension:@"html"];
     [web loadFileURL:page allowingReadAccessToURL:page];
@@ -755,6 +809,10 @@ static NSImage *PebbleMenuBarIcon(void) {
                   NSWindowStyleMaskFullSizeContentView
           backing:NSBackingStoreBuffered defer:NO];
     window.title = @"鹅卵石设置";
+#if __has_include(<Sparkle/Sparkle.h>)
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(settingsDidClose:)
+        name:NSWindowWillCloseNotification object:window];
+#endif
     window.titlebarAppearsTransparent = YES;
     window.releasedWhenClosed = NO;
     window.minSize = NSMakeSize(760, 520);
@@ -1623,9 +1681,95 @@ static const NSInteger PassAuthorSeed = 13612;
     reply([action.request.URL isEqual:page] ? WKNavigationActionPolicyAllow : WKNavigationActionPolicyCancel);
 }
 
+// Recover the same view so screen ownership, controls and the pass layout stay intact.
+- (BOOL)prepareRendererForReload:(WKWebView *)web {
+    NSString *config = nil;
+    BOOL desktop = NO;
+    for (NSNumber *display in self.desktopWindows) {
+        if (self.desktopWindows[display].contentView != web) continue;
+        desktop = YES;
+        config = [self.rendererConfigScript stringByAppendingFormat:
+            @"window.pebbleHistory = %@;%@window.pebblePaused = %@;",
+            [self jsonForPebble:self.pebbleHistory[display.stringValue] ?: @{}],
+            self.smartPauseScript, self.paused ? @"true" : @"false"];
+        break;
+    }
+    if (web == self.passRenderer) config = self.passConfigScript;
+    if (!config) return NO; // A disconnected display's delayed retry is obsolete.
+    WKUserContentController *controller = web.configuration.userContentController;
+    [controller removeAllUserScripts];
+    if (desktop) config = [config stringByAppendingString:
+        @"document.documentElement.classList.add('pebble-desktop');"];
+    [controller addUserScript:[[WKUserScript alloc] initWithSource:config
+        injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES]];
+    return YES;
+}
+
+- (void)recoverRenderer:(WKWebView *)web error:(NSError *)error {
+    PebbleRendererRecovery *state = [self.rendererRecovery objectForKey:web];
+    if (!state || state.pending) return;
+    if (state.attempts >= 3) {
+        NSLog(@"Renderer recovery stopped after three attempts: %@. Use 恢复壁纸显示 to retry.", error);
+        return;
+    }
+    state.pending = YES;
+    NSUInteger generation = ++state.generation;
+    NSTimeInterval delay = 1 << state.attempts++;
+    NSLog(@"Renderer interrupted (%@); retry %lu in %.0fs.", error,
+        (unsigned long)state.attempts, delay);
+    __weak WKWebView *weakWeb = web;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+        WKWebView *view = weakWeb;
+        if (!view || generation != state.generation) return;
+        state.pending = NO;
+        if (![self prepareRendererForReload:view]) return;
+        NSURL *page = [NSBundle.mainBundle URLForResource:@"wallpaper" withExtension:@"html"];
+        [view loadFileURL:page allowingReadAccessToURL:page];
+    });
+}
+
+- (void)reloadRenderers:(id)sender {
+    NSMutableArray *views = [NSMutableArray array];
+    for (NSWindow *window in self.desktopWindows.allValues) [views addObject:window.contentView];
+    if (self.passRenderer) [views addObject:self.passRenderer];
+    for (WKWebView *web in views) {
+        PebbleRendererRecovery *state = [self.rendererRecovery objectForKey:web];
+        state.pending = NO;
+        state.attempts = 0;
+        state.generation++;
+        [self recoverRenderer:web error:nil];
+    }
+}
+
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)web {
+    [self recoverRenderer:web error:[NSError errorWithDomain:WKErrorDomain
+        code:WKErrorWebContentProcessTerminated userInfo:nil]];
+}
+
+- (void)webView:(WKWebView *)web didFailProvisionalNavigation:(WKNavigation *)navigation
+    withError:(NSError *)error {
+    if (error.code == NSURLErrorCancelled && [error.domain isEqual:NSURLErrorDomain]) return;
+    [self recoverRenderer:web error:error];
+}
+
+- (void)webView:(WKWebView *)web didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+    [self webView:web didFailProvisionalNavigation:navigation withError:error];
+}
+
 - (void)webView:(WKWebView *)web didFinishNavigation:(WKNavigation *)navigation {
+    PebbleRendererRecovery *state = [self.rendererRecovery objectForKey:web];
+    NSUInteger generation = state.generation;
+    // A page that repeatedly loads then crashes must still exhaust its retry budget.
+    __weak WKWebView *weakWeb = web;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 60 * NSEC_PER_SEC),
+                   dispatch_get_main_queue(), ^{
+        if (weakWeb && state.generation == generation && !state.pending) state.attempts = 0;
+    });
     [self applyPauseTo:web];
-    if (self.testPreviewPath && web == self.desktopWindows.allValues.firstObject.contentView) {
+    if (self.verifyingRecovery && web == self.desktopWindows.allValues.firstObject.contentView) {
+        [self checkRecoveredRenderer:web attempt:0];
+    } else if (self.testPreviewPath && web == self.desktopWindows.allValues.firstObject.contentView) {
         [self verifyRenderer:web attempt:0];
     }
 }
@@ -1810,9 +1954,98 @@ static const NSInteger PassAuthorSeed = 13612;
                 exit(9);
             }
             NSLog(@"Verified native PNG dimensions for all five iPhone export sizes.");
-            [NSApp terminate:nil];
+            [self verifyRendererRecovery:web];
         }];
 }
+
+// Exercise the production recovery path with the latest native settings, rather
+// than merely checking that a delegate method exists. --verify never alters history.
+- (void)verifyRendererRecovery:(WKWebView *)web {
+    // Verification normally omits persistence; give the page an explicit stone.
+    [web evaluateJavaScript:
+        @"window.pebbleHistory={};window.pebbleThrow();window.pebbleHistory"
+        completionHandler:^(NSDictionary *saved, NSError *readError) {
+        if (readError || !saved[@"current"]) exit(10);
+        NSNumber *display = web.window.screen.deviceDescription[@"NSScreenNumber"];
+        self.pebbleHistory[display.stringValue] = saved;
+        self.recoveryExpectedHistory = saved;
+        self.tiltDegrees = 17;
+        self.rotationRate = 1.5;
+        self.paused = YES;
+        self.verifyingRecovery = YES;
+        [self webView:web didFailProvisionalNavigation:nil withError:
+            [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCancelled userInfo:nil]];
+        if ([self.rendererRecovery objectForKey:web].attempts != 0) exit(10);
+        [self webViewWebContentProcessDidTerminate:web];
+        // Duplicate failures must coalesce into one pending retry.
+        [self webView:web didFailNavigation:nil withError:
+            [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCannotConnectToHost userInfo:nil]];
+        if ([self.rendererRecovery objectForKey:web].attempts != 1) exit(10);
+    }];
+}
+
+- (void)checkRecoveredRenderer:(WKWebView *)web attempt:(NSUInteger)attempt {
+    [web evaluateJavaScript:
+        @"window.pebbleRedraw?.();({history:window.pebbleHistory,tilt:window.pebbleConfig.tiltDegrees,"
+         "rate:window.pebbleConfig.rotationRate,paused:window.pebblePaused,"
+         "ready:typeof window.pebbleTone==='number' && typeof window.pebbleThrow==='function'})"
+        completionHandler:^(NSDictionary *result, NSError *error) {
+        if (error || ![result[@"ready"] boolValue]) {
+            if (attempt >= 40) exit(10);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 150 * NSEC_PER_MSEC),
+                dispatch_get_main_queue(), ^{ [self checkRecoveredRenderer:web attempt:attempt + 1]; });
+            return;
+        }
+        if (![result[@"history"] isEqual:self.recoveryExpectedHistory] ||
+            [result[@"tilt"] integerValue] != 17 || [result[@"rate"] doubleValue] != 1.5 ||
+            ![result[@"paused"] boolValue]) {
+            NSLog(@"Recovered renderer lost state: %@", result); exit(10);
+        }
+        if (self.recoveryVerificationStage++ == 0) {
+            [self webView:web didFailProvisionalNavigation:nil withError:
+                [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCannotOpenFile userInfo:nil]];
+            return;
+        }
+        PebbleRendererRecovery *state = [self.rendererRecovery objectForKey:web];
+        if (self.recoveryVerificationStage == 3) {
+            if (state.attempts != 1) exit(10);
+            NSLog(@"Renderer recovery preserved stone/settings; cancellation, retry limit and manual retry verified.");
+#if __has_include(<Sparkle/Sparkle.h>)
+            [self verifyUpdateCallbackContract];
+#else
+            [NSApp terminate:nil];
+#endif
+            return;
+        }
+        state.attempts = 3;
+        [self webViewWebContentProcessDidTerminate:web];
+        if (state.pending || state.attempts != 3) exit(10);
+        [self reloadRenderers:nil];
+    }];
+}
+
+#if __has_include(<Sparkle/Sparkle.h>)
+- (void)verifyUpdateCallbackContract {
+    __block NSUInteger installs = 0;
+    [self stageUpdateInstallation:^{ installs++; }];
+    if (installs != 0) exit(11); // The delegate must return before invoking Sparkle.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (installs != 1 || !self.pendingInstall) exit(11);
+        [self installPendingUpdateIfIdle];
+        if (installs != 1) exit(11); // Coalesce duplicate close/idle notifications.
+        [self resetPendingUpdate];
+        if (self.pendingInstall || self.installationRequested) exit(11);
+        [self stageUpdateInstallation:^{ installs++; }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (installs != 2) exit(11);
+            [self resetPendingUpdate];
+            if (self.pendingInstall || self.installationRequested) exit(11);
+            NSLog(@"Update callback ordering, duplicate suppression and failed-cycle cleanup verified.");
+            [NSApp terminate:nil];
+        });
+    });
+}
+#endif
 
 - (void)verifyRenderer:(WKWebView *)web attempt:(NSUInteger)attempt {
     // Each draw clears the canvas. A nontransparent center confirms the offline texture rendered.
