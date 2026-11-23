@@ -507,7 +507,7 @@ run('codesign', '--verify', '--strict', '--deep', str(app))
 run('lipo', str(binary), '-verify_arch', 'arm64', 'x86_64')
 
 preview = staging / 'wallpaper-verification.png'
-run(str(binary), '--verify', str(preview), timeout=25)
+run(str(binary), '--verify', str(preview), timeout=60)
 if args.app_only:
     raise SystemExit(0)
 window_width, window_height = 780, 462

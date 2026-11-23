@@ -24,6 +24,11 @@ int main(void) { @autoreleasepool {
  NSDictionary *histories=PebbleNormalizeHistories(@{@"7":@{@"current":legacy,@"previous":@"bad"},@"bad":legacy,@"8":@"bad"},textures);
  CHECK(histories.count==1); CHECK([histories[@"7"][@"current"] isEqual:migrated]);
  CHECK(PebbleNormalizeHistories(@[],textures).count==0); CHECK(PebbleNormalizeFavorites(@{},textures).count==0);
+ CHECK([PebbleTargetDisplays(@[@1,@2],@2,YES) isEqual:@[@2]]);
+ CHECK(PebbleTargetDisplays(@[@1,@2],@3,YES).count==0);
+ CHECK([PebbleTargetDisplays(@[@1,@2],nil,YES) isEqual:(@[@1,@2])]);
+ CHECK([PebbleTargetDisplays(@[@1,@2],nil,NO) isEqual:@[@1]]);
+ CHECK(PebbleTargetDisplays(@[],nil,NO).count==0);
  NSLog(@"State migration, pose, invalid/future records and mixed persistence fixtures verified.");
 } return 0; }
 '''

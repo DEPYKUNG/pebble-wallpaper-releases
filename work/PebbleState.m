@@ -67,3 +67,8 @@ NSArray *PebbleNormalizeFavorites(id value, NSArray<NSString *> *textures) {
     }
     return result;
 }
+
+NSArray<NSNumber *> *PebbleTargetDisplays(NSArray<NSNumber *> *connected, NSNumber *selected, BOOL allWhenUnselected) {
+    if (selected) return [connected containsObject:selected] ? @[selected] : @[];
+    return allWhenUnselected ? connected : (connected.count ? @[connected.firstObject] : @[]);
+}
