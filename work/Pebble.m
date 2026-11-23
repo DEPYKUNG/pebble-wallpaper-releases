@@ -8,6 +8,7 @@
 #import "PebbleState.h"
 #import "PebbleWallpaperPolicy.h"
 #import "PebbleSettingsSurface.h"
+#import "PebbleChangelogView.h"
 #if __has_include(<Sparkle/Sparkle.h>)
 #import <Sparkle/Sparkle.h>
 #endif
@@ -296,7 +297,11 @@ static NSImage *PebbleMenuBarIcon(void) {
     // Renders a settings pane straight to PNG. The window's layout cannot be
     // checked any other way, and screen capture needs permissions a build box
     // will not have. Same kind of affordance as --verify.
-    if (self.settingsPreview) { [self showSettings:nil]; return; }
+    if (self.settingsPreview) {
+        [self showSettings:nil];
+        if ([NSProcessInfo.processInfo.arguments containsObject:@"--preview-about"]) [self showPaneAtIndex:3];
+        return;
+    }
     if (self.shotPath) {
         [self showSettings:nil];
         [self showPaneAtIndex:self.shotSection];
@@ -1219,6 +1224,18 @@ static const NSInteger PassAuthorSeed = 13612;
     header.edgeInsets = NSEdgeInsetsMake(10, 0, 6, 0);
 
     NSMutableArray *cards = [NSMutableArray arrayWithObject:header];
+    NSURL *logURL = [NSBundle.mainBundle URLForResource:@"changelog" withExtension:@"json"];
+    NSData *logData = logURL ? [NSData dataWithContentsOfURL:logURL] : nil;
+    id entries = logData ? [NSJSONSerialization JSONObjectWithData:logData options:0 error:nil] : nil;
+    NSButton *viewAll = [NSButton buttonWithTitle:@"查看全部" target:self action:@selector(openReleases:)];
+    viewAll.bordered = NO;
+    viewAll.attributedTitle = [[NSAttributedString alloc] initWithString:@"查看全部"
+        attributes:@{NSForegroundColorAttributeName:NSColor.linkColor, NSFontAttributeName:[NSFont systemFontOfSize:12]}];
+    viewAll.accessibilityLabel = @"查看全部更新日志";
+    viewAll.toolTip = @"在浏览器中打开全部历史版本";
+    PebbleChangelogView *log = [[PebbleChangelogView alloc] initWithEntries:entries
+        currentVersion:info[@"CFBundleShortVersionString"] ?: @"" viewAllButton:viewAll];
+    [cards addObject:[self cardWithRows:@[log]]];
 #if __has_include(<Sparkle/Sparkle.h>)
     if (self.updaterController) {
         SPUUpdater *updater = self.updaterController.updater;
