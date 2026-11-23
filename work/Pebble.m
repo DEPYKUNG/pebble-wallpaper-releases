@@ -182,6 +182,10 @@ static NSImage *PebbleMenuBarIcon(void) {
 @property (strong) WKWebView *passRenderer;
 @property (strong) NSMapTable<WKWebView *, PebbleRendererRecovery *> *rendererRecovery;
 @property BOOL verifyingRecovery;
+@property NSUInteger verificationCommandErrors;
+@property (copy) void (^verificationReload)(WKWebView *);
+@property BOOL showingOperationError;
+@property NSTimeInterval lastOperationError;
 @property NSUInteger recoveryVerificationStage;
 @property (copy) NSDictionary *recoveryExpectedHistory;
 @property (strong) NSPopUpButton *texturePopUp, *palettePopUp, *facePopUp;
@@ -490,11 +494,12 @@ static NSImage *PebbleMenuBarIcon(void) {
 }
 
 - (void)updateMotionRenderers:(BOOL)restartTimer {
+    [self syncRendererStartupScripts];
     NSString *update = restartTimer
         ? @"document.dispatchEvent(new Event('visibilitychange'));" : @"window.pebbleRedraw?.();";
     NSString *script = [self.motionConfigScript stringByAppendingString:update];
     [self forEachRenderer:^(WKWebView *web) {
-        [web evaluateJavaScript:script completionHandler:nil];
+        [self performWallpaperScript:script inWeb:web reportErrors:YES completion:nil];
     }];
 }
 
@@ -531,10 +536,11 @@ static NSImage *PebbleMenuBarIcon(void) {
     return [NSString stringWithFormat:@"window.pebbleConfig = window.pebbleConfig || {};"
             "window.pebbleConfig.texture = %@; window.pebbleConfig.palette = %@;"
             "window.pebbleConfig.faces = %@;"
-            "window.pebbleStaticPaused = %@;%@%@",
+            "window.pebbleStaticPaused = %@;window.pebblePaused = %@;%@%@%@",
             texture, palette,
             self.face ? [NSString stringWithFormat:@"'%@'", self.face] : @"null",
-            self.staticWallpaperMode ? @"true" : @"false", self.backgroundConfigScript, self.motionConfigScript];
+            self.staticWallpaperMode ? @"true" : @"false", self.paused ? @"true" : @"false",
+            self.smartPauseScript, self.backgroundConfigScript, self.motionConfigScript];
 }
 
 - (void)storeChoice:(NSString *)choice forKey:(NSString *)key {
@@ -545,8 +551,9 @@ static NSImage *PebbleMenuBarIcon(void) {
         [defaults removeObjectForKey:key];
     }
     [self syncSettingsControls];
+    [self syncRendererStartupScripts];
     [self forEachRenderer:^(WKWebView *web) {
-        [web evaluateJavaScript:self.rendererConfigScript completionHandler:nil];
+        [self performWallpaperScript:self.rendererConfigScript inWeb:web reportErrors:YES completion:nil];
     }];
     // The stone already on screen keeps whatever it was raised with.
     [self changePebble:nil];
@@ -582,18 +589,17 @@ static NSImage *PebbleMenuBarIcon(void) {
     return [self newRendererWithConfig:self.rendererConfigScript desktop:desktop];
 }
 
-- (WKWebView *)newRendererWithConfig:(NSString *)config desktop:(BOOL)desktop {
-    if (self.testPreviewPath) {
-        // Count real animation interval callbacks only in --verify, including
-        // callbacks that would be invisible in a hidden desktop window.
-        config = [config stringByAppendingString:
-            @"window.pebbleVerifyIntervalTicks=0;window.pebbleVerifyIntervals=new Set();"
+- (NSString *)rendererVerificationInstrumentation {
+    return @"window.pebbleVerifyIntervalTicks=0;window.pebbleVerifyIntervals=new Set();"
              "{const start=window.setInterval.bind(window),stop=window.clearInterval.bind(window);"
              "window.setInterval=(fn,ms,...args)=>{const id=start(()=>{"
              "window.pebbleVerifyIntervalTicks++;fn(...args)},ms);"
              "window.pebbleVerifyIntervals.add(id);return id};"
-             "window.clearInterval=id=>{window.pebbleVerifyIntervals.delete(id);stop(id)}};"];
-    }
+             "window.clearInterval=id=>{window.pebbleVerifyIntervals.delete(id);stop(id)}};";
+}
+
+- (WKWebView *)newRendererWithConfig:(NSString *)config desktop:(BOOL)desktop {
+    if (self.testPreviewPath) config = [config stringByAppendingString:self.rendererVerificationInstrumentation];
     WKWebViewConfiguration *configuration = [WKWebViewConfiguration new];
     configuration.websiteDataStore = WKWebsiteDataStore.nonPersistentDataStore;
     // The first pebble is raised while the module loads, so the choice has to be
@@ -677,6 +683,7 @@ static NSImage *PebbleMenuBarIcon(void) {
             NSDictionary *history = PebbleNormalizeHistory(message.body, self.stoneTextures);
             self.pebbleHistory[display.stringValue] = history;
             [NSUserDefaults.standardUserDefaults setObject:self.pebbleHistory forKey:PebbleHistoryKey];
+            [self prepareRendererForReload:message.webView];
         }
         return;
     }
@@ -720,6 +727,7 @@ static NSImage *PebbleMenuBarIcon(void) {
         [ownedURLs addObject:stable];
         if (!restore && [self.backgroundPreset isEqual:preset]) {
             NSError *error = nil;
+            if (!bundled) { NSLog(@"Bundled background resource is missing."); return NO; }
             NSData *image = [NSData dataWithContentsOfURL:bundled options:0 error:&error];
             if (!image || ![NSFileManager.defaultManager createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:&error] ||
                 (![image isEqual:[NSData dataWithContentsOfURL:stable]] && ![image writeToURL:stable options:NSDataWritingAtomic error:&error])) {
@@ -847,6 +855,7 @@ static NSImage *PebbleMenuBarIcon(void) {
         [self.desktopControls[display] orderOut:nil];
         [self.desktopControls removeObjectForKey:display];
     }
+    [self syncRendererStartupScripts];
     // Explicitly stop/start animation timers when entering/leaving static mode.
     // Hidden WebViews can stay alive for exports; visibility alone is not a pause.
     [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
@@ -987,7 +996,8 @@ static NSImage *PebbleMenuBarIcon(void) {
     NSUInteger index = (NSUInteger)sender.tag;
     if (index >= BackgroundCount) return;
     self.backgroundPreset = @(BackgroundKeys[index]);
-    [self syncNativeDesktopBackground:NO explicitChange:YES];
+    if (![self syncNativeDesktopBackground:NO explicitChange:YES])
+        [self showWallpaperError:@"系统壁纸背景暂时未能同步，请稍后重新选择背景。"];
     if (!self.testPreviewPath) {
         [NSUserDefaults.standardUserDefaults setObject:self.backgroundPreset forKey:BackgroundPreference];
     }
@@ -996,9 +1006,10 @@ static NSImage *PebbleMenuBarIcon(void) {
         NSString *label = BackgroundLabels[button.tag];
         button.title = button == sender ? [label stringByAppendingString:@" ✓"] : label;
     }
+    [self syncRendererStartupScripts];
     NSString *script = [self.backgroundConfigScript stringByAppendingString:@"window.pebbleRedraw?.();"];
     [self forEachRenderer:^(WKWebView *web) {
-        [web evaluateJavaScript:script completionHandler:nil];
+        [self performWallpaperScript:script inWeb:web reportErrors:YES completion:nil];
     }];
 }
 
@@ -1482,11 +1493,34 @@ static const NSInteger PassAuthorSeed = 13612;
 }
 
 - (void)showWallpaperError:(NSString *)detail {
+    if (self.testPreviewPath || self.shotPath) {
+        self.verificationCommandErrors++; NSLog(@"Operation feedback: %@", detail); return;
+    }
+    NSTimeInterval now = NSDate.timeIntervalSinceReferenceDate;
+    if (self.showingOperationError || now - self.lastOperationError < 2) return;
+    self.showingOperationError = YES; self.lastOperationError = now;
     [NSApp activateIgnoringOtherApps:YES];
-    NSAlert *alert = [NSAlert new];
-    alert.messageText = @"无法生成静态壁纸";
-    alert.informativeText = detail;
-    [alert runModal];
+    NSAlert *alert = [NSAlert new]; alert.messageText = @"操作未完成"; alert.informativeText = detail;
+    [alert runModal]; self.showingOperationError = NO;
+}
+
+- (void)performWallpaperScript:(NSString *)script inWeb:(WKWebView *)web reportErrors:(BOOL)report
+    completion:(void (^)(id, NSError *))completion {
+    void (^finish)(id, NSError *) = ^(id result, NSError *error) {
+        if (error) {
+            NSLog(@"Wallpaper command failed: %@", error);
+            if ([error.domain isEqual:WKErrorDomain] && error.code == WKErrorWebContentProcessTerminated)
+                [self recoverRenderer:web error:error];
+            if (report) [self showWallpaperError:@"画面可能正在加载或恢复，请稍后重试。也可从菜单栏选择「恢复壁纸显示」。"];
+        }
+        if (completion) completion(result, error);
+    };
+    if (!web) finish(nil, [NSError errorWithDomain:@"Pebble" code:1 userInfo:@{NSLocalizedDescriptionKey:@"屏幕已断开"}]);
+    else [web evaluateJavaScript:script completionHandler:finish];
+}
+
+- (void)syncRendererStartupScripts {
+    [self forEachRenderer:^(WKWebView *web) { [self prepareRendererForReload:web]; }];
 }
 
 - (NSData *)resizeStaticWallpaperPNG:(NSData *)png size:(WallpaperExportSize)size {
@@ -1626,7 +1660,7 @@ static const NSInteger PassAuthorSeed = 13612;
 - (void)previousPebble:(NSMenuItem *)sender {
     for (NSNumber *display in PebbleTargetDisplays(self.connectedDisplayIdentifiers, sender.representedObject, YES)) {
         NSWindow *window = self.desktopWindows[display];
-        if (window.isVisible) [(WKWebView *)window.contentView evaluateJavaScript:@"window.pebblePrevious()" completionHandler:nil];
+        if (window.isVisible) [self performWallpaperScript:@"window.pebblePrevious()" inWeb:(WKWebView *)window.contentView reportErrors:YES completion:nil];
     }
 }
 
@@ -1694,7 +1728,7 @@ static const NSInteger PassAuthorSeed = 13612;
     NSArray *targets = PebbleTargetDisplays(self.connectedDisplayIdentifiers, self.favoriteDisplay, YES);
     if (!targets.count) { [self showWallpaperError:@"所选屏幕已断开，请重新选择屏幕。"]; return; }
     NSString *script = [NSString stringWithFormat:@"window.pebbleRestore(%@)", [self jsonForPebble:self.favorites[sender.tag]]];
-    for (NSNumber *display in targets) [(WKWebView *)self.desktopWindows[display].contentView evaluateJavaScript:script completionHandler:nil];
+    for (NSNumber *display in targets) [self performWallpaperScript:script inWeb:(WKWebView *)self.desktopWindows[display].contentView reportErrors:YES completion:nil];
 
 }
 
@@ -1735,6 +1769,7 @@ static const NSInteger PassAuthorSeed = 13612;
         if ([name isEqualToString:NSWorkspaceScreensDidWakeNotification]) self.displaysAsleep = NO;
         if ([name isEqualToString:NSWorkspaceSessionDidResignActiveNotification]) self.sessionInactive = YES;
         if ([name isEqualToString:NSWorkspaceSessionDidBecomeActiveNotification]) self.sessionInactive = NO;
+        [self syncRendererStartupScripts];
         [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
     });
 }
@@ -1774,7 +1809,7 @@ static const NSInteger PassAuthorSeed = 13612;
 - (void)rethrowDisplay:(NSNumber *)display {
     NSWindow *window = display ? self.desktopWindows[display] : nil;
     if (!window.isVisible) return;
-    [(WKWebView *)window.contentView evaluateJavaScript:@"window.pebbleThrow?.()" completionHandler:nil];
+    [self performWallpaperScript:@"window.pebbleThrow()" inWeb:(WKWebView *)window.contentView reportErrors:YES completion:nil];
 }
 
 - (void)rethrowMenuScreen:(NSMenuItem *)sender {
@@ -1818,7 +1853,7 @@ static const NSInteger PassAuthorSeed = 13612;
          "document.dispatchEvent(new Event('visibilitychange'));",
         self.paused ? @"true" : @"false",
         self.staticWallpaperMode ? @"true" : @"false", self.smartPauseScript];
-    [web evaluateJavaScript:script completionHandler:nil];
+    [self performWallpaperScript:script inWeb:web reportErrors:NO completion:nil];
 }
 
 - (void)togglePause:(id)sender {
@@ -1828,6 +1863,7 @@ static const NSInteger PassAuthorSeed = 13612;
     [NSUserDefaults.standardUserDefaults setBool:self.paused forKey:PausedPreference];
     self.pauseItem.state = self.paused ? NSControlStateValueOff : NSControlStateValueOn;
     [self syncSettingsControls];
+    [self syncRendererStartupScripts];
     [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
 }
 
@@ -1860,6 +1896,7 @@ static const NSInteger PassAuthorSeed = 13612;
     [controller removeAllUserScripts];
     if (desktop) config = [config stringByAppendingString:
         @"document.documentElement.classList.add('pebble-desktop');"];
+    if (self.testPreviewPath) config = [config stringByAppendingString:self.rendererVerificationInstrumentation];
     [controller addUserScript:[[WKUserScript alloc] initWithSource:config
         injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES]];
     return YES;
@@ -1926,7 +1963,13 @@ static const NSInteger PassAuthorSeed = 13612;
                    dispatch_get_main_queue(), ^{
         if (weakWeb && state.generation == generation && !state.pending) state.attempts = 0;
     });
+    if (web != self.passRenderer) [self performWallpaperScript:
+        [self.rendererConfigScript stringByAppendingString:@"window.pebbleRedraw?.();"]
+        inWeb:web reportErrors:NO completion:nil];
     [self applyPauseTo:web];
+    if (self.testPreviewPath && self.verificationReload) {
+        void (^loaded)(WKWebView *) = self.verificationReload; self.verificationReload = nil; loaded(web); return;
+    }
     if (self.verifyingRecovery && web == self.desktopWindows.allValues.firstObject.contentView) {
         [self checkRecoveredRenderer:web attempt:0];
     } else if (self.testPreviewPath && web == self.desktopWindows.allValues.firstObject.contentView) {
@@ -1957,6 +2000,7 @@ static const NSInteger PassAuthorSeed = 13612;
 - (void)verifyOverrides:(WKWebView *)web then:(void (^)(void))next {
     NSString *script =
         @"(() => {const button = document.querySelector('button');"
+         "window.pebbleHistory = null;"
          "const raise = count => Array.from({length: count}, () => {button.click();"
          " return {texture: window.pebbleTexture, palette: window.pebblePalette,"
          "         base: window.pebbleColors[0]};});"
@@ -2190,7 +2234,7 @@ static const NSInteger PassAuthorSeed = 13612;
         self.staticWallpaperMode = staticMode;
         [self forEachRenderer:^(WKWebView *view) { [self applyPauseTo:view]; }];
         NSLog(@"Static mode stops animation timers even with smart pause disabled; manual pause and exports verified.");
-        [self verifyRendererRecovery:web];
+        [self verifyRendererCommands:web];
     }];
 }
 
@@ -2223,6 +2267,43 @@ static const NSInteger PassAuthorSeed = 13612;
             exit(12);
         }
         [self verifyStaticPauseStep:step + 1 web:web then:next];
+    }];
+}
+
+- (void)verifyRendererCommands:(WKWebView *)web {
+    NSUInteger before = self.verificationCommandErrors;
+    [self performWallpaperScript:@"window.pebbleDeliberatelyMissingVerificationFunction()" inWeb:web reportErrors:YES
+        completion:^(id result, NSError *error) {
+        if (!error || self.verificationCommandErrors != before + 1) exit(15);
+        [web evaluateJavaScript:@"window.pebbleSnapshot()" completionHandler:^(NSDictionary *stone, NSError *readError) {
+            if (readError || !PebbleNormalizeStone(stone, self.stoneTextures)) exit(15);
+            NSNumber *display = web.window.screen.deviceDescription[@"NSScreenNumber"];
+            NSInteger oldTilt=self.tiltDegrees; double oldRate=self.rotationRate; BOOL oldPaused=self.paused;
+            id oldHistory=self.pebbleHistory[display.stringValue];
+            self.pebbleHistory[display.stringValue]=@{@"current":stone};
+            self.tiltDegrees=19; self.rotationRate=.5; self.paused=YES;
+            [self syncRendererStartupScripts];
+            __weak PebbleApp *weakSelf = self;
+            self.verificationReload=^(WKWebView *loaded) {
+                PebbleApp *app = weakSelf;
+                [loaded callAsyncJavaScript:
+                    @"for(let i=0;i<120&&!window.pebbleSnapshot;i++)await new Promise(r=>setTimeout(r,25));"
+                     "return {tilt:window.pebbleConfig.tiltDegrees,rate:window.pebbleConfig.rotationRate,"
+                     "paused:window.pebblePaused,stone:window.pebbleSnapshot()};"
+                    arguments:@{} inFrame:nil inContentWorld:WKContentWorld.pageWorld
+                    completionHandler:^(NSDictionary *value, NSError *loadError) {
+                    if (loadError || [value[@"tilt"] integerValue]!=19 || [value[@"rate"] doubleValue]!=.5 ||
+                        ![value[@"paused"] boolValue] || ![value[@"stone"] isEqual:stone]) exit(15);
+                    app.tiltDegrees=oldTilt; app.rotationRate=oldRate; app.paused=oldPaused;
+                    if (oldHistory) app.pebbleHistory[display.stringValue]=oldHistory;
+                    else [app.pebbleHistory removeObjectForKey:display.stringValue];
+                    [app syncRendererStartupScripts];
+                    NSLog(@"Failed-command feedback and ordinary reload with latest settings/stone verified.");
+                    [app verifyRendererRecovery:loaded];
+                }];
+            };
+            [web reload];
+        }];
     }];
 }
 
