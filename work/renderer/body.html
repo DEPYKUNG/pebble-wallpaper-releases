@@ -1,0 +1,14 @@
+<div id="desktop-question" role="img" aria-label="你准备好向宇宙抛颗石头了吗？"
+    style="mask-image: url(data:image/png;base64,@@QUESTION@@); -webkit-mask-image: url(data:image/png;base64,@@QUESTION@@)"></div>
+    <img id="pass-card" src="data:image/png;base64,@@PASS_CARD@@" alt="">
+    <img id="pass-stone" alt="编号对应的鹅卵石">
+    <div id="pass-number"></div>
+    <script type="module">
+    if (window.pebbleConfig?.staticPass) {
+        document.documentElement.classList.add('pebble-pass');
+        document.getElementById('root').inert = true;
+        const number = document.getElementById('pass-number');
+        number.textContent = String(window.pebbleConfig.number).padStart(2, '0');
+        number.setAttribute('aria-label', '石头编号 ' + number.textContent);
+    }
+    @@SCRIPT@@</script></body>

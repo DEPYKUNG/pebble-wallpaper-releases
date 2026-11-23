@@ -1,0 +1,92 @@
+[
+  {
+    "name": "pause-policy",
+    "before": "!document.hidden",
+    "after": "!window.pebblePaused&&!window.pebbleSmartPaused&&!window.pebbleStaticPaused&&!(window.pebbleConfig||{}).staticPass&&!document.hidden"
+  },
+  {
+    "name": "pass-input",
+    "before": "for(const[w,X]of Object.entries(Yl))W.addEventListener(w,X);",
+    "after": "if(!(window.pebbleConfig||{}).staticPass)for(const[w,X]of Object.entries(Yl))W.addEventListener(w,X);"
+  },
+  {
+    "name": "pass-tone",
+    "before": "j.draw(F)}function k()",
+    "after": "j.draw(F);if((window.pebbleConfig||{}).staticPass)updatePassTone(R)}function k()"
+  },
+  {
+    "name": "pass-keyboard",
+    "before": "R.detail===0&&z.current?.()",
+    "after": "!(window.pebbleConfig||{}).staticPass&&R.detail===0&&z.current?.()"
+  },
+  {
+    "name": "tilt-angle",
+    "before": "y.uniform2f(W.pose,x.yaw,x.pitch)",
+    "after": "y.uniform2f(W.pose,x.yaw,pebblePitch(x.pitch))"
+  },
+  {
+    "name": "rotation-speed",
+    "before": "},Gg))",
+    "after": "},Gg/(window.pebbleConfig?.rotationRate ?? 1)))"
+  },
+  {
+    "name": "preserve-yaw",
+    "before": "F.yaw=0,rl(),k()",
+    "after": "rl(),j&&updateDesktopTone(R),k()"
+  },
+  {
+    "name": "native-api",
+    "before": "j=Mg(R,ql),rl(),k()",
+    "after": "j=Mg(R,ql),rl(),updateDesktopTone(R),window.pebbleRedraw=()=>{rl();updateDesktopTone(R)},window.pebbleExport=(width,height)=>renderPebbleWallpaper(F,ql,width,height),window.pebbleSnapshot=()=>snapshotPebble(F),k()"
+  },
+  {
+    "name": "apply-config-history",
+    "before": "F.colors=D[Cg(F.seed,D.length)]",
+    "after": "F.colors=D[Cg(F.seed,D.length)],applyPebbleConfig(F),rememberPebble(F,saved)"
+  },
+  {
+    "name": "restore-input",
+    "before": "function x(){F=Bg(",
+    "after": "function x(saved){window.pebbleRestoring=validPebble(saved)?saved:null;F=Bg("
+  },
+  {
+    "name": "restore-api",
+    "before": "z.current=x,x();",
+    "after": "z.current=x;window.pebbleThrow=()=>x();window.pebbleRestore=x;window.pebblePrevious=()=>{if(window.pebbleHistory.previous)x(window.pebbleHistory.previous)};x(window.pebbleHistory?.current);"
+  },
+  {
+    "name": "stone-seed",
+    "before": "function Bg(S,z){const y=Math.floor(Math.random()*1e6)",
+    "after": "function Bg(S,z){const y=pebbleSeed()"
+  },
+  {
+    "name": "palette-seed",
+    "before": "function Hg(){return{seed:pg(),",
+    "after": "function Hg(){return{seed:pebblePaletteSeed(),"
+  },
+  {
+    "name": "face-uniform",
+    "before": "uniform sampler2D profiles,paintAtlas;",
+    "after": "uniform sampler2D profiles,paintAtlas;\nuniform float faces;"
+  },
+  {
+    "name": "face-gate",
+    "before": " float roll=phases.w/(2.*PI);\n if(roll>=.35)return pigment;",
+    "after": " float roll=phases.w/(2.*PI);\n if(faces>1.5)return pigment;\n float forced=step(.5,faces);\n if(forced<.5&&roll>=.35)return pigment;"
+  },
+  {
+    "name": "face-tile",
+    "before": " float tile=step(.175,roll);",
+    "after": " float tile=forced>.5?step(.5,fract(roll*3.)):step(.175,roll);"
+  },
+  {
+    "name": "face-bindings",
+    "before": "[\"res\",\"form\",\"feel\",\"pose\",\"phases\",\"color0\",\"color1\",\"color2\",\"profiles\",\"paintAtlas\"]",
+    "after": "[\"res\",\"form\",\"feel\",\"pose\",\"phases\",\"color0\",\"color1\",\"color2\",\"profiles\",\"paintAtlas\",\"faces\"]"
+  },
+  {
+    "name": "face-value",
+    "before": "y.uniform2f(W.res,Q,dl),",
+    "after": "y.uniform2f(W.res,Q,dl),y.uniform1f(W.faces,pebbleFaces()==='off'?2:(pebbleFaces()==='on'?1:0)),"
+  }
+]
