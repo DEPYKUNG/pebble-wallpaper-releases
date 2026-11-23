@@ -81,7 +81,8 @@
     // will not have. Same kind of affordance as --verify.
     if (self.settingsPreview) {
         [self showSettings:nil];
-        if ([NSProcessInfo.processInfo.arguments containsObject:@"--preview-about"]) [self showPaneAtIndex:3];
+        if ([NSProcessInfo.processInfo.arguments containsObject:@"--preview-pet-settings"]) [self showPaneAtIndex:PetPaneIndex];
+        if ([NSProcessInfo.processInfo.arguments containsObject:@"--preview-about"]) [self showPaneAtIndex:AboutPaneIndex];
         return;
     }
     if (self.shotPath) {
@@ -105,6 +106,7 @@
     if (!self.testPreviewPath) [self observeSmartPause];
     [self refreshDisplays:nil];
     [self updatePetPresentation];
+    if(self.petPreview && [NSProcessInfo.processInfo.arguments containsObject:@"--preview-pet-settings"]) [self showPetSettings:nil];
     if (!self.testPreviewPath) [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(refreshDisplays:)
                  name:NSApplicationDidChangeScreenParametersNotification object:NSApp];
 }

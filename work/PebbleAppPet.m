@@ -13,19 +13,13 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     for (NSInteger i=0;i<3;i++){NSMenuItem *item=[self addItem:titles[i] action:@selector(selectPetSize:) toMenu:size.submenu];item.tag=i;}
     [self addItem:@"同步当前石头" action:@selector(syncPetStone) toMenu:petMenu];
     [self addItem:@"收回右下角" action:@selector(summonPet:) toMenu:petMenu];
+    [self addItem:@"打个水漂" action:@selector(skipPet:) toMenu:petMenu];
+    [self addItem:@"说句话" action:@selector(sayPet:) toMenu:petMenu];
     [self addItem:@"桌宠设置…" action:@selector(showPetSettings:) toMenu:petMenu];
     [self syncPetControls];
 }
 - (void)showPetSettings:(id)sender {
-    [self showSettings:sender];[self showPaneAtIndex:0];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.settings.contentView layoutSubtreeIfNeeded];
-        NSScrollView *scroll=(NSScrollView *)self.panes[0];
-        if([scroll isKindOfClass:NSScrollView.class]) {
-            NSView *document=scroll.documentView;
-            [document scrollPoint:NSMakePoint(0,MAX(0,NSHeight(document.bounds)-NSHeight(scroll.contentView.bounds)))];
-        }
-    });
+    [self showSettings:sender];[self showPaneAtIndex:PetPaneIndex];
 }
 - (void)updatePetPresentation {
     if (self.testPreviewPath || self.shotPath || self.settingsPreview) return;
@@ -67,6 +61,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             if (generation!=self.petGeneration || self.pet!=pet || error) return;
             NSData *data=[encoded isKindOfClass:NSString.class]?[[NSData alloc] initWithBase64EncodedString:encoded options:0]:nil;
             if (![pet setStonePNG:data]) NSLog(@"Desktop pet sprite unavailable; keeping the last valid image.");
+            [self syncPetControls];
             if (self.petPreview) {
                 for(NSWindow *window in self.desktopWindows.allValues)[window orderOut:nil];
                 for(NSPanel *panel in self.desktopControls.allValues)[panel orderOut:nil];
@@ -105,6 +100,19 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     self.petEnabledItem.state=enabled;self.petRoamingItem.state=roaming;
     self.petSwitch.state=enabled;self.petRoamSwitch.state=roaming;self.petRoamSwitch.enabled=enabled;
     [self.petSizePicker selectItemAtIndex:size];
+    NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
+    BOOL skipping=self.pet?self.pet.skippingEnabled:![defaults boolForKey:@"DesktopPetSkippingDisabled"];
+    BOOL speech=self.pet?self.pet.speechEnabled:![defaults boolForKey:@"DesktopPetSpeechDisabled"];
+    BOOL chat=self.pet?self.pet.casualSpeech:[defaults boolForKey:@"DesktopPetCasualSpeech"];
+    NSInteger limit=self.pet?self.pet.skipLimit:[defaults integerForKey:@"DesktopPetSkipLimit"];
+    if(limit!=3 && limit!=7)limit=5;
+    self.petSkippingSwitch.state=skipping;self.petSkippingSwitch.enabled=enabled;
+    self.petSpeechSwitch.state=speech;self.petSpeechSwitch.enabled=enabled;
+    self.petChatSwitch.state=chat;self.petChatSwitch.enabled=enabled&&speech;
+    [self.petSkipLimitPicker selectItemWithTitle:[NSString stringWithFormat:@"%ld 次",(long)limit]];
+    self.petSkipLimitPicker.enabled=enabled&&skipping;
+    self.petSkipButton.enabled=enabled&&skipping&&self.pet.stoneImage!=nil;
+    self.petSayButton.enabled=enabled&&speech&&self.pet.stoneImage!=nil;
     NSMenu *menu=self.petEnabledItem.menu;
     for(NSMenuItem *item in menu.itemArray) if(item.submenu) for(NSMenuItem *choice in item.submenu.itemArray) choice.state=choice.tag==size;
 }
@@ -119,8 +127,50 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [self rowWithSymbol:@"smile" title:@"开启桌宠" subtitle:@"把当前石头带到窗口旁，点一下打招呼" control:self.petSwitch],
         [self rowWithSymbol:@"rotate-cw" title:@"自由活动" subtitle:@"轻轻跳动；关闭后安静陪伴，仍可拖动" control:self.petRoamSwitch],
         [self rowWithSymbol:@"grid" title:@"桌宠大小" subtitle:nil control:self.petSizePicker],
-        [self rowWithSymbol:@"repeat" title:@"拖动与轻抛" subtitle:@"拖住移动，松手轻抛；右键查看更多操作" control:actions],
+        [self rowWithSymbol:@"repeat" title:@"带回身边" subtitle:@"同步所在屏幕的石头，或收回右下角" control:actions],
     ]];[self syncPetControls];return [self settingsGroup:@"石头桌宠" containing:card];
+}
+
+
+- (void)skipPet:(id)sender {[self.pet skip:sender];}
+- (void)sayPet:(id)sender {[self.pet say:sender];}
+- (void)togglePetOption:(id)sender {
+    NSInteger option=[sender tag];if(option<0 || option>2)return;
+    BOOL value=[sender state]==NSControlStateValueOn;
+    NSArray *keys=@[@"DesktopPetSkippingDisabled",@"DesktopPetSpeechDisabled",@"DesktopPetCasualSpeech"];
+    [NSUserDefaults.standardUserDefaults setBool:option<2?!value:value forKey:keys[option]];
+    if(option==0)self.pet.skippingEnabled=value;
+    if(option==1)self.pet.speechEnabled=value;
+    if(option==2)self.pet.casualSpeech=value;
+    [self syncPetControls];
+}
+- (void)selectPetSkipLimit:(NSPopUpButton *)sender {
+    NSInteger count=sender.titleOfSelectedItem.integerValue;if(count!=3 && count!=7)count=5;
+    [NSUserDefaults.standardUserDefaults setInteger:count forKey:@"DesktopPetSkipLimit"];
+    self.pet.skipLimit=count;[self syncPetControls];
+}
+- (NSView *)petPane {
+    NSView *companion=[self petSettingsGroup];
+    self.petSkippingSwitch=[self switchOn:YES action:@selector(togglePetOption:)];self.petSkippingSwitch.tag=0;
+    self.petSpeechSwitch=[self switchOn:YES action:@selector(togglePetOption:)];self.petSpeechSwitch.tag=1;
+    self.petChatSwitch=[self switchOn:NO action:@selector(togglePetOption:)];self.petChatSwitch.tag=2;
+    self.petSkipLimitPicker=[[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+    [self.petSkipLimitPicker addItemsWithTitles:@[@"3 次",@"5 次",@"7 次"]];
+    self.petSkipLimitPicker.target=self;self.petSkipLimitPicker.action=@selector(selectPetSkipLimit:);
+    self.petSkipButton=[self actionButton:@"漂一下" action:@selector(skipPet:)];
+    self.petSayButton=[self actionButton:@"说句话" action:@selector(sayPet:)];
+    NSView *skipping=[self cardWithRows:@[
+        [self rowWithSymbol:@"repeat" title:@"横甩打水漂" subtitle:@"快速横向甩出，在松手高度连续弹跳" control:self.petSkippingSwitch],
+        [self rowWithSymbol:@"gauge" title:@"最多弹跳" subtitle:@"遇到屏幕边缘会提前落定" control:self.petSkipLimitPicker],
+        [self rowWithSymbol:@"compass-drawing" title:@"试试打水漂" subtitle:@"减少动态效果开启时暂停大幅运动" control:self.petSkipButton],
+    ]];
+    NSView *speech=[self cardWithRows:@[
+        [self rowWithSymbol:@"smile" title:@"说话气泡" subtitle:@"点击时回应，水漂后报个数" control:self.petSpeechSwitch],
+        [self rowWithSymbol:@"heart" title:@"偶尔说两句" subtitle:@"安静待着时，偶尔冒一句话" control:self.petChatSwitch],
+        [self rowWithSymbol:@"info" title:@"试试气泡" subtitle:@"不用打开窗口，也能看见石头回应" control:self.petSayButton],
+    ]];
+    [self syncPetControls];
+    return [self paneWithCards:@[companion,[self settingsGroup:@"屏幕打水漂" containing:skipping],[self settingsGroup:@"说话气泡" containing:speech]]];
 }
 
 #if __has_include(<Sparkle/Sparkle.h>)
@@ -135,11 +185,13 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if(installs || !self.pendingInstall)exit(19);
         [pet setValue:@NO forKey:@"dragging"];[pet setValue:@YES forKey:@"menuOpen"];
         [self installPendingUpdateIfIdle];if(installs)exit(19);
-        [pet setValue:@NO forKey:@"menuOpen"];[self installPendingUpdateIfIdle];
+        [pet setValue:@NO forKey:@"menuOpen"];[pet setValue:@YES forKey:@"skipEnding"];
+        [self installPendingUpdateIfIdle];if(installs)exit(19);
+        [pet setValue:@NO forKey:@"skipEnding"];[self installPendingUpdateIfIdle];
         if(installs!=1)exit(19);
         [self resetPendingUpdate];[pet invalidate];self.pet=nil;
         [defaults removePersistentDomainForName:suite];
-        NSLog(@"Update installation defers during pet dragging/menu tracking and resumes after interaction.");
+        NSLog(@"Update installation defers during pet dragging/menu tracking/skipping and resumes after interaction.");
         [NSApp terminate:nil];
     });
 }
@@ -183,6 +235,77 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [pet endDragAtTime:1.08];if(pet.dragging || pet.interacting)exit(18);
         [pet beginDragAtPoint:pointer time:2];[pet setSuspended:YES];
         if(pet.dragging || pet.panel.isVisible)exit(18);
+        [pet setSuspended:NO];
+        [pet beginDragAtPoint:pet.panel.frame.origin time:3];
+        [pet dragToPoint:NSMakePoint(pet.panel.frame.origin.x-70,pet.panel.frame.origin.y) time:3.1];
+        [pet endDragAtTime:3.11];
+        if(!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion && (!pet.skipping || !pet.interacting))exit(20);
+        [pet setSuspended:YES];if(pet.skipping || pet.interacting)exit(20);
+        if(!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion && NSScreen.screens.count){
+            pet.roaming=NO;[pet setSuspended:NO];[pet summon:nil];[pet skip:nil];
+            double deadline=[NSDate timeIntervalSinceReferenceDate]+9;
+            NSPoint initial=pet.panel.frame.origin;NSUInteger peakRipples=0;
+            while(pet.interacting && [NSDate timeIntervalSinceReferenceDate]<deadline){
+                [NSRunLoop.mainRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:.025]];
+                peakRipples=MAX(peakRipples,pet.effects.rippleCount);
+            }
+            if(pet.interacting || !peakRipples || fabs(initial.x-pet.panel.frame.origin.x)<30 ||
+               ![pet.effects.message hasPrefix:@"漂了 "]) {NSLog(@"Live skipping failed: %@ ripples=%lu",pet.effects.message,(unsigned long)peakRipples);exit(20);}
+            NSView *liveBubble=pet.effects.bubblePanel.contentView;
+            NSBitmapImageRep *livePNG=[liveBubble bitmapImageRepForCachingDisplayInRect:liveBubble.bounds];
+            [liveBubble cacheDisplayInRect:liveBubble.bounds toBitmapImageRep:livePNG];
+            NSString *livePath=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"pet-skipping-bubble.png"];
+            if(![[livePNG representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:livePath atomically:YES])exit(20);
+            NSLog(@"Live timer skipping, visible ripples, settling and completion speech verified: %@",pet.effects.message);
+            [pet setSuspended:YES];if(pet.effects.message || pet.effects.rippleCount)exit(20);
+        }
+        pet.skippingEnabled=NO;pet.skipLimit=7;pet.speechEnabled=NO;pet.casualSpeech=YES;
+        PebblePetController *restored=[[PebblePetController alloc] initWithDefaults:defaults];
+        if(restored.skippingEnabled || restored.speechEnabled || !restored.casualSpeech || restored.skipLimit!=7)exit(20);
+        [restored invalidate];
+        PebblePetEffects *effects=[PebblePetEffects new];
+        if(![effects showMessage:@"提醒展示接口" priority:PebblePetMessageReminder duration:5] ||
+           [effects showMessage:@"闲聊" priority:PebblePetMessageAmbient duration:5] || ![effects.message isEqual:@"提醒展示接口"])exit(20);
+        NSScreen *screen=NSScreen.screens.firstObject;
+        NSRect visible=screen?screen.visibleFrame:NSMakeRect(0,0,1440,900);
+        NSRect anchor=NSMakeRect(NSMidX(visible)-80,NSMinY(visible)+100,160,140);
+        [effects updateAtTime:CACurrentMediaTime() anchor:anchor visible:visible];
+        if(!effects.bubblePanel.isVisible || !effects.bubblePanel.ignoresMouseEvents || effects.bubblePanel.canBecomeKeyWindow ||
+            !NSContainsRect(visible,effects.bubblePanel.frame))exit(20);
+        NSView *bubble=effects.bubblePanel.contentView;
+        NSBitmapImageRep *bubblePNG=[bubble bitmapImageRepForCachingDisplayInRect:bubble.bounds];
+        [bubble cacheDisplayInRect:bubble.bounds toBitmapImageRep:bubblePNG];
+        NSString *bubblePath=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"pet-bubble-verification.png"];
+        if(![[bubblePNG representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:bubblePath atomically:YES])exit(20);
+        for(NSUInteger i=0;i<10;i++)[effects addRippleAt:NSMakePoint(NSMidX(visible),NSMinY(visible)+40) color:NSColor.systemTealColor];
+        NSUInteger expectedRipples=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion?0:6;
+        if(effects.rippleCount!=expectedRipples)exit(20);
+        for(NSDictionary *entry in [effects valueForKey:@"ripples"]){
+            NSPanel *panel=entry[@"panel"];
+            if(panel.opaque || !panel.ignoresMouseEvents || !panel.isVisible || panel.canBecomeKeyWindow)exit(20);
+        }
+        if(expectedRipples){
+            [effects updateAtTime:CACurrentMediaTime()+.25 anchor:anchor visible:visible];
+            NSPanel *ringPanel=[effects valueForKey:@"ripples"][0][@"panel"];
+            NSView *ring=ringPanel.contentView;
+            NSBitmapImageRep *rep=[ring bitmapImageRepForCachingDisplayInRect:ring.bounds];
+            [ring cacheDisplayInRect:ring.bounds toBitmapImageRep:rep];BOOL painted=NO;
+            for(NSInteger y=0;y<rep.pixelsHigh;y++)for(NSInteger x=0;x<rep.pixelsWide;x++)if([rep colorAtX:x y:y].alphaComponent>.02)painted=YES;
+            if(!painted)exit(20);
+        }
+        [effects updateAtTime:CACurrentMediaTime()+40 anchor:anchor visible:visible];
+        if(effects.message || effects.bubblePanel.isVisible || effects.rippleCount)exit(20);
+        [effects showMessage:@"测试关闭" priority:PebblePetMessageInteraction duration:5];effects.speechEnabled=NO;
+        if(effects.message || [effects showMessage:@"不得显示" priority:PebblePetMessageReminder duration:5])exit(20);
+        [effects clear];
+        BOOL oldPreview=self.settingsPreview;NSInteger oldPass=self.shotPassNumber;
+        self.settingsPreview=YES;self.shotPassNumber=2;[self buildSettings];
+        self.settingsPreview=oldPreview;self.shotPassNumber=oldPass;
+        if(self.panes.count!=5 || ![self.sectionButtons[PetPaneIndex].title isEqual:@"桌宠"] ||
+           ![self.petSwitch isDescendantOf:self.panes[PetPaneIndex]] || [self.petSwitch isDescendantOf:self.panes[GeneralPaneIndex]] ||
+           ![self.sectionButtons[PassPaneIndex].title isEqual:@"石头证"] || ![self.sectionButtons[AboutPaneIndex].title isEqual:@"关于"])exit(20);
+        [self showPaneAtIndex:PetPaneIndex];if(self.selectedSettingsPane!=PetPaneIndex)exit(20);
+        NSLog(@"Pet tab routing, horizontal gesture skipping, preferences, speech priority/bounds/expiry/disable and ripple teardown verified.");
         pet.sizeIndex=2;pet.roaming=NO;
         NSView *view=pet.panel.contentView;
         NSBitmapImageRep *drawing=[view bitmapImageRepForCachingDisplayInRect:view.bounds];

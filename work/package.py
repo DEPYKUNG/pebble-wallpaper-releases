@@ -135,7 +135,7 @@ run('clang', '-arch', 'arm64', '-arch', 'x86_64', '-mmacosx-version-min=13.0',
     '-framework', 'CoreGraphics', '-framework', 'QuartzCore', '-framework', 'UniformTypeIdentifiers', '-I', str(generated),
     *sparkle_flags, str(work / 'Pebble.m'),
     *(str(path) for path in sorted(work.glob('PebbleApp*.m'))),
-    str(work / 'PebbleMenuIcon.m'), str(work / 'PebblePet.m'), str(work / 'PebblePetPhysics.m'), str(work / 'PebbleState.m'), str(work / 'PebbleWallpaperPolicy.m'), str(work / 'PebbleSettingsSurface.m'), str(work / 'PebbleChangelogView.m'), '-o', str(binary))
+    str(work / 'PebbleMenuIcon.m'), str(work / 'PebblePet.m'), str(work / 'PebblePetEffects.m'), str(work / 'PebblePetPhysics.m'), str(work / 'PebbleState.m'), str(work / 'PebbleWallpaperPolicy.m'), str(work / 'PebbleSettingsSurface.m'), str(work / 'PebbleChangelogView.m'), '-o', str(binary))
 run('codesign', '--force', '--sign', '-', str(app))
 run('codesign', '--verify', '--strict', '--deep', str(app))
 run('lipo', str(binary), '-verify_arch', 'arm64', 'x86_64')

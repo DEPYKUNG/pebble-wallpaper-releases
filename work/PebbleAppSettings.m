@@ -39,7 +39,7 @@
     sidebar.translatesAutoresizingMaskIntoConstraints = NO;
 
     self.sectionButtons = [NSMutableArray array];
-    NSArray *sections = @[@[@"通用", @"settings"], @[@"收藏", @"heart"], @[@"石头证", @"id-badge"], @[@"关于", @"info"]];
+    NSArray *sections = @[@[@"通用", @"settings"], @[@"桌宠", @"smile"], @[@"收藏", @"heart"], @[@"石头证", @"id-badge"], @[@"关于", @"info"]];
     NSStackView *list = [NSStackView stackViewWithViews:@[]];
     list.orientation = NSUserInterfaceLayoutOrientationVertical;
     list.alignment = NSLayoutAttributeLeading;
@@ -66,7 +66,7 @@
     }];
     [sidebar addSubview:list];
 
-    self.panes = @[[self generalPane], [NSView new], [self passPane], [self aboutPane]];
+    self.panes = @[[self generalPane], [self petPane], [NSView new], [self passPane], [self aboutPane]];
     NSView *body = [NSView new];
     body.translatesAutoresizingMaskIntoConstraints = NO;
     self.settingsBody = body;
@@ -90,7 +90,7 @@
     ]];
 
     // Remembers where the user left it, which a settings window is expected to do.
-    if (!self.settingsPreview && !self.shotPath) [window setFrameAutosaveName:@"PebbleSettingsWindow"];
+    if (!self.settingsPreview && !self.shotPath && !self.testPreviewPath && !self.petPreview) [window setFrameAutosaveName:@"PebbleSettingsWindow"];
     if (NSIsEmptyRect(window.frame) || !window.frameAutosaveName.length) [window center];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(settingsWillClose:)
                  name:NSWindowWillCloseNotification object:window];
@@ -247,7 +247,7 @@
     ]];
     return [self paneWithCards:@[[self backgroundPicker],
         [self settingsGroup:@"鹅卵石" containing:stone],
-        [self settingsGroup:@"旋转与倾斜" containing:motion], [self petSettingsGroup]]];
+        [self settingsGroup:@"旋转与倾斜" containing:motion]]];
 }
 
 // The number is the seed, so the card is literally generated from its own

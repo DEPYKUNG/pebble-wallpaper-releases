@@ -1,10 +1,15 @@
 #import <AppKit/AppKit.h>
+#import "PebblePetEffects.h"
 
 @interface PebblePetController : NSObject
 @property (nonatomic, readonly) NSPanel *panel;
 @property (nonatomic, readonly) BOOL dragging;
 @property (nonatomic, readonly) BOOL interacting;
 @property (nonatomic) BOOL roaming;
+@property (nonatomic) BOOL skippingEnabled,speechEnabled,casualSpeech;
+@property (nonatomic) NSInteger skipLimit;
+@property (nonatomic, readonly) BOOL skipping;
+@property (nonatomic, readonly) PebblePetEffects *effects;
 @property (nonatomic) NSInteger sizeIndex;
 @property (nonatomic, copy) void (^syncStone)(void);
 @property (nonatomic, copy) void (^dismissPet)(void);
@@ -17,6 +22,9 @@
 - (void)refreshScreens;
 - (void)summon:(id)sender;
 - (void)greet:(id)sender;
+- (void)skip:(id)sender;
+- (void)say:(id)sender;
+- (BOOL)showMessage:(NSString *)message priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration;
 - (void)invalidate;
 // Pointer samples are explicit so the real gesture path can be regression-tested.
 - (void)beginDragAtPoint:(NSPoint)point time:(NSTimeInterval)time;

@@ -25,6 +25,15 @@ static const CGFloat PetSizes[]={112,156,204};
 @property NSTimeInterval lastSample,lastTick,nextWander,celebrateUntil;
 @property NSPoint throwVelocity;
 @property PebblePetBody body;
+@property PebblePetSkip skipState;
+@property (nonatomic, readwrite) PebblePetEffects *effects;
+@property NSColor *stoneColor;
+@property BOOL skipEnding;
+@property NSUInteger finishedSkips;
+@property NSTimeInterval nextSpeech,impactUntil;
+- (void)startSkipping:(NSPoint)velocity;
+- (void)cancelPlay;
+- (NSRect)effectAnchor;
 @property CGFloat angle,stretch;
 - (void)tick:(NSTimer *)timer;
 - (void)beginDrag;
@@ -80,10 +89,18 @@ static const CGFloat PetSizes[]={112,156,204};
 @end
 
 @implementation PebblePetController
-- (BOOL)interacting {return self.dragging || self.menuOpen;}
+- (BOOL)interacting {return self.dragging || self.menuOpen || self.skipState.active || self.skipEnding;}
+- (BOOL)skipping {return self.skipState.active;}
 - (instancetype)initWithDefaults:(NSUserDefaults *)defaults {
     if (!(self=[super init])) return nil;
     _defaults=defaults;_roaming=![defaults boolForKey:@"DesktopPetQuiet"];
+    _skippingEnabled=![defaults boolForKey:@"DesktopPetSkippingDisabled"];
+    _speechEnabled=![defaults boolForKey:@"DesktopPetSpeechDisabled"];
+    _casualSpeech=[defaults boolForKey:@"DesktopPetCasualSpeech"];
+    NSInteger savedLimit=[defaults integerForKey:@"DesktopPetSkipLimit"];
+    _skipLimit=(savedLimit==3 || savedLimit==7)?savedLimit:5;
+    _effects=[PebblePetEffects new];_effects.speechEnabled=_speechEnabled;
+    _nextSpeech=CACurrentMediaTime()+45;
     _sizeIndex=[defaults objectForKey:@"DesktopPetSize"]?MAX(0,MIN(2,[defaults integerForKey:@"DesktopPetSize"])):1;
     CGFloat size=PetSizes[_sizeIndex];NSSize windowSize=NSMakeSize(size+48,size+52);
     NSRect frame=PebblePetRestoreFrame([defaults objectForKey:PetPlacementKey],NSScreen.screens,windowSize);
@@ -123,6 +140,13 @@ static const CGFloat PetSizes[]={112,156,204};
     self.bitmap=[[NSBitmapImageRep alloc] initWithCGImage:cropped];
     self.stoneImage=[[NSImage alloc] initWithCGImage:cropped size:NSMakeSize(CGImageGetWidth(cropped)/2.0,CGImageGetHeight(cropped)/2.0)];
     CGImageRelease(cropped);
+    double red=0,green=0,blue=0,count=0;
+    for(NSInteger y=0;y<self.bitmap.pixelsHigh;y+=MAX(1,self.bitmap.pixelsHigh/10))
+        for(NSInteger x=0;x<self.bitmap.pixelsWide;x+=MAX(1,self.bitmap.pixelsWide/10)){
+            NSColor *c=[[self.bitmap colorAtX:x y:y] colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+            if(c.alphaComponent>.8 && c.redComponent+c.greenComponent+c.blueComponent>.3 && c.redComponent+c.greenComponent+c.blueComponent<2.7){red+=c.redComponent;green+=c.greenComponent;blue+=c.blueComponent;count++;}
+        }
+    self.stoneColor=count?[NSColor colorWithSRGBRed:red/count green:green/count blue:blue/count alpha:1]:NSColor.secondaryLabelColor;
     self.petView.needsDisplay=YES;
     [self setSuspended:self.suspended];return YES;
 }
@@ -131,7 +155,58 @@ static const CGFloat PetSizes[]={112,156,204};
     self.nextWander=CACurrentMediaTime()+8;
     if(self.interactionEnded)self.interactionEnded();
 }
+- (void)setSkippingEnabled:(BOOL)enabled {
+    _skippingEnabled=enabled;[self.defaults setBool:!enabled forKey:@"DesktopPetSkippingDisabled"];
+    if(!enabled){[self cancelPlay];self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,NO};}
+    if(self.interactionEnded)self.interactionEnded();
+}
+- (void)setSkipLimit:(NSInteger)limit {
+    _skipLimit=(limit==3 || limit==7)?limit:5;
+    [self.defaults setInteger:_skipLimit forKey:@"DesktopPetSkipLimit"];
+    if(self.interactionEnded)self.interactionEnded();
+}
+- (void)setSpeechEnabled:(BOOL)enabled {
+    _speechEnabled=enabled;self.effects.speechEnabled=enabled;
+    [self.defaults setBool:!enabled forKey:@"DesktopPetSpeechDisabled"];
+    if(self.interactionEnded)self.interactionEnded();
+}
+- (void)setCasualSpeech:(BOOL)enabled {
+    _casualSpeech=enabled;self.nextSpeech=CACurrentMediaTime()+45;
+    [self.defaults setBool:enabled forKey:@"DesktopPetCasualSpeech"];
+    if(self.interactionEnded)self.interactionEnded();
+}
+- (NSRect)effectAnchor {return NSOffsetRect(self.artRect,NSMinX(self.panel.frame),NSMinY(self.panel.frame));}
+- (void)cancelPlay {
+    PebblePetSkip state=self.skipState;state.active=NO;self.skipState=state;
+    self.skipEnding=NO;self.finishedSkips=0;[self.effects clear];
+}
+- (BOOL)showMessage:(NSString *)message priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration {
+    if(self.suspended || self.invalidated || !self.stoneImage)return NO;
+    BOOL accepted=[self.effects showMessage:message priority:priority duration:duration];
+    [self.effects updateAtTime:CACurrentMediaTime() anchor:self.effectAnchor visible:(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame];
+    return accepted;
+}
+- (void)say:(id)sender {
+    NSArray *words=@[@"在呢。",@"慢一点，也没关系。",@"今天也稳稳当当。",@"先抛一颗石头，再往前走。"];
+    [self showMessage:words[arc4random_uniform((uint32_t)words.count)] priority:PebblePetMessageInteraction duration:5];
+}
+- (void)startSkipping:(NSPoint)velocity {
+    [self cancelPlay];
+    NSRect visible=(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame;
+    self.skipState=PebblePetBeginSkip((PebblePetBody){self.panel.frame.origin,velocity,NO},visible,self.panel.frame.size,self.skipLimit);
+    self.body=self.skipState.body;self.nextWander=CACurrentMediaTime()+15;
+}
+- (void)skip:(id)sender {
+    if(!self.skippingEnabled || self.suspended || !self.stoneImage)return;
+    if(NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion){
+        [self showMessage:@"减少动态效果已开启，先轻轻歇一会儿。" priority:PebblePetMessageInteraction duration:5];return;
+    }
+    NSRect visible=(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame;
+    double direction=NSMidX(self.panel.frame)>NSMidX(visible)?-1:1;
+    [self startSkipping:NSMakePoint(direction*780,0)];
+}
 - (void)setSizeIndex:(NSInteger)index {
+    [self cancelPlay];
     _sizeIndex=MAX(0,MIN(2,index));[self.defaults setInteger:_sizeIndex forKey:@"DesktopPetSize"];
     NSRect frame=self.panel.frame;CGFloat center=NSMidX(frame);
     frame.size=NSMakeSize(PetSizes[_sizeIndex]+48,PetSizes[_sizeIndex]+52);frame.origin.x=center-frame.size.width/2;
@@ -142,11 +217,15 @@ static const CGFloat PetSizes[]={112,156,204};
 }
 - (void)setSuspended:(BOOL)suspended {
     _suspended=suspended;[self.timer invalidate];self.timer=nil;
-    if (suspended) {self.dragging=NO;self.menuOpen=NO;self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,NO};}
+    if (suspended) {[self cancelPlay];self.dragging=NO;self.menuOpen=NO;self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,NO};}
     if (suspended || self.invalidated || !self.stoneImage) {[self.panel orderOut:nil];return;}
     self.lastTick=CACurrentMediaTime();self.nextWander=self.lastTick+8;
     __weak typeof(self) weakSelf=self;
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion||NSProcessInfo.processInfo.lowPowerModeEnabled;
+    if(NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion && (self.skipState.active || self.skipEnding)){
+        [self cancelPlay];NSPoint point=self.panel.frame.origin;point.y=NSMinY((self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame);
+        [self.panel setFrameOrigin:point];self.body=(PebblePetBody){point,NSZeroPoint,YES};
+    }
     self.timer=[NSTimer timerWithTimeInterval:reduced?.1:1.0/30 repeats:YES block:^(NSTimer *timer){[weakSelf tick:timer];}];
     self.timer.tolerance=.006;[NSRunLoop.mainRunLoop addTimer:self.timer forMode:NSRunLoopCommonModes];
     [self.panel orderFrontRegardless];[self tick:nil];
@@ -168,27 +247,48 @@ static const CGFloat PetSizes[]={112,156,204};
     double now=CACurrentMediaTime(),dt=MIN(.05,MAX(0,now-self.lastTick));self.lastTick=now;
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion||NSProcessInfo.processInfo.lowPowerModeEnabled;
     NSRect visible=(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame;
-    if (!self.interacting) {
+    if(!self.dragging && !self.menuOpen) {
+        BOOL wasResting=self.body.resting;
         PebblePetBody body=self.body;
-        if (body.resting && self.roaming && !reduced && now>self.nextWander) {
-            double direction=NSMidX(self.panel.frame)>NSMidX(visible)?-1:1;
-            body.velocity=NSMakePoint(direction*(45+arc4random_uniform(45)),150);body.resting=NO;
-            self.nextWander=now+10+arc4random_uniform(10);
+        if(self.skipState.active) {
+            NSUInteger previous=self.skipState.bounces;
+            self.skipState=PebblePetAdvanceSkip(self.skipState,visible,self.panel.frame.size,dt);
+            body=self.skipState.body;
+            if(self.skipState.bounces>previous) {
+                self.impactUntil=now+.11;
+                [self.effects addRippleAt:NSMakePoint(body.position.x+NSWidth(self.panel.frame)/2,self.skipState.waterline+26) color:self.stoneColor];
+            }
+            if(!self.skipState.active){self.skipEnding=YES;self.finishedSkips=self.skipState.bounces;}
+        } else {
+            if(body.resting && self.roaming && !self.skipEnding && !reduced && now>self.nextWander) {
+                double direction=NSMidX(self.panel.frame)>NSMidX(visible)?-1:1;
+                body.velocity=NSMakePoint(direction*(45+arc4random_uniform(45)),150);body.resting=NO;
+                self.nextWander=now+10+arc4random_uniform(10);
+            }
+            if(!body.resting)body=PebblePetAdvance(body,visible,self.panel.frame.size,dt);
         }
-        if (!body.resting) {
-            BOOL wasResting=body.resting;body=PebblePetAdvance(body,visible,self.panel.frame.size,dt);
-            [self.panel setFrameOrigin:body.position];self.body=body;
-            if (!wasResting && body.resting) [self savePlacement];
+        [self.panel setFrameOrigin:body.position];self.body=body;
+        if(!wasResting && body.resting)[self savePlacement];
+        if(body.resting && self.skipEnding) {
+            NSUInteger count=self.finishedSkips;self.skipEnding=NO;[self savePlacement];
+            [self showMessage:count?[NSString stringWithFormat:@"漂了 %lu 下，落稳啦。",(unsigned long)count]:@"换个方向，再漂一次。" priority:PebblePetMessageInteraction duration:5];
+            if(self.interactionEnded)self.interactionEnded();
         }
-        CGFloat desiredAngle=body.resting?(reduced?0:sin(now*1.3)*1.2):MAX(-12,MIN(12,-body.velocity.x*.05));
+        if(body.resting && self.casualSpeech && self.speechEnabled && now>self.nextSpeech && !NSProcessInfo.processInfo.lowPowerModeEnabled) {
+            [self showMessage:@"忙完这一小步，记得松松肩。" priority:PebblePetMessageAmbient duration:5];self.nextSpeech=now+75;
+        }
+        CGFloat desiredAngle=self.skipState.active?MAX(-18,MIN(18,-body.velocity.x*.02)):
+            (body.resting?(reduced?0:sin(now*1.3)*1.2):MAX(-12,MIN(12,-body.velocity.x*.05)));
         self.angle+=(desiredAngle-self.angle)*MIN(1,dt*10);
-        self.stretch=reduced?1:1+sin(now*2.1)*.009;
+        self.stretch=reduced?1:(now<self.impactUntil?.91:1+sin(now*2.1)*.009);
     }
     self.panel.ignoresMouseEvents=!self.dragging && ![self containsStoneAtScreenPoint:NSEvent.mouseLocation];
-    if (!reduced || !self.body.resting || self.celebrateUntil>now) self.petView.needsDisplay=YES;
+    [self.effects updateAtTime:now anchor:self.effectAnchor visible:visible];
+    if(!reduced || !self.body.resting || self.celebrateUntil>now)self.petView.needsDisplay=YES;
 }
 - (void)beginDrag {[self beginDragAtPoint:NSEvent.mouseLocation time:CACurrentMediaTime()];}
 - (void)beginDragAtPoint:(NSPoint)point time:(NSTimeInterval)now {
+    [self cancelPlay];
     self.dragging=YES;self.moved=NO;self.downMouse=self.lastMouse=point;
     self.downOrigin=self.panel.frame.origin;self.lastSample=now;self.throwVelocity=NSZeroPoint;
     self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,NO};self.stretch=1.035;
@@ -210,15 +310,21 @@ static const CGFloat PetSizes[]={112,156,204};
     self.dragging=NO;
     NSPoint velocity=now-self.lastSample>.12?NSZeroPoint:self.throwVelocity;
     self.body=(PebblePetBody){self.panel.frame.origin,velocity,NO};self.stretch=1;
-    if (!self.moved) [self greet:nil];else if(self.syncStone) self.syncStone();
+    if(!self.moved)[self greet:nil];
+    else {
+        if(self.skippingEnabled && !NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion && PebblePetShouldSkip(velocity))[self startSkipping:velocity];
+        if(self.syncStone)self.syncStone();
+    }
     [self savePlacement];if (self.interactionEnded) self.interactionEnded();
 }
 - (void)greet:(id)sender {
+    [self cancelPlay];[self say:nil];
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
     self.body=(PebblePetBody){self.panel.frame.origin,reduced?NSZeroPoint:NSMakePoint(0,360),reduced};
     self.celebrateUntil=CACurrentMediaTime()+.7;self.nextWander=CACurrentMediaTime()+12;self.petView.needsDisplay=YES;
 }
 - (void)summon:(id)sender {
+    [self cancelPlay];
     NSScreen *screen=NSScreen.mainScreen ?: NSScreen.screens.firstObject;
     NSRect frame=self.panel.frame,visible=screen.visibleFrame;
     frame.origin=NSMakePoint(NSMaxX(visible)-NSWidth(frame)-28,NSMinY(visible));
@@ -227,6 +333,7 @@ static const CGFloat PetSizes[]={112,156,204};
     if (!self.suspended && self.stoneImage) [self.panel orderFrontRegardless];
 }
 - (void)refreshScreens {
+    [self cancelPlay];
     if (!NSScreen.screens.count) {[self setSuspended:YES];return;}
     NSScreen *screen=self.panel.screen;
     if (!screen) {[self summon:nil];return;}
@@ -246,6 +353,9 @@ static const CGFloat PetSizes[]={112,156,204};
     NSArray *titles=@[@"打个招呼",@"同步当前石头",@"收回右下角",@"自由活动"];
     SEL actions[]={@selector(greet:),@selector(syncFromMenu:),@selector(summon:),@selector(toggleQuiet:)};
     for (NSUInteger i=0;i<titles.count;i++) {NSMenuItem *item=[menu addItemWithTitle:titles[i] action:actions[i] keyEquivalent:@""];item.target=self;if(i==3)item.state=self.roaming;}
+    NSMenuItem *skip=[menu addItemWithTitle:@"打个水漂" action:@selector(skip:) keyEquivalent:@""];skip.target=self;skip.enabled=self.skippingEnabled;
+    NSMenuItem *say=[menu addItemWithTitle:@"说句话" action:@selector(say:) keyEquivalent:@""];say.target=self;say.enabled=self.speechEnabled;
+    menu.autoenablesItems=NO;
     NSMenuItem *size=[menu addItemWithTitle:@"桌宠大小" action:nil keyEquivalent:@""];size.submenu=[NSMenu new];
     NSArray *sizes=@[@"小",@"中",@"大"];
     for (NSInteger i=0;i<3;i++){NSMenuItem *item=[size.submenu addItemWithTitle:sizes[i] action:@selector(selectSize:) keyEquivalent:@""];item.target=self;item.tag=i;item.state=i==self.sizeIndex;}
@@ -255,8 +365,8 @@ static const CGFloat PetSizes[]={112,156,204};
     return menu;
 }
 - (void)invalidate {
-    [self savePlacement];self.invalidated=YES;[self.timer invalidate];self.timer=nil;[self.panel orderOut:nil];
+    [self savePlacement];[self cancelPlay];self.invalidated=YES;[self.timer invalidate];self.timer=nil;[self.panel close];
     self.syncStone=nil;self.dismissPet=nil;self.openSettings=nil;self.interactionEnded=nil;
 }
-- (void)dealloc {[self.timer invalidate];[self.panel orderOut:nil];}
+- (void)dealloc {[self.effects clear];[self.timer invalidate];[self.panel orderOut:nil];}
 @end
