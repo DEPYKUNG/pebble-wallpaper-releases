@@ -120,13 +120,14 @@ for original, updated in (
     ('R.detail===0&&z.current?.()', '!(window.pebbleConfig||{}).staticPass&&R.detail===0&&z.current?.()'),
     ('y.uniform2f(W.pose,x.yaw,x.pitch)', 'y.uniform2f(W.pose,x.yaw,pebblePitch(x.pitch))'),
     ('},Gg))', '},Gg/(window.pebbleConfig?.rotationRate ?? 1)))'),
-    ('F.yaw=0,rl(),k()', 'F.yaw=0,rl(),j&&updateDesktopTone(R),k()'),
+    ('F.yaw=0,rl(),k()', 'rl(),j&&updateDesktopTone(R),k()'),
     # Expose a redraw so the face switch repaints the stone in place. Without
     # it a paused wallpaper would keep the old frame until the next pebble.
     ('j=Mg(R,ql),rl(),k()',
      'j=Mg(R,ql),rl(),updateDesktopTone(R),'
      'window.pebbleRedraw=()=>{rl();updateDesktopTone(R)},'
-     'window.pebbleExport=(width,height)=>renderPebbleWallpaper(F,ql,width,height),k()'),
+     'window.pebbleExport=(width,height)=>renderPebbleWallpaper(F,ql,width,height),'
+     'window.pebbleSnapshot=()=>snapshotPebble(F),k()'),
     ('F.colors=D[Cg(F.seed,D.length)]',
      'F.colors=D[Cg(F.seed,D.length)],applyPebbleConfig(F),rememberPebble(F,saved)'),
     # A stone is entirely determined by its seed, so pinning the seed is what
@@ -253,6 +254,8 @@ function applyPebbleConfig(pebble) {
         pebble.texture = window.pebbleRestoring.texture;
         pebble.colors = window.pebbleRestoring.colors;
     }
+    pebble.yaw = window.pebbleRestoring?.yaw ?? 0;
+    pebble.pitch = window.pebbleRestoring?.pitch ?? pebble.pitch;
     // Exposed so the build self-check can prove the choices are honoured.
     window.pebbleTexture = pebble.texture;
     window.pebblePalette = pebbleFamilies[family] ? family : null;
@@ -288,7 +291,10 @@ function renderPebbleWallpaper(stone, atlas, width, height) {
 }
 
 function validPebble(stone) {
-    return stone && Number.isInteger(stone.seed) && stone.seed >= 0 && stone.seed < 1e6
+    return stone && (stone.schemaVersion === undefined || stone.schemaVersion === 1)
+        && (stone.yaw === undefined || Number.isFinite(stone.yaw) && Math.abs(stone.yaw) <= 2*Math.PI)
+        && (stone.pitch === undefined || Number.isFinite(stone.pitch) && Math.abs(stone.pitch) <= Math.PI/2)
+        && Number.isInteger(stone.seed) && stone.seed >= 0 && stone.seed < 1e6
         && pebbleTextures.includes(stone.texture) && Array.isArray(stone.colors)
         && stone.colors.length === 3 && stone.colors.every(color => /^#[0-9a-f]{6}$/i.test(color))
         && ['', 'on', 'off'].includes(stone.faces);
@@ -298,13 +304,17 @@ function pebbleFaces() {
     return window.pebbleHistory?.current?.faces ?? window.pebbleConfig.faces;
 }
 
+function snapshotPebble(pebble, faces = pebbleFaces() ?? '') {
+    return {schemaVersion: 1, seed: pebble.seed, texture: pebble.texture,
+        colors: [...pebble.colors], faces, yaw: pebble.yaw, pitch: pebble.pitch};
+}
+
 function rememberPebble(pebble, saved) {
     const restored = window.pebbleRestoring;
     window.pebbleRestoring = null;
     const history = window.pebbleHistory;
     if (!history) return;
-    const current = {seed: pebble.seed, texture: pebble.texture, colors: pebble.colors,
-        faces: restored?.faces ?? window.pebbleConfig.faces ?? ''};
+    const current = snapshotPebble(pebble, restored?.faces ?? window.pebbleConfig.faces ?? '');
     if (saved !== history.current) history.previous = history.current || null;
     history.current = current;
     window.webkit.messageHandlers.pebbleHistory.postMessage(history);
@@ -491,7 +501,7 @@ elif (contents / 'Frameworks/Sparkle.framework').exists():
 run('clang', '-arch', 'arm64', '-arch', 'x86_64', '-mmacosx-version-min=13.0',
     '-fobjc-arc', '-fblocks', '-O2', '-framework', 'AppKit', '-framework', 'WebKit',
     '-framework', 'CoreGraphics', '-framework', 'UniformTypeIdentifiers', '-I', str(generated),
-    *sparkle_flags, str(work / 'Pebble.m'), '-o', str(binary))
+    *sparkle_flags, str(work / 'Pebble.m'), str(work / 'PebbleState.m'), '-o', str(binary))
 run('codesign', '--force', '--sign', '-', str(app))
 run('codesign', '--verify', '--strict', '--deep', str(app))
 run('lipo', str(binary), '-verify_arch', 'arm64', 'x86_64')

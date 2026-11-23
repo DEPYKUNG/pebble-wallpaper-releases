@@ -5,6 +5,7 @@
 // textures the renderer actually knows how to draw.
 #import "PebbleTextures.h"
 #import "PebbleColors.h"
+#import "PebbleState.h"
 #if __has_include(<Sparkle/Sparkle.h>)
 #import <Sparkle/Sparkle.h>
 #endif
@@ -213,8 +214,14 @@ static NSImage *PebbleMenuBarIcon(void) {
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     self.paused = [defaults boolForKey:PausedPreference];
-    self.pebbleHistory = [[defaults dictionaryForKey:PebbleHistoryKey] mutableCopy] ?: [NSMutableDictionary dictionary];
-    self.favorites = [[defaults arrayForKey:PebbleFavoritesKey] mutableCopy] ?: [NSMutableArray array];
+    id oldHistory = [defaults objectForKey:PebbleHistoryKey], oldFavorites = [defaults objectForKey:PebbleFavoritesKey];
+    self.pebbleHistory = [PebbleNormalizeHistories(oldHistory, self.stoneTextures) mutableCopy];
+    self.favorites = [PebbleNormalizeFavorites(oldFavorites, self.stoneTextures) mutableCopy];
+    if (!self.testPreviewPath && !self.shotPath &&
+        ((oldHistory && ![oldHistory isEqual:self.pebbleHistory]) || (oldFavorites && ![oldFavorites isEqual:self.favorites])) &&
+        ![defaults objectForKey:@"PebbleDataBackupBeforeSchema1"]) {
+        [defaults setObject:@{@"history":oldHistory ?: @{}, @"favorites":oldFavorites ?: @[]} forKey:@"PebbleDataBackupBeforeSchema1"];
+    }
     self.tiltDegrees = MAX(-TiltLimit, MIN(TiltLimit, [defaults integerForKey:TiltPreference]));
     self.rotationRate = 1;
     double savedRate = [defaults doubleForKey:SpeedPreference];
@@ -669,11 +676,7 @@ static NSImage *PebbleMenuBarIcon(void) {
         NSNumber *display = window.screen.deviceDescription[@"NSScreenNumber"];
         if (!self.testPreviewPath && message.frameInfo.mainFrame && display &&
             self.desktopWindows[display] == window && [message.body isKindOfClass:NSDictionary.class]) {
-            NSMutableDictionary *history = [NSMutableDictionary dictionary];
-            for (NSString *key in @[@"current", @"previous"]) {
-                NSDictionary *stone = message.body[key];
-                if ([stone isKindOfClass:NSDictionary.class]) history[key] = stone;
-            }
+            NSDictionary *history = PebbleNormalizeHistory(message.body, self.stoneTextures);
             self.pebbleHistory[display.stringValue] = history;
             [NSUserDefaults.standardUserDefaults setObject:self.pebbleHistory forKey:PebbleHistoryKey];
         }
@@ -1420,7 +1423,14 @@ static const NSInteger PassAuthorSeed = 13612;
     return toggle;
 }
 
+- (NSArray<NSString *> *)stoneTextures {
+    NSMutableArray *textures = [NSMutableArray array];
+    for (NSUInteger index = 0; index < PebbleTextureCount; index++) [textures addObject:@(PebbleTextureKeys[index])];
+    return textures;
+}
+
 - (NSString *)jsonForPebble:(NSDictionary *)object {
+    if (![NSJSONSerialization isValidJSONObject:object]) return @"null";
     NSData *data = [NSJSONSerialization dataWithJSONObject:object options:0 error:nil];
     return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] ?: @"null";
 }
@@ -1549,11 +1559,15 @@ static const NSInteger PassAuthorSeed = 13612;
 - (void)saveFavorite:(id)sender {
     NSNumber *display = NSScreen.screens.firstObject.deviceDescription[@"NSScreenNumber"];
     WKWebView *web = display ? (WKWebView *)self.desktopWindows[display].contentView : nil;
-    [web evaluateJavaScript:@"window.pebbleHistory?.current" completionHandler:^(id stone, NSError *error) {
-        if ([stone isKindOfClass:NSDictionary.class] && ![self.favorites containsObject:stone]) {
-            [self.favorites addObject:stone];
-            [self persistFavorites];
+    [web evaluateJavaScript:@"window.pebbleSnapshot()" completionHandler:^(id value, NSError *error) {
+        NSDictionary *stone = error ? nil : PebbleNormalizeStone(value, self.stoneTextures);
+        if (!stone) { [self showWallpaperError:@"石头尚未加载完成，请稍后再收藏。"]; return; }
+        for (NSUInteger index = 0; index < self.favorites.count; index++) {
+            if ([PebbleStoneIdentity(self.favorites[index]) isEqual:PebbleStoneIdentity(stone)]) {
+                self.favorites[index] = stone; [self persistFavorites]; return;
+            }
         }
+        [self.favorites addObject:stone]; [self persistFavorites];
     }];
 }
 
@@ -1880,9 +1894,14 @@ static const NSInteger PassAuthorSeed = 13612;
          "window.pebbleThrow(); window.pebbleRestore(JSON.parse(saved));"
          "const restoredMatches = canvas.toDataURL() === savedFrame"
          " && JSON.stringify(window.pebbleHistory.current) === saved;"
+         "const pose=JSON.parse(saved);pose.yaw=1.2;pose.pitch=.3;window.pebbleRestore(pose);"
+         "const poseRestored=JSON.stringify(window.pebbleSnapshot())===JSON.stringify(pose) && canvas.toDataURL()!==savedFrame;"
+         "const legacy=JSON.parse(saved);delete legacy.schemaVersion;delete legacy.yaw;delete legacy.pitch;"
+         "window.pebbleRestore(legacy);const migrated=window.pebbleSnapshot();"
+         "const legacyRestored=migrated.schemaVersion===1 && migrated.yaw===0 && migrated.pitch===-.12;"
          "window.pebbleHistory = null;"
          "return {seedPinned: stampA === stampB, seedReleased: looseA !== looseB,"
-         " previousMatches, restoredMatches,"
+         " previousMatches, restoredMatches, poseRestored, legacyRestored,"
          " smartPause: smartPaused === undefined && resumed === fast && manuallyPaused === undefined,"
          " tiltApplied: tiltedLeft !== tiltedRight && looseB === restoredTiltFrame,"
          " speedApplied: normal > 0 && slow === normal * 2 && fast === normal / 2 && paused === undefined,"
