@@ -247,7 +247,7 @@
     ]];
     return [self paneWithCards:@[[self backgroundPicker],
         [self settingsGroup:@"鹅卵石" containing:stone],
-        [self settingsGroup:@"旋转与倾斜" containing:motion]]];
+        [self settingsGroup:@"旋转与倾斜" containing:motion], [self petSettingsGroup]]];
 }
 
 // The number is the seed, so the card is literally generated from its own

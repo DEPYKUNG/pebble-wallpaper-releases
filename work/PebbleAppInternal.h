@@ -9,6 +9,7 @@
 #import "PebbleTextures.h"
 #import "PebbleColors.h"
 #import "PebbleState.h"
+#import "PebblePet.h"
 #import "PebbleWallpaperPolicy.h"
 #import "PebbleSettingsSurface.h"
 #import "PebbleChangelogView.h"
@@ -144,6 +145,13 @@ NSImage *PebbleMenuBarIcon(void);
 @property (copy) NSString *testPreviewPath;
 @property (copy) NSString *shotPath;
 @property BOOL settingsPreview;
+@property BOOL petPreview,petPreviewDismissed;
+@property (strong) PebblePetController *pet;
+@property (strong) NSMenuItem *petEnabledItem,*petRoamingItem;
+@property (strong) NSSwitch *petSwitch,*petRoamSwitch;
+@property (strong) NSPopUpButton *petSizePicker;
+@property NSUInteger petGeneration;
+@property BOOL petSyncScheduled;
 @property NSInteger shotSection;
 @property NSInteger shotPassNumber;
 #if __has_include(<Sparkle/Sparkle.h>)
@@ -315,4 +323,19 @@ NSImage *PebbleMenuBarIcon(void);
 - (void)verifyUpdateCallbackContract;
 #endif
 - (void)verifyRenderer:(WKWebView *)web attempt:(NSUInteger)attempt;
+@end
+
+@interface PebbleApp (Pet)
+- (void)configurePetMenu:(NSMenu *)menu;
+- (void)showPetSettings:(id)sender;
+- (void)updatePetPresentation;
+- (void)syncPetStone;
+- (void)togglePet:(id)sender;
+- (void)togglePetRoaming:(id)sender;
+- (void)selectPetSize:(id)sender;
+- (void)summonPet:(id)sender;
+- (void)syncPetControls;
+- (NSView *)petSettingsGroup;
+- (void)verifyPetUpdateDeferral;
+- (void)verifyPetRenderer:(WKWebView *)web then:(void (^)(void))next;
 @end

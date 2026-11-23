@@ -48,6 +48,7 @@
     NSMenuItem *smart = [self addItem:@"智能暂停" action:@selector(toggleSmartPause:) toMenu:menu];
     smart.state = [NSUserDefaults.standardUserDefaults boolForKey:SmartPauseDisabledKey] ? NSControlStateValueOff : NSControlStateValueOn;
     [self addMotionMenusTo:menu];
+    [self configurePetMenu:menu];
     NSMenuItem *wallpaper = [menu addItemWithTitle:@"静态壁纸" action:nil keyEquivalent:@""];
     wallpaper.submenu = [[NSMenu alloc] initWithTitle:wallpaper.title];
     NSMenuItem *export = [wallpaper.submenu addItemWithTitle:@"导出 PNG" action:nil keyEquivalent:@""];
@@ -59,7 +60,7 @@
     settingsItem.keyEquivalent = @",";
     [menu addItem:NSMenuItem.separatorItem];
 #if __has_include(<Sparkle/Sparkle.h>)
-    if (!self.testPreviewPath && !self.shotPath && !self.settingsPreview) {
+    if (!self.testPreviewPath && !self.shotPath && !self.settingsPreview && !self.petPreview) {
         self.updaterController = [[SPUStandardUpdaterController alloc]
             initWithStartingUpdater:YES updaterDelegate:self userDriverDelegate:nil];
         NSMenuItem *updateItem = [menu addItemWithTitle:@"检查更新…"
@@ -103,11 +104,13 @@
     }
     if (!self.testPreviewPath) [self observeSmartPause];
     [self refreshDisplays:nil];
-    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(refreshDisplays:)
+    [self updatePetPresentation];
+    if (!self.testPreviewPath) [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(refreshDisplays:)
                  name:NSApplicationDidChangeScreenParametersNotification object:NSApp];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification {
+    [self.pet invalidate];
     [self syncNativeDesktopBackground:YES];
 }
 
@@ -129,6 +132,7 @@ int main(int argc, const char *argv[]) {
             delegate.shotSection = atoi(argv[3]);
             if (argc == 5) delegate.shotPassNumber = atoi(argv[4]);
         }
+        if ([NSProcessInfo.processInfo.arguments containsObject:@"--preview-pet"]) delegate.petPreview = YES;
         if ([NSProcessInfo.processInfo.arguments containsObject:@"--preview-settings"]) delegate.settingsPreview = YES;
         application.delegate = delegate;
         [application run];

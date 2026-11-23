@@ -162,6 +162,7 @@
 }
 
 - (void)storeChoice:(NSString *)choice forKey:(NSString *)key {
+    [self syncPetStone];
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     if (choice) {
         [defaults setObject:choice forKey:key];

@@ -36,7 +36,7 @@
 
 // Relaunching while the interactive window is open would discard it mid-use.
 - (void)installPendingUpdateIfIdle {
-    if (!self.pendingInstall || self.installationRequested || self.settings.isVisible) return;
+    if (!self.pendingInstall || self.installationRequested || self.settings.isVisible || self.pet.interacting) return;
     self.installationRequested = YES;
     void (^install)(void) = self.pendingInstall;
     install();
