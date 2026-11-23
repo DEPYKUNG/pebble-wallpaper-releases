@@ -1,0 +1,39 @@
+
+    html[data-pebble-background] body { background-color: var(--wallpaper-background, #eeeee7); }
+    #desktop-question, #pass-card, #pass-number, #pass-stone { display: none; }
+    .pebble-pass body {
+        --card-width: min(100vw, 79.518dvh);
+        background: radial-gradient(ellipse at 50% 47%, rgba(var(--pass-tone, 124, 146, 135), .33),
+                    rgba(var(--pass-tone, 124, 146, 135), .12) 36%, transparent 68%),
+                    linear-gradient(#262e2e, #141d20);
+        overflow: hidden;
+    }
+    .pebble-pass #pass-card {
+        display: block; position: absolute; height: 100%; width: var(--card-width);
+        left: 50%; transform: translateX(-50%); object-fit: contain;
+    }
+    .pebble-pass #root { position: absolute; pointer-events: none; }
+    .pebble-pass button {
+        position: absolute; display: block; inset: auto; width: auto; height: auto;
+        top: 54.7%; left: 50%; transform: translate(-50%, -50%);
+    }
+    .pebble-pass canvas {
+        width: calc(var(--card-width) * .583); height: calc(var(--card-width) * .583);
+        visibility: hidden;
+    }
+    .pebble-pass #pass-stone {
+        display: block; position: absolute; width: calc(var(--card-width) * .583);
+        height: auto; top: 54.7%; left: 50%; transform: translate(-50%, -50%);
+        filter: drop-shadow(0 7px 8px rgba(0, 0, 0, .45));
+    }
+    .pebble-pass #pass-number {
+        display: block; position: absolute; color: #e5e8df; top: 78.31%; left: 50%;
+        transform: translate(-50%, -50%); font: 400 clamp(14px, 4.1dvh, 24px)/1 Menlo, monospace;
+    }
+    .pebble-desktop #desktop-question {
+        display: block; position: fixed; z-index: 1; pointer-events: none;
+        right: clamp(24px, 3.7vw, 56px); top: 52px; width: min(226px, 30vw);
+        aspect-ratio: 226 / 169; background-color: var(--pebble-tone, transparent);
+        mask-size: contain; mask-repeat: no-repeat;
+        -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat;
+    }

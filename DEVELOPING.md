@@ -50,3 +50,10 @@ python3 work/test_wallpaper_policy.py
 
 
 应用入口与生命周期保留在 `work/Pebble.m`。`PebbleAppMenu.m` 管理菜单与选项，`PebbleAppRendering.m` 管理 WebKit/显示器/暂停，`PebbleAppWallpaper.m` 管理收藏、导出与系统壁纸，`PebbleAppSettings.m` 管理设置布局，`PebbleAppPass.m` 管理石头证，`PebbleAppUpdates.m` 管理更新，`PebbleAppVerification.m` 管理现有回归检查。共享属性与类型化方法契约集中在内部头 `PebbleAppInternal.h`；这些 category 共用一个应用实例，未改变状态所有权。后续新增功能应放在所属模块，不继续堆进入口文件。
+
+
+P2 渲染构建：`work/renderer_build.py` 负责离线组装；自有 JavaScript、样式和页面片段位于 `work/renderer/bridge.js`、`wallpaper.css`、`body.html`，颜色表位于 `colors.json`。`patches.json` 是按名称标识的上游适配补丁，每个锚点必须且只能出现一次；`upstream.json` 固定 `original.js` / `original.html` 的 SHA256，并声明原生调用所需的 JS API。任何文件指纹、补丁、材质字典或 API 不匹配都会拒绝构建，不会继续打包不完整的渲染页面。
+
+更新上游时，应先保留并检查差异，逐条适配命名补丁，核查材质字典和 `bridge.js` 使用的上游接口（如 `Mg`）；审查完成后再更新指纹。不能只刷新 SHA256 绕过校验。运行 `python3 work/test_renderer_build.py`、既有状态/壁纸策略/日志测试和完整 `package.py --app-only` 回归后才能发布。当前仍使用固定版本的上游压缩代码，适配层将这个依赖集中在一个有明确校验的边界内，不承诺任意上游版本可直接替换。
+
+本次重构前后生成的 `wallpaper.html`、`PebbleTextures.h`、`PebbleColors.h` 已逐字节比对一致。兼容性测试另覆盖上游漂移、锚点缺失/重复、重复补丁名、材质字典部分匹配、原生 API 丢失、不安全脚本及模板缺失。
