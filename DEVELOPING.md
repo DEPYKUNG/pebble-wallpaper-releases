@@ -22,7 +22,7 @@ python3 -m venv .venv
 
 前者验证设置窗口打开时推迟安装，关闭后继续；后者验证直接安装。测试以磁盘 Build 变更和新应用进程启动作为通过条件。运行期间会短暂显示测试壁纸/设置窗口。
 
-菜单栏图标绘制：`work/Pebble.m` 的 `PebbleMenuBarIcon()`；渲染恢复：同文件的 `recoverRenderer:error:`；更新生命周期：`installPendingUpdateIfIdle` 及 Sparkle delegate。
+菜单栏图标绘制：`work/PebbleMenuIcon.m` 的 `PebbleMenuBarIcon()`；渲染恢复：`work/PebbleAppRendering.m` 的 `recoverRenderer:error:`；更新生命周期：`work/PebbleAppUpdates.m` 的 `installPendingUpdateIfIdle` 及 Sparkle delegate。
 
 
 P1 回归检查（原生数据与壁纸策略测试不修改系统桌面）：
@@ -47,3 +47,6 @@ python3 work/test_wallpaper_policy.py
 关于页更新日志：维护 `work/changelog.json`，每次发布新增版本、整数 Build、ISO 日期和简短摘要，并保留既有记录。`package.py` 会验证当前版本/Build 有对应日志，按整数 Build 倒序打包不晚于当前构建的最近三条到 `Resources/changelog.json`；不会在启动时联网抓取日志。「查看全部」沿用 GitHub Releases 历史页。隔离更新测试构建允许没有对应正式版日志。
 
 运行 `python3 work/test_changelog.py` 验证版本排序、三条上限、当前版本匹配及异常记录拒绝。布局可用 `--shoot <输出路径> 3 --preview-frosted --preview-light` 或 `--preview-dark` 检查；`--preview-settings --preview-about` 可直接打开关于页实屏预览。应用本身再次限制展示三条，长摘要随窗口宽度换行。
+
+
+应用入口与生命周期保留在 `work/Pebble.m`。`PebbleAppMenu.m` 管理菜单与选项，`PebbleAppRendering.m` 管理 WebKit/显示器/暂停，`PebbleAppWallpaper.m` 管理收藏、导出与系统壁纸，`PebbleAppSettings.m` 管理设置布局，`PebbleAppPass.m` 管理石头证，`PebbleAppUpdates.m` 管理更新，`PebbleAppVerification.m` 管理现有回归检查。共享属性与类型化方法契约集中在内部头 `PebbleAppInternal.h`；这些 category 共用一个应用实例，未改变状态所有权。后续新增功能应放在所属模块，不继续堆进入口文件。
