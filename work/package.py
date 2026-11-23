@@ -13,6 +13,7 @@ import dmgbuild
 from PIL import Image
 
 from installer_art import build_icon, make_background
+from changelog import recent_releases
 
 
 def run(*command, timeout=90):
@@ -76,6 +77,12 @@ app = staging / 'Pebble Wallpaper.app'
 contents = app / 'Contents'
 resources = contents / 'Resources'
 resources.mkdir(parents=True, exist_ok=True)
+try:
+    notes = recent_releases(json.loads((work / 'changelog.json').read_text()), args.version, args.build,
+                            local_test=args.local_update_test)
+except ValueError as error:
+    parser.error(str(error))
+(resources / 'changelog.json').write_text(json.dumps(notes, ensure_ascii=False, indent=2) + '\n')
 # Solid native wallpapers used for the system menu bar tint.
 for preset, rgb in {'nord0': (46, 52, 64), 'nord3': (76, 86, 106)}.items():
     Image.new('RGB', (64, 64), rgb).save(resources / f'desktop-base-{preset}.png')
@@ -501,7 +508,7 @@ elif (contents / 'Frameworks/Sparkle.framework').exists():
 run('clang', '-arch', 'arm64', '-arch', 'x86_64', '-mmacosx-version-min=13.0',
     '-fobjc-arc', '-fblocks', '-O2', '-framework', 'AppKit', '-framework', 'WebKit',
     '-framework', 'CoreGraphics', '-framework', 'UniformTypeIdentifiers', '-I', str(generated),
-    *sparkle_flags, str(work / 'Pebble.m'), str(work / 'PebbleState.m'), str(work / 'PebbleWallpaperPolicy.m'), str(work / 'PebbleSettingsSurface.m'), '-o', str(binary))
+    *sparkle_flags, str(work / 'Pebble.m'), str(work / 'PebbleState.m'), str(work / 'PebbleWallpaperPolicy.m'), str(work / 'PebbleSettingsSurface.m'), str(work / 'PebbleChangelogView.m'), '-o', str(binary))
 run('codesign', '--force', '--sign', '-', str(app))
 run('codesign', '--verify', '--strict', '--deep', str(app))
 run('lipo', str(binary), '-verify_arch', 'arm64', 'x86_64')

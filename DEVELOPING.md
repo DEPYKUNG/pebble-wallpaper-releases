@@ -42,3 +42,8 @@ python3 work/test_wallpaper_policy.py
 设置背景由 `work/PebbleSettingsSurface.m` 管理。使用 macOS 26 SDK 构建时，通过可用性判断和弱链接，在 macOS 26 或更新系统使用 `NSGlassEffectView` Regular；macOS 13–15 或旧 SDK 构建使用 `NSVisualEffectView` 毛玻璃。单一材质承托整个设置窗口，alpha 保持 1，设置卡片以 90% 不透明度保证可读性。「减少透明度」开启时，材质内容下的实色衬底显示，并动态响应系统设置变化。
 
 仅设置预览（不接管系统壁纸或启动更新检查）：`"build/Pebble Wallpaper.app/Contents/MacOS/Pebble" --preview-settings`。可追加 `--preview-light`、`--preview-dark`、`--preview-frosted` 或 `--preview-solid` 检查不同样式；这些覆盖只在预览/截图模式生效。`--shoot` 的视图缓存截图用于布局检查，玻璃折射和背景模糊仍需实屏验证。
+
+
+关于页更新日志：维护 `work/changelog.json`，每次发布新增版本、整数 Build、ISO 日期和简短摘要，并保留既有记录。`package.py` 会验证当前版本/Build 有对应日志，按整数 Build 倒序打包不晚于当前构建的最近三条到 `Resources/changelog.json`；不会在启动时联网抓取日志。「查看全部」沿用 GitHub Releases 历史页。隔离更新测试构建允许没有对应正式版日志。
+
+运行 `python3 work/test_changelog.py` 验证版本排序、三条上限、当前版本匹配及异常记录拒绝。布局可用 `--shoot <输出路径> 3 --preview-frosted --preview-light` 或 `--preview-dark` 检查；`--preview-settings --preview-about` 可直接打开关于页实屏预览。应用本身再次限制展示三条，长摘要随窗口宽度换行。
