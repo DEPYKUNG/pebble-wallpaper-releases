@@ -37,8 +37,9 @@ static const NSUInteger WallpaperSizeCount = sizeof(WallpaperSizes) / sizeof(Wal
 
 static NSString *const StaticWallpaperPathKey = @"StaticWallpaperPath";
 static NSString *const PebbleHistoryKey = @"DesktopPebbleHistory";
-static const NSInteger FavoritesPaneIndex = 1;
-static const NSInteger PassPaneIndex = 2;
+typedef NS_ENUM(NSInteger, PebbleSettingsPane) {
+    GeneralPaneIndex=0,PetPaneIndex=1,FavoritesPaneIndex=2,PassPaneIndex=3,AboutPaneIndex=4
+};
 static NSString *const PebbleFavoritesKey = @"FavoritePebbles";
 static NSString *const SmartPauseDisabledKey = @"SmartPauseDisabled";
 static NSString *const PebbleToneMessage = @"pebbleTone";
@@ -149,7 +150,9 @@ NSImage *PebbleMenuBarIcon(void);
 @property (strong) PebblePetController *pet;
 @property (strong) NSMenuItem *petEnabledItem,*petRoamingItem;
 @property (strong) NSSwitch *petSwitch,*petRoamSwitch;
-@property (strong) NSPopUpButton *petSizePicker;
+@property (strong) NSPopUpButton *petSizePicker,*petSkipLimitPicker;
+@property (strong) NSSwitch *petSkippingSwitch,*petSpeechSwitch,*petChatSwitch;
+@property (strong) NSButton *petSkipButton,*petSayButton;
 @property NSUInteger petGeneration;
 @property BOOL petSyncScheduled;
 @property NSInteger shotSection;
@@ -336,6 +339,11 @@ NSImage *PebbleMenuBarIcon(void);
 - (void)summonPet:(id)sender;
 - (void)syncPetControls;
 - (NSView *)petSettingsGroup;
+- (NSView *)petPane;
+- (void)togglePetOption:(id)sender;
+- (void)selectPetSkipLimit:(id)sender;
+- (void)skipPet:(id)sender;
+- (void)sayPet:(id)sender;
 - (void)verifyPetUpdateDeferral;
 - (void)verifyPetRenderer:(WKWebView *)web then:(void (^)(void))next;
 @end

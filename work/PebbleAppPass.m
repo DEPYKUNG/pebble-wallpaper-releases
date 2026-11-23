@@ -3,7 +3,7 @@
 @implementation PebbleApp (Pass)
 
 - (NSInteger)passNumber {
-    if (self.shotPath && self.shotPassNumber > 0) return self.shotPassNumber;
+    if ((self.shotPath || self.testPreviewPath) && self.shotPassNumber > 0) return self.shotPassNumber;
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     NSNumber *issued = [defaults objectForKey:PassPreference];
     if ([issued isKindOfClass:NSNumber.class] && issued.integerValue < PassLegacyFloor) {

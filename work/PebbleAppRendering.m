@@ -298,6 +298,8 @@
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
+    if(item.action==@selector(skipPet:))return self.pet.stoneImage && self.pet.skippingEnabled;
+    if(item.action==@selector(sayPet:))return self.pet.stoneImage && self.pet.speechEnabled;
     if(item.action==@selector(syncPetStone) || item.action==@selector(togglePetRoaming:)) return self.pet!=nil;
     if (item.action == @selector(previousPebble:)) {
         for (NSNumber *display in PebbleTargetDisplays(self.connectedDisplayIdentifiers, item.representedObject, YES))

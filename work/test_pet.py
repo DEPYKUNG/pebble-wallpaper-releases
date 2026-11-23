@@ -35,6 +35,31 @@ int main(){@autoreleasepool{
  for(NSScreen *screen in NSScreen.screens){NSRect a=PebblePetConstrainFrame(NSMakeRect(NSMinX(screen.visibleFrame)+55,NSMinY(screen.visibleFrame),200,210),screen.visibleFrame);
    NSDictionary *saved=PebblePetPlacement(a,screen);NSRect b=PebblePetRestoreFrame(saved,NSScreen.screens,size);CHECK(fabs(a.origin.x-b.origin.x)<.01);CHECK(a.origin.y==b.origin.y);}
  CHECK(NSEqualSizes(PebblePetRestoreFrame(nil,@[],size).size,size));
+
+ CHECK(PebblePetShouldSkip(NSMakePoint(600,100)));CHECK(PebblePetShouldSkip(NSMakePoint(-600,-100)));
+ CHECK(!PebblePetShouldSkip(NSMakePoint(200,0)));CHECK(!PebblePetShouldSkip(NSMakePoint(600,500)));
+ CHECK(!PebblePetShouldSkip(NSMakePoint(NAN,0)));
+ NSRect water=NSMakeRect(-3200,30,6400,1600);
+ for(NSNumber *limit in @[@3,@5,@7]){
+   PebblePetSkip skip=PebblePetBeginSkip((PebblePetBody){NSMakePoint(-2600,330),NSMakePoint(900,0),NO},water,size,limit.unsignedIntegerValue);
+   NSUInteger last=0;double firstX=skip.body.position.x;
+   for(int i=0;i<1000 && skip.active;i++){
+     skip=PebblePetAdvanceSkip(skip,water,size,1.0/60);
+     CHECK(NSContainsRect(water,(NSRect){skip.body.position,size}));
+     CHECK(skip.bounces>=last&&skip.bounces<=limit.unsignedIntegerValue);last=skip.bounces;
+     CHECK(skip.body.position.y>=skip.waterline-.01);CHECK(skip.body.position.y<skip.waterline+60);
+   }
+   CHECK(!skip.active && skip.bounces==limit.unsignedIntegerValue);CHECK(skip.body.position.x-firstX>200);
+   body=skip.body;for(int i=0;i<1000;i++)body=PebblePetAdvance(body,water,size,.033);
+   CHECK(body.resting&&body.position.y==NSMinY(water));
+ }
+ PebblePetSkip edge=PebblePetBeginSkip((PebblePetBody){NSMakePoint(NSMaxX(visible)-size.width,100),NSMakePoint(900,0),NO},visible,size,5);
+ edge=PebblePetAdvanceSkip(edge,visible,size,.05);CHECK(!edge.active&&edge.bounces==0);
+ for(NSValue *point in @[[NSValue valueWithPoint:NSMakePoint(-1920,30)],[NSValue valueWithPoint:NSMakePoint(-220,870)]]){
+   NSRect bubble=PebblePetBubbleFrame((NSRect){point.pointValue,size},visible,NSMakeSize(240,100));
+   CHECK(NSContainsRect(visible,bubble));
+ }
+ NSLog(@"Skipping: 3/5/7 diminishing hops, gesture gate, virtual waterline, edges, settling and bubble bounds verified.");
  NSLog(@"Pet gravity, bounded throws, rebound/settle, negative display coordinates, malformed placement, restore and 10000 random bounds verified.");
 }return 0;}
 '''
