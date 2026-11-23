@@ -260,7 +260,10 @@
 }
 
 - (void)verifyStaticPauseStep:(NSUInteger)step web:(WKWebView *)web then:(void (^)(void))next {
-    if (step == 3) { next(); return; }
+    if (step == 4) {
+        [web evaluateJavaScript:@"delete document.hidden" completionHandler:nil];next(); return;
+    }
+    [web evaluateJavaScript:[NSString stringWithFormat:@"Object.defineProperty(document, 'hidden', {configurable:true,value:%@});",step==3?@"true":@"false"] completionHandler:nil];
     self.staticWallpaperMode = step == 0;
     self.paused = step == 1;
     [self forEachRenderer:^(WKWebView *view) { [self applyPauseTo:view]; }];
@@ -277,7 +280,7 @@
          "reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,hidden:document.hidden};"
         arguments:@{} inFrame:nil inContentWorld:WKContentWorld.pageWorld
         completionHandler:^(NSDictionary *result, NSError *error) {
-        BOOL stopped = step < 2 || [result[@"reduced"] boolValue] || [result[@"hidden"] boolValue];
+        BOOL stopped = step < 2 || step==3 || [result[@"reduced"] boolValue];
         BOOL ticksStopped = [result[@"before"] isEqual:result[@"after"]];
         if (error || !result || [result[@"static"] boolValue] != (step == 0) ||
             [result[@"manual"] boolValue] != (step == 1) || [result[@"smart"] boolValue] ||
@@ -411,7 +414,7 @@
             [self resetPendingUpdate];
             if (self.pendingInstall || self.installationRequested) exit(11);
             NSLog(@"Update callback ordering, duplicate suppression and failed-cycle cleanup verified.");
-            [NSApp terminate:nil];
+            [self verifyPetUpdateDeferral];
         });
     });
 }
@@ -474,6 +477,7 @@
                 NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] initWithData:desktopPreview.TIFFRepresentation];
                 NSData *png = [bitmap representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
                 if (![png writeToFile:self.testPreviewPath atomically:YES]) exit(4);
+                [self verifyPetRenderer:web then:^{
                 [self verifyChoicesReachPage:web then:^{
                     [self verifyBackgroundPicker:web then:^{
                         NSLog(@"Offline rendering, desktop button, matching text colors and "
@@ -502,6 +506,7 @@
                             [self verifyPhoneWallpaperSizes:web];
                         }];
                     }];
+                }];
                 }];
             }];
         }];

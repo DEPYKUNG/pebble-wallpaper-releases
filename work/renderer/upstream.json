@@ -9,6 +9,8 @@
     "pebbleSnapshot",
     "pebbleThrow",
     "pebbleRestore",
-    "pebblePrevious"
+    "pebblePrevious",
+    "pebblePetFrame",
+    "pebbleReleasePet"
   ]
 }

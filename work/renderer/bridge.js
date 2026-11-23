@@ -214,3 +214,65 @@ function updateDesktopTone(canvas) {
     document.documentElement.style.setProperty('--pebble-tone', `rgb(${tone.join(', ')})`);
     window.webkit.messageHandlers.pebbleTone.postMessage(window.pebbleTone);
 }
+
+// One task may request several sprites before WebKit processes context-loss events.
+// Reuse two scratch surfaces within that task, then release them at its boundary.
+let petScratch = null;
+function releasePebblePet() {
+    if (!petScratch) return;
+    const scratch = petScratch;
+    petScratch = null;
+    clearTimeout(scratch.releaseTimer);
+    for (const canvas of [scratch.probe, scratch.layer]) {
+        canvas.getContext('webgl')?.getExtension('WEBGL_lose_context')?.loseContext();
+        canvas.width = canvas.height = 1;
+    }
+    scratch.readback.width = scratch.readback.height = 1;
+}
+window.pebbleReleasePet = releasePebblePet;
+
+// Find a broad view rather than assuming yaw=0 faces the camera. This preserves
+// the original shape, including stones that are naturally long and narrow.
+function renderPebblePet(stone, atlas) {
+    if (!petScratch) {
+        const probe = document.createElement('canvas');
+        probe.width = probe.height = 96;
+        const readback = document.createElement('canvas');
+        readback.width = readback.height = 96;
+        const layer = document.createElement('canvas');
+        layer.width = layer.height = 640;
+        petScratch = {probe, readback, layer, releaseTimer: null};
+    }
+    const scratch = petScratch;
+    clearTimeout(scratch.releaseTimer);
+    const {probe, readback, layer} = scratch;
+    const context = readback.getContext('2d', {willReadFrequently: true});
+    let probeRenderer = null, renderer = null;
+    let best = {yaw: 0, pitch: -.12}, score = -1;
+    try {
+        probeRenderer = Mg(probe, atlas);
+        // Stay near the front: the painted eyes live on the front hemisphere.
+        for (const yaw of [0, -.3, .3]) {
+            for (const pitch of [-.12, 0, .2]) {
+                probeRenderer.draw({...stone, yaw, pitch});
+                context.clearRect(0, 0, 96, 96);
+                context.drawImage(probe, 0, 0);
+                const pixels = context.getImageData(0, 0, 96, 96).data;
+                let coverage = 0;
+                for (let i = 3; i < pixels.length; i += 4) coverage += pixels[i] / 255;
+                const candidate = coverage * (1 - Math.abs(yaw) * .008);
+                if (candidate > score) {score = candidate; best = {yaw, pitch};}
+            }
+        }
+        probeRenderer.dispose(); probeRenderer = null;
+        renderer = Mg(layer, atlas);
+        renderer.draw({...stone, ...best});
+        return layer.toDataURL('image/png').split(',')[1];
+    } finally {
+        probeRenderer?.dispose();
+        renderer?.dispose();
+        scratch.releaseTimer = setTimeout(() => {
+            if (petScratch === scratch) releasePebblePet();
+        }, 0);
+    }
+}

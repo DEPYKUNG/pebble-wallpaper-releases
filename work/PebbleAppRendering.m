@@ -101,6 +101,7 @@
             self.pebbleHistory[display.stringValue] = history;
             [NSUserDefaults.standardUserDefaults setObject:self.pebbleHistory forKey:PebbleHistoryKey];
             [self prepareRendererForReload:message.webView];
+            [self syncPetStone];
         }
         return;
     }
@@ -178,6 +179,8 @@
     // Hidden WebViews can stay alive for exports; visibility alone is not a pause.
     [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
     [self rebuildRethrowMenu];
+    [self.pet refreshScreens];
+    [self updatePetPresentation];
 }
 
 #pragma mark - Settings window
@@ -211,7 +214,8 @@
 - (void)observeSmartPause {
     NSNotificationCenter *workspace = NSWorkspace.sharedWorkspace.notificationCenter;
     for (NSNotificationName name in @[NSWorkspaceScreensDidSleepNotification, NSWorkspaceScreensDidWakeNotification,
-                                       NSWorkspaceSessionDidResignActiveNotification, NSWorkspaceSessionDidBecomeActiveNotification]) {
+                                       NSWorkspaceSessionDidResignActiveNotification, NSWorkspaceSessionDidBecomeActiveNotification,
+                                       NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification]) {
         [workspace addObserver:self selector:@selector(smartPauseChanged:) name:name object:nil];
     }
     NSDistributedNotificationCenter *distributed = NSDistributedNotificationCenter.defaultCenter;
@@ -233,6 +237,7 @@
         if ([name isEqualToString:NSWorkspaceSessionDidResignActiveNotification]) self.sessionInactive = YES;
         if ([name isEqualToString:NSWorkspaceSessionDidBecomeActiveNotification]) self.sessionInactive = NO;
         [self syncRendererStartupScripts];
+        [self updatePetPresentation];
         [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
     });
 }
@@ -271,7 +276,7 @@
 
 - (void)rethrowDisplay:(NSNumber *)display {
     NSWindow *window = display ? self.desktopWindows[display] : nil;
-    if (!window.isVisible) return;
+    if (!window || (!window.isVisible && !self.petPreview)) return;
     [self performWallpaperScript:@"window.pebbleThrow()" inWeb:(WKWebView *)window.contentView reportErrors:YES completion:nil];
 }
 
@@ -293,6 +298,7 @@
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
+    if(item.action==@selector(syncPetStone) || item.action==@selector(togglePetRoaming:)) return self.pet!=nil;
     if (item.action == @selector(previousPebble:)) {
         for (NSNumber *display in PebbleTargetDisplays(self.connectedDisplayIdentifiers, item.representedObject, YES))
             if (self.desktopWindows[display].isVisible && self.pebbleHistory[display.stringValue][@"previous"]) return YES;
@@ -426,6 +432,7 @@
         [self.rendererConfigScript stringByAppendingString:@"window.pebbleRedraw?.();"]
         inWeb:web reportErrors:NO completion:nil];
     [self applyPauseTo:web];
+    if (web != self.passRenderer) [self syncPetStone];
     if (self.testPreviewPath && self.verificationReload) {
         void (^loaded)(WKWebView *) = self.verificationReload; self.verificationReload = nil; loaded(web); return;
     }

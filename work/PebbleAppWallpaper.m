@@ -12,7 +12,7 @@
 }
 
 - (BOOL)syncNativeDesktopBackground:(BOOL)restore explicitChange:(BOOL)explicitChange {
-    if (self.testPreviewPath || self.shotPath || self.settingsPreview) return YES;
+    if (self.testPreviewPath || self.shotPath || self.settingsPreview || self.petPreview) return YES;
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     NSString *staticPath = [defaults stringForKey:StaticWallpaperPathKey];
     if (staticPath && [NSFileManager.defaultManager fileExistsAtPath:staticPath]) return YES;
