@@ -6,6 +6,7 @@
 #import "PebbleTextures.h"
 #import "PebbleColors.h"
 #import "PebbleState.h"
+#import "PebbleWallpaperPolicy.h"
 #if __has_include(<Sparkle/Sparkle.h>)
 #import <Sparkle/Sparkle.h>
 #endif
@@ -695,58 +696,99 @@ static NSImage *PebbleMenuBarIcon(void) {
                                                 blue:(tone & 255) / 255.0 alpha:1];
 }
 
-// The system menu bar samples the native wallpaper underneath our desktop window.
+// These images must survive app replacement and moving the application bundle.
+- (NSURL *)wallpaperSupportDirectory {
+    return [[NSFileManager.defaultManager URLsForDirectory:NSApplicationSupportDirectory
+        inDomains:NSUserDomainMask].firstObject URLByAppendingPathComponent:@"Pebble Wallpaper" isDirectory:YES];
+}
+
 - (void)syncNativeDesktopBackground:(BOOL)restore {
-    if (self.testPreviewPath || self.shotPath) return;
+    [self syncNativeDesktopBackground:restore explicitChange:NO];
+}
 
-    NSString *staticPath = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
-    if (staticPath && [NSFileManager.defaultManager fileExistsAtPath:staticPath]) return;
-
-    NSString *preset = self.backgroundPreset;
-    NSURL *background = nil;
-    if (!restore && ([preset isEqualToString:@"nord0"] || [preset isEqualToString:@"nord3"])) {
-        background = [NSBundle.mainBundle URLForResource:[@"desktop-base-" stringByAppendingString:preset]
-                                           withExtension:@"png"];
-    }
-
+- (BOOL)syncNativeDesktopBackground:(BOOL)restore explicitChange:(BOOL)explicitChange {
+    if (self.testPreviewPath || self.shotPath) return YES;
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
-    NSMutableDictionary *originals = [[defaults dictionaryForKey:OriginalDesktopImagesKey] mutableCopy]
-        ?: [NSMutableDictionary dictionary];
+    NSString *staticPath = [defaults stringForKey:StaticWallpaperPathKey];
+    if (staticPath && [NSFileManager.defaultManager fileExistsAtPath:staticPath]) return YES;
+    NSURL *directory = [self.wallpaperSupportDirectory URLByAppendingPathComponent:@"Desktop Backgrounds" isDirectory:YES];
+    NSURL *staticDirectory = [self.wallpaperSupportDirectory URLByAppendingPathComponent:@"Static Wallpapers" isDirectory:YES];
+    NSMutableArray *ownedURLs = [NSMutableArray array];
+    NSURL *background = nil;
+    for (NSString *preset in @[@"nord0", @"nord3"]) {
+        NSString *name = [@"desktop-base-" stringByAppendingString:preset];
+        NSURL *bundled = [NSBundle.mainBundle URLForResource:name withExtension:@"png"];
+        NSURL *stable = [directory URLByAppendingPathComponent:[name stringByAppendingString:@".png"]];
+        if (bundled) [ownedURLs addObject:bundled];
+        [ownedURLs addObject:stable];
+        if (!restore && [self.backgroundPreset isEqual:preset]) {
+            NSError *error = nil;
+            NSData *image = [NSData dataWithContentsOfURL:bundled options:0 error:&error];
+            if (!image || ![NSFileManager.defaultManager createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:&error] ||
+                (![image isEqual:[NSData dataWithContentsOfURL:stable]] && ![image writeToURL:stable options:NSDataWritingAtomic error:&error])) {
+                NSLog(@"Could not prepare stable native wallpaper: %@", error); return NO;
+            }
+            background = stable;
+        }
+    }
+    NSMutableDictionary *originals = [[defaults dictionaryForKey:OriginalDesktopImagesKey] mutableCopy] ?: [NSMutableDictionary dictionary];
+    NSMutableDictionary *managedURLs = [[defaults dictionaryForKey:@"ManagedDesktopImageURLs"] mutableCopy] ?: [NSMutableDictionary dictionary];
+    NSMutableDictionary *blocked = [[defaults dictionaryForKey:@"NativeWallpaperUserOverrides"] mutableCopy] ?: [NSMutableDictionary dictionary];
     NSWorkspace *workspace = NSWorkspace.sharedWorkspace;
+    BOOL success = YES;
     for (NSScreen *screen in NSScreen.screens) {
         NSNumber *display = screen.deviceDescription[@"NSScreenNumber"];
         if (!display) continue;
         NSString *key = display.stringValue;
         NSURL *current = [workspace desktopImageURLForScreen:screen];
-        NSString *filename = current.lastPathComponent;
-        BOOL managed = [filename isEqualToString:@"desktop-base-nord0.png"] ||
-                       [filename isEqualToString:@"desktop-base-nord3.png"];
-        if (background) {
-            if ([current.path isEqualToString:background.path] || !current) continue;
-            if (!managed) {
-                NSDictionary *options = [workspace desktopImageOptionsForScreen:screen] ?: @{};
-                NSData *encodedOptions = [NSKeyedArchiver archivedDataWithRootObject:options
-                                                              requiringSecureCoding:YES error:nil];
-                originals[key] = @{@"url":current.absoluteString, @"options":encodedOptions ?: NSData.data};
-                [defaults setObject:originals forKey:OriginalDesktopImagesKey];
-            }
-            NSError *error = nil;
-            if (![workspace setDesktopImageURL:background forScreen:screen options:@{} error:&error]) {
-                NSLog(@"Could not synchronize wallpaper for display %@: %@", key, error.localizedDescription);
-            }
-        } else if (originals[key]) {
-            if (managed) {
-                NSDictionary *original = originals[key];
-                NSURL *url = [NSURL URLWithString:original[@"url"]];
-                NSSet *classes = [NSSet setWithArray:@[NSDictionary.class, NSString.class, NSNumber.class, NSColor.class]];
-                NSDictionary *options = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes
-                                                                           fromData:original[@"options"] error:nil] ?: @{};
-                if (!url || ![workspace setDesktopImageURL:url forScreen:screen options:options error:nil]) continue;
-            }
-            [originals removeObjectForKey:key];
+        id record = originals[key];
+        NSDictionary *original = [record isKindOfClass:NSDictionary.class] ? record : nil;
+        NSString *savedURL = [original[@"url"] isKindOfClass:NSString.class] ? original[@"url"] : nil;
+        NSURL *previous = savedURL ? [NSURL URLWithString:savedURL] : nil;
+        BOOL managed = PebbleWallpaperURLIsManaged(current, ownedURLs, managedURLs[key], staticDirectory);
+        PebbleWallpaperAction action = PebbleWallpaperPlan(current, background, managed, previous.isFileURL,
+            [blocked[key] isKindOfClass:NSNumber.class] && [blocked[key] boolValue], explicitChange);
+        if (action == PebbleWallpaperRespectUser) {
+            // A wallpaper chosen outside Pebble wins until the user picks a background here again.
+            [originals removeObjectForKey:key]; [managedURLs removeObjectForKey:key]; blocked[key] = @YES;
+            continue;
         }
+        if (explicitChange) [blocked removeObjectForKey:key];
+        if (action == PebbleWallpaperNothing) continue;
+        if (action == PebbleWallpaperCaptureAndInstall) {
+            NSDictionary *options = [workspace desktopImageOptionsForScreen:screen] ?: @{};
+            NSData *encoded = [NSKeyedArchiver archivedDataWithRootObject:options requiringSecureCoding:YES error:nil];
+            originals[key] = @{@"url":current.absoluteString, @"options":encoded ?: NSData.data};
+            // Save before handing control to the system so an interrupted install can recover.
+            [defaults setObject:originals forKey:OriginalDesktopImagesKey];
+        }
+        NSURL *target = action == PebbleWallpaperRestore ? previous : background;
+        NSDictionary *options = @{};
+        if (action == PebbleWallpaperRestore) {
+            NSData *data = [original[@"options"] isKindOfClass:NSData.class] ? original[@"options"] : nil;
+            if (data.length) {
+                NSSet *classes = [NSSet setWithArray:@[NSDictionary.class, NSString.class, NSNumber.class, NSColor.class]];
+                @try { options = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:nil] ?: @{}; }
+                @catch (NSException *exception) { NSLog(@"Ignoring invalid saved wallpaper options: %@", exception.name); }
+            }
+        }
+        NSError *error = nil;
+        if (!target || ![NSFileManager.defaultManager fileExistsAtPath:target.path] ||
+            ![workspace setDesktopImageURL:target forScreen:screen options:options error:&error]) {
+            if (action == PebbleWallpaperCaptureAndInstall) {
+                if (record) originals[key] = record; else [originals removeObjectForKey:key];
+            }
+            success = NO; NSLog(@"Native wallpaper change deferred for display %@: %@", key, error); continue;
+        }
+        if (action == PebbleWallpaperRestore) {
+            [originals removeObjectForKey:key]; [managedURLs removeObjectForKey:key]; [blocked removeObjectForKey:key];
+        } else managedURLs[key] = target.absoluteString;
     }
+    // Disconnected displays remain in these dictionaries until they can be restored.
     [defaults setObject:originals forKey:OriginalDesktopImagesKey];
+    [defaults setObject:managedURLs forKey:@"ManagedDesktopImageURLs"];
+    [defaults setObject:blocked forKey:@"NativeWallpaperUserOverrides"];
+    return success;
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification {
@@ -948,7 +990,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     NSUInteger index = (NSUInteger)sender.tag;
     if (index >= BackgroundCount) return;
     self.backgroundPreset = @(BackgroundKeys[index]);
-    [self syncNativeDesktopBackground:NO];
+    [self syncNativeDesktopBackground:NO explicitChange:YES];
     if (!self.testPreviewPath) {
         [NSUserDefaults.standardUserDefaults setObject:self.backgroundPreset forKey:BackgroundPreference];
     }
@@ -1503,14 +1545,34 @@ static const NSInteger PassAuthorSeed = 13612;
         }
 
         NSWorkspace *workspace = NSWorkspace.sharedWorkspace;
+        NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+        NSDictionary *savedOriginals = [defaults dictionaryForKey:OriginalDesktopImagesKey] ?: @{};
+        NSMutableDictionary *originals = [savedOriginals mutableCopy];
         NSMutableArray<void (^)(void)> *undo = [NSMutableArray array];
         for (NSScreen *screen in NSScreen.screens) {
             NSURL *previous = [workspace desktopImageURLForScreen:screen];
             NSDictionary *options = [workspace desktopImageOptionsForScreen:screen] ?: @{};
+            NSString *key = [screen.deviceDescription[@"NSScreenNumber"] stringValue];
+            NSMutableArray *owned = [NSMutableArray array];
+            for (NSString *preset in @[@"nord0", @"nord3"]) {
+                NSString *name = [@"desktop-base-" stringByAppendingString:preset];
+                NSURL *bundled = [NSBundle.mainBundle URLForResource:name withExtension:@"png"];
+                if (bundled) [owned addObject:bundled];
+                [owned addObject:[[self.wallpaperSupportDirectory URLByAppendingPathComponent:@"Desktop Backgrounds"]
+                    URLByAppendingPathComponent:[name stringByAppendingString:@".png"]]];
+            }
+            NSDictionary *managed = [defaults dictionaryForKey:@"ManagedDesktopImageURLs"] ?: @{};
+            BOOL wasManaged = PebbleWallpaperURLIsManaged(previous, owned, managed[key], directory);
+            if (previous && key && !wasManaged) {
+                NSData *encoded = [NSKeyedArchiver archivedDataWithRootObject:options requiringSecureCoding:YES error:nil];
+                originals[key] = @{@"url":previous.absoluteString, @"options":encoded ?: NSData.data};
+                [defaults setObject:originals forKey:OriginalDesktopImagesKey];
+            }
             if (![workspace setDesktopImageURL:url forScreen:screen
                                        options:@{NSWorkspaceDesktopImageScalingKey:@(NSImageScaleProportionallyUpOrDown),
                                                  NSWorkspaceDesktopImageAllowClippingKey:@YES} error:&error]) {
                 for (void (^restore)(void) in undo.reverseObjectEnumerator) restore();
+                [defaults setObject:savedOriginals forKey:OriginalDesktopImagesKey];
                 [self showWallpaperError:error.localizedDescription ?: @"macOS 无法设置这张壁纸。"];
                 return;
             }
