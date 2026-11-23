@@ -174,6 +174,8 @@ static NSImage *PebbleMenuBarIcon(void) {
 @property (strong) NSMutableDictionary<NSNumber *, NSWindow *> *desktopWindows;
 @property (strong) NSMutableDictionary<NSNumber *, NSPanel *> *desktopControls;
 @property (strong) NSMenu *rethrowMenu;
+@property (strong) NSMenu *previousMenu, *exportMenu;
+@property (strong) NSNumber *favoriteDisplay;
 @property (strong) NSWindow *settings;
 @property (strong) NSView *settingsBody;
 @property (strong) NSMutableArray<NSButton *> *sectionButtons;
@@ -248,7 +250,8 @@ static NSImage *PebbleMenuBarIcon(void) {
     NSMenuItem *rethrow = [menu addItemWithTitle:@"重新抛" action:nil keyEquivalent:@""];
     self.rethrowMenu = [[NSMenu alloc] initWithTitle:rethrow.title];
     rethrow.submenu = self.rethrowMenu;
-    [self addItem:@"上一颗" action:@selector(previousPebble:) toMenu:menu];
+    NSMenuItem *previous = [menu addItemWithTitle:@"上一颗" action:nil keyEquivalent:@""];
+    self.previousMenu = [[NSMenu alloc] initWithTitle:previous.title]; previous.submenu = self.previousMenu;
     [self addChoiceMenusTo:menu];
     self.pauseItem = [self addItem:@"旋转开关" action:@selector(togglePause:) toMenu:menu];
     // Reads as a switch now, so the tick means spinning rather than stopped. The
@@ -260,14 +263,8 @@ static NSImage *PebbleMenuBarIcon(void) {
     NSMenuItem *wallpaper = [menu addItemWithTitle:@"静态壁纸" action:nil keyEquivalent:@""];
     wallpaper.submenu = [[NSMenu alloc] initWithTitle:wallpaper.title];
     NSMenuItem *export = [wallpaper.submenu addItemWithTitle:@"导出 PNG" action:nil keyEquivalent:@""];
-    export.submenu = [[NSMenu alloc] initWithTitle:export.title];
-    for (NSUInteger index = 0; index < WallpaperSizeCount; index++) {
-        WallpaperExportSize size = WallpaperSizes[index];
-        NSString *title = [NSString stringWithFormat:@"%@（%lu × %lu）…", size.name,
-                           (unsigned long)size.width, (unsigned long)size.height];
-        [self addItem:title action:@selector(exportWallpaper:) toMenu:export.submenu].tag = index;
-    }
-    [self addItem:@"设为静态壁纸" action:@selector(setStaticWallpaper:) toMenu:wallpaper.submenu];
+    self.exportMenu = [[NSMenu alloc] initWithTitle:export.title]; export.submenu = self.exportMenu;
+    [self addItem:@"设为静态壁纸（主屏幕 → 所有屏幕）" action:@selector(setStaticWallpaper:) toMenu:wallpaper.submenu];
     [self addItem:@"恢复动态壁纸" action:@selector(resumeDynamicWallpaper:) toMenu:wallpaper.submenu];
     [self addItem:@"恢复壁纸显示" action:@selector(reloadRenderers:) toMenu:menu];
     NSMenuItem *settingsItem = [self addItem:@"设置…" action:@selector(showSettings:) toMenu:menu];
@@ -1492,21 +1489,42 @@ static const NSInteger PassAuthorSeed = 13612;
     [alert runModal];
 }
 
+- (NSData *)resizeStaticWallpaperPNG:(NSData *)png size:(WallpaperExportSize)size {
+    NSBitmapImageRep *source = png ? [NSBitmapImageRep imageRepWithData:png] : nil;
+    if (!source || source.pixelsWide != 3840 || source.pixelsHigh != 2160) return nil;
+    if (size.width == 3840 && size.height == 2160) return png;
+    NSBitmapImageRep *output = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+        pixelsWide:size.width pixelsHigh:size.height bitsPerSample:8 samplesPerPixel:4
+        hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
+    if (!output) return nil;
+    NSImage *image = [[NSImage alloc] initWithData:png]; image.size = NSMakeSize(3840, 2160);
+    [NSGraphicsContext saveGraphicsState];
+    NSGraphicsContext.currentContext = [NSGraphicsContext graphicsContextWithBitmapImageRep:output];
+    NSGraphicsContext.currentContext.imageInterpolation = NSImageInterpolationHigh;
+    [[source colorAtX:0 y:0] setFill]; NSRectFill(NSMakeRect(0, 0, size.width, size.height));
+    CGFloat square = MIN(size.width, size.height);
+    CGFloat centerY = size.height * (size.height > size.width ? .44 : .5);
+    [image drawInRect:NSMakeRect((size.width-square)/2, centerY-square/2, square, square)
+        fromRect:NSMakeRect(840, 0, 2160, 2160) operation:NSCompositingOperationSourceOver fraction:1];
+    [NSGraphicsContext restoreGraphicsState];
+    return [output representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
+}
+
 - (void)withWallpaperPNGForSize:(WallpaperExportSize)size completion:(void (^)(NSData *))completion {
-    NSString *path = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
-    NSData *saved = path && size.width == WallpaperSizes[0].width && size.height == WallpaperSizes[0].height
-        ? [NSData dataWithContentsOfFile:path] : nil;
-    if (saved) {
-        completion(saved);
-        return;
-    }
-    NSNumber *display = NSScreen.screens.firstObject.deviceDescription[@"NSScreenNumber"];
+    [self withWallpaperPNGForSize:size display:self.connectedDisplayIdentifiers.firstObject completion:completion];
+}
+
+- (void)withWallpaperPNGForSize:(WallpaperExportSize)size display:(NSNumber *)display completion:(void (^)(NSData *))completion {
     WKWebView *web = display ? (WKWebView *)self.desktopWindows[display].contentView : nil;
-    if (!web) {
-        [self showWallpaperError:@"当前没有可用的桌面画面。"];
+    if (!web) { [self showWallpaperError:@"所选屏幕已断开，请重新选择屏幕。"]; return; }
+    NSString *path = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
+    if (self.staticWallpaperMode && path) {
+        NSData *png = [self resizeStaticWallpaperPNG:[NSData dataWithContentsOfFile:path] size:size];
+        if (png) completion(png);
+        else [self showWallpaperError:@"保存的静态壁纸无法读取，请恢复动态壁纸后重新设置。"];
         return;
     }
-    NSString *script = [NSString stringWithFormat:@"window.pebbleExport?.(%lu,%lu)",
+    NSString *script = [NSString stringWithFormat:@"window.pebbleExport(%lu,%lu)",
                         (unsigned long)size.width, (unsigned long)size.height];
     [web evaluateJavaScript:script completionHandler:^(id result, NSError *error) {
         NSData *png = [self wallpaperPNGFromBase64:result size:size];
@@ -1518,7 +1536,7 @@ static const NSInteger PassAuthorSeed = 13612;
 - (void)exportWallpaper:(NSMenuItem *)sender {
     if ((NSUInteger)sender.tag >= WallpaperSizeCount) return;
     WallpaperExportSize size = WallpaperSizes[sender.tag];
-    [self withWallpaperPNGForSize:size completion:^(NSData *png) {
+    [self withWallpaperPNGForSize:size display:sender.representedObject completion:^(NSData *png) {
         [NSApp activateIgnoringOtherApps:YES];
         NSSavePanel *panel = [NSSavePanel savePanel];
         panel.allowedContentTypes = @[UTTypePNG];
@@ -1588,27 +1606,62 @@ static const NSInteger PassAuthorSeed = 13612;
     [self refreshDisplays:nil];
 }
 
-- (void)previousPebble:(id)sender {
-    [self forEachRenderer:^(WKWebView *web) {
-        [web evaluateJavaScript:@"window.pebblePrevious?.()" completionHandler:nil];
-    }];
+- (NSArray<NSNumber *> *)connectedDisplayIdentifiers {
+    NSMutableArray *result = [NSMutableArray array];
+    for (NSScreen *screen in NSScreen.screens) {
+        NSNumber *display = screen.deviceDescription[@"NSScreenNumber"];
+        if (display && self.desktopWindows[display]) [result addObject:display];
+    }
+    return result;
+}
+
+- (NSString *)displayTitle:(NSNumber *)display {
+    for (NSScreen *screen in NSScreen.screens) {
+        if ([screen.deviceDescription[@"NSScreenNumber"] isEqual:display]) return [NSString stringWithFormat:@"%@ · %@",
+            [display isEqual:self.connectedDisplayIdentifiers.firstObject] ? @"主屏幕" : @"屏幕", screen.localizedName];
+    }
+    return @"已断开的屏幕";
+}
+
+- (void)previousPebble:(NSMenuItem *)sender {
+    for (NSNumber *display in PebbleTargetDisplays(self.connectedDisplayIdentifiers, sender.representedObject, YES)) {
+        NSWindow *window = self.desktopWindows[display];
+        if (window.isVisible) [(WKWebView *)window.contentView evaluateJavaScript:@"window.pebblePrevious()" completionHandler:nil];
+    }
+}
+
+- (void)selectFavoriteDisplay:(NSPopUpButton *)sender {
+    self.favoriteDisplay = sender.selectedItem.representedObject;
+    [self showPaneAtIndex:FavoritesPaneIndex];
 }
 
 - (NSView *)favoritesPane {
-    NSView *save = [self rowWithSymbol:@"heart" title:@"收藏当前石头"
-        subtitle:@"保存主屏幕上的鹅卵石"
-        control:[self actionButton:@"收藏" action:@selector(saveFavorite:)]];
+    NSPopUpButton *target = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+    [target addItemWithTitle:@"所有屏幕"];
+    for (NSNumber *display in self.connectedDisplayIdentifiers) {
+        [target addItemWithTitle:[self displayTitle:display]]; target.lastItem.representedObject = display;
+    }
+    if (self.favoriteDisplay && ![self.connectedDisplayIdentifiers containsObject:self.favoriteDisplay]) {
+        [target addItemWithTitle:@"已断开的屏幕"]; target.lastItem.representedObject = self.favoriteDisplay; target.lastItem.enabled = NO;
+    }
+    for (NSMenuItem *item in target.itemArray) if ([item.representedObject isEqual:self.favoriteDisplay]) [target selectItem:item];
+    target.target = self; target.action = @selector(selectFavoriteDisplay:); target.accessibilityLabel = @"收藏操作的目标屏幕";
+    BOOL available = !self.staticWallpaperMode && PebbleTargetDisplays(self.connectedDisplayIdentifiers, self.favoriteDisplay, NO).count;
+    NSButton *saveButton = [self actionButton:@"收藏" action:@selector(saveFavorite:)]; saveButton.enabled = available;
+    NSString *hint = self.staticWallpaperMode ? @"恢复动态壁纸后，可收藏和应用石头" : @"收藏所选屏幕；选择所有屏幕时收藏主屏幕";
+    NSView *save = [self rowWithSymbol:@"heart" title:@"收藏当前石头" subtitle:hint control:saveButton];
+    NSView *scope = [self rowWithSymbol:nil title:@"目标屏幕" subtitle:@"设为当前仅影响这里选择的屏幕" control:target];
     NSMutableArray *rows = [NSMutableArray array];
     [self.favorites enumerateObjectsUsingBlock:^(NSDictionary *stone, NSUInteger index, BOOL *stop) {
         NSButton *restore = [self actionButton:@"设为当前" action:@selector(restoreFavorite:)];
         NSButton *remove = [self actionButton:@"移除" action:@selector(removeFavorite:)];
-        restore.tag = remove.tag = index;
+        restore.tag = remove.tag = index; restore.enabled = available;
         NSStackView *controls = [NSStackView stackViewWithViews:@[restore, remove]];
         NSString *title = [NSString stringWithFormat:@"石头 %lu", (unsigned long)index + 1];
         [rows addObject:[self rowWithSymbol:nil title:title subtitle:[stone[@"colors"] firstObject] control:controls]];
     }];
     NSView *collection = rows.count ? [self cardWithRows:rows] : [self caption:@"还没有收藏的石头"];
-    return [self paneWithCards:@[[self cardWithRows:@[save]], collection]];
+    return [self paneWithCards:@[[self cardWithRows:@[scope, save]], collection]];
 }
 
 - (void)persistFavorites {
@@ -1619,8 +1672,10 @@ static const NSInteger PassAuthorSeed = 13612;
 }
 
 - (void)saveFavorite:(id)sender {
-    NSNumber *display = NSScreen.screens.firstObject.deviceDescription[@"NSScreenNumber"];
+    if (self.staticWallpaperMode) return;
+    NSNumber *display = PebbleTargetDisplays(self.connectedDisplayIdentifiers, self.favoriteDisplay, NO).firstObject;
     WKWebView *web = display ? (WKWebView *)self.desktopWindows[display].contentView : nil;
+    if (!web) { [self showWallpaperError:@"所选屏幕已断开，请重新选择屏幕。"]; return; }
     [web evaluateJavaScript:@"window.pebbleSnapshot()" completionHandler:^(id value, NSError *error) {
         NSDictionary *stone = error ? nil : PebbleNormalizeStone(value, self.stoneTextures);
         if (!stone) { [self showWallpaperError:@"石头尚未加载完成，请稍后再收藏。"]; return; }
@@ -1635,11 +1690,12 @@ static const NSInteger PassAuthorSeed = 13612;
 
 - (void)restoreFavorite:(NSButton *)sender {
     if ((NSUInteger)sender.tag >= self.favorites.count) return;
-    NSString *script = [NSString stringWithFormat:@"window.pebbleRestore?.(%@)",
-                        [self jsonForPebble:self.favorites[sender.tag]]];
-    [self forEachRenderer:^(WKWebView *web) {
-        [web evaluateJavaScript:script completionHandler:nil];
-    }];
+    if (self.staticWallpaperMode) return;
+    NSArray *targets = PebbleTargetDisplays(self.connectedDisplayIdentifiers, self.favoriteDisplay, YES);
+    if (!targets.count) { [self showWallpaperError:@"所选屏幕已断开，请重新选择屏幕。"]; return; }
+    NSString *script = [NSString stringWithFormat:@"window.pebbleRestore(%@)", [self jsonForPebble:self.favorites[sender.tag]]];
+    for (NSNumber *display in targets) [(WKWebView *)self.desktopWindows[display].contentView evaluateJavaScript:script completionHandler:nil];
+
 }
 
 - (void)removeFavorite:(NSButton *)sender {
@@ -1696,18 +1752,23 @@ static const NSInteger PassAuthorSeed = 13612;
 }
 
 - (void)rebuildRethrowMenu {
-    [self.rethrowMenu removeAllItems];
+    [self.rethrowMenu removeAllItems]; [self.previousMenu removeAllItems]; [self.exportMenu removeAllItems];
     [self addItem:@"所有屏幕" action:@selector(changePebble:) toMenu:self.rethrowMenu];
-    [self.rethrowMenu addItem:NSMenuItem.separatorItem];
-    NSArray<NSScreen *> *screens = NSScreen.screens;
-    [screens enumerateObjectsUsingBlock:^(NSScreen *screen, NSUInteger index, BOOL *stop) {
-        NSNumber *display = screen.deviceDescription[@"NSScreenNumber"];
-        if (!display) return;
-        NSString *title = index == 0
-            ? [NSString stringWithFormat:@"主屏幕 · %@", screen.localizedName]
-            : [NSString stringWithFormat:@"屏幕 %lu · %@", (unsigned long)index + 1, screen.localizedName];
+    [self addItem:@"所有屏幕" action:@selector(previousPebble:) toMenu:self.previousMenu];
+    for (NSNumber *display in self.connectedDisplayIdentifiers) {
+        NSString *title = [self displayTitle:display];
         [self addItem:title action:@selector(rethrowMenuScreen:) toMenu:self.rethrowMenu].representedObject = display;
-    }];
+        [self addItem:title action:@selector(previousPebble:) toMenu:self.previousMenu].representedObject = display;
+    }
+    for (NSUInteger index=0; index<WallpaperSizeCount; index++) {
+        WallpaperExportSize size=WallpaperSizes[index];
+        NSMenuItem *entry=[self.exportMenu addItemWithTitle:[NSString stringWithFormat:@"%@（%lu × %lu）",size.name,(unsigned long)size.width,(unsigned long)size.height] action:nil keyEquivalent:@""];
+        NSMenu *screens=[[NSMenu alloc] initWithTitle:entry.title]; entry.submenu=screens;
+        for (NSNumber *display in self.connectedDisplayIdentifiers) {
+            NSMenuItem *item=[self addItem:[[self displayTitle:display] stringByAppendingString:@"…"] action:@selector(exportWallpaper:) toMenu:screens];
+            item.tag=index; item.representedObject=display;
+        }
+    }
 }
 
 - (void)rethrowDisplay:(NSNumber *)display {
@@ -1734,6 +1795,11 @@ static const NSInteger PassAuthorSeed = 13612;
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
+    if (item.action == @selector(previousPebble:)) {
+        for (NSNumber *display in PebbleTargetDisplays(self.connectedDisplayIdentifiers, item.representedObject, YES))
+            if (self.desktopWindows[display].isVisible && self.pebbleHistory[display.stringValue][@"previous"]) return YES;
+        return NO;
+    }
     if (item.action == @selector(rethrowMenuScreen:)) {
         return self.desktopWindows[item.representedObject].isVisible;
     }
@@ -2056,8 +2122,57 @@ static const NSInteger PassAuthorSeed = 13612;
                 exit(9);
             }
             NSLog(@"Verified native PNG dimensions for all five iPhone export sizes.");
-            [self verifyStaticPause:web];
+            [self verifyDisplayRoutingThen:^{ [self verifyStaticPause:web]; }];
         }];
+}
+
+- (void)verifyDisplayRoutingThen:(void (^)(void))next {
+    NSArray *displays = self.connectedDisplayIdentifiers;
+    if (!displays.count || self.exportMenu.numberOfItems != WallpaperSizeCount) exit(14);
+    for (NSMenuItem *size in self.exportMenu.itemArray) {
+        NSMutableArray *targets = [NSMutableArray array];
+        for (NSMenuItem *item in size.submenu.itemArray) [targets addObject:item.representedObject];
+        if (![targets isEqual:displays]) exit(14);
+    }
+    BOOL wasPaused = self.paused; self.paused = YES;
+    [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
+    dispatch_group_t group = dispatch_group_create();
+    [displays enumerateObjectsUsingBlock:^(NSNumber *display, NSUInteger index, BOOL *stop) {
+        dispatch_group_enter(group);
+        NSString *script = [NSString stringWithFormat:
+            @"window.pebbleHistory={};window.pebbleConfig.seed=%lu;window.pebbleThrow();window.pebbleConfig.seed=%lu;",
+            (unsigned long)(100000+index), (unsigned long)(200000+index)];
+        [(WKWebView *)self.desktopWindows[display].contentView evaluateJavaScript:script completionHandler:^(id result, NSError *error) {
+            if (error) exit(14); dispatch_group_leave(group);
+        }];
+    }];
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        NSMenuItem *target = self.rethrowMenu.itemArray[1];
+        [self rethrowMenuScreen:target];
+        [self checkDisplaySeeds:displays rethrown:YES then:^{
+            [self previousPebble:self.previousMenu.itemArray[1]];
+            [self checkDisplaySeeds:displays rethrown:NO then:^{
+                self.paused = wasPaused;
+                [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
+                NSLog(@"Per-screen rethrow/previous routing and all export menu targets verified on %lu screen(s).", (unsigned long)displays.count);
+                next();
+            }];
+        }];
+    });
+}
+
+- (void)checkDisplaySeeds:(NSArray *)displays rethrown:(BOOL)rethrown then:(void (^)(void))next {
+    dispatch_group_t group = dispatch_group_create();
+    [displays enumerateObjectsUsingBlock:^(NSNumber *display, NSUInteger index, BOOL *stop) {
+        dispatch_group_enter(group);
+        NSString *script = @"delete window.pebbleConfig.seed;window.pebbleSnapshot().seed";
+        [(WKWebView *)self.desktopWindows[display].contentView evaluateJavaScript:script completionHandler:^(NSNumber *seed, NSError *error) {
+            NSUInteger expected = index == 0 && rethrown ? 200000 : 100000+index;
+            if (error || seed.unsignedIntegerValue != expected) exit(14);
+            dispatch_group_leave(group);
+        }];
+    }];
+    dispatch_group_notify(group, dispatch_get_main_queue(), next);
 }
 
 - (void)verifyStaticPause:(WKWebView *)web {
@@ -2273,7 +2388,15 @@ static const NSInteger PassAuthorSeed = 13612;
                                 NSLog(@"4K wallpaper render failed: %@", error);
                                 exit(9);
                             }
-                            NSLog(@"Verified 3840 × 2160 PNG with rendered stone and solid background.");
+                            for (NSUInteger index=1; index<WallpaperSizeCount; index++) {
+                                 WallpaperExportSize size=WallpaperSizes[index];
+                                 NSData *resized=[self resizeStaticWallpaperPNG:png size:size];
+                                 NSBitmapImageRep *phone=resized ? [NSBitmapImageRep imageRepWithData:resized] : nil;
+                                 if (phone.pixelsWide!=size.width || phone.pixelsHigh!=size.height ||
+                                     [[phone colorAtX:size.width/2 y:(NSInteger)(size.height*.56)] isEqual:[phone colorAtX:0 y:0]]) exit(13);
+                             }
+                             NSLog(@"Saved static PNG exports preserve the stone for all phone sizes.");
+                             NSLog(@"Verified 3840 × 2160 PNG with rendered stone and solid background.");
                             [self verifyPhoneWallpaperSizes:web];
                         }];
                     }];
