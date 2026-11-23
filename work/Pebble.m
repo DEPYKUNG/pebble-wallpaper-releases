@@ -7,6 +7,7 @@
 #import "PebbleColors.h"
 #import "PebbleState.h"
 #import "PebbleWallpaperPolicy.h"
+#import "PebbleSettingsSurface.h"
 #if __has_include(<Sparkle/Sparkle.h>)
 #import <Sparkle/Sparkle.h>
 #endif
@@ -207,6 +208,7 @@ static NSImage *PebbleMenuBarIcon(void) {
 @property (strong) NSMutableArray *favorites;
 @property (copy) NSString *testPreviewPath;
 @property (copy) NSString *shotPath;
+@property BOOL settingsPreview;
 @property NSInteger shotSection;
 @property NSInteger shotPassNumber;
 #if __has_include(<Sparkle/Sparkle.h>)
@@ -224,7 +226,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     id oldHistory = [defaults objectForKey:PebbleHistoryKey], oldFavorites = [defaults objectForKey:PebbleFavoritesKey];
     self.pebbleHistory = [PebbleNormalizeHistories(oldHistory, self.stoneTextures) mutableCopy];
     self.favorites = [PebbleNormalizeFavorites(oldFavorites, self.stoneTextures) mutableCopy];
-    if (!self.testPreviewPath && !self.shotPath &&
+    if (!self.testPreviewPath && !self.shotPath && !self.settingsPreview &&
         ((oldHistory && ![oldHistory isEqual:self.pebbleHistory]) || (oldFavorites && ![oldFavorites isEqual:self.favorites])) &&
         ![defaults objectForKey:@"PebbleDataBackupBeforeSchema1"]) {
         [defaults setObject:@{@"history":oldHistory ?: @{}, @"favorites":oldFavorites ?: @[]} forKey:@"PebbleDataBackupBeforeSchema1"];
@@ -275,7 +277,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     settingsItem.keyEquivalent = @",";
     [menu addItem:NSMenuItem.separatorItem];
 #if __has_include(<Sparkle/Sparkle.h>)
-    if (!self.testPreviewPath && !self.shotPath) {
+    if (!self.testPreviewPath && !self.shotPath && !self.settingsPreview) {
         self.updaterController = [[SPUStandardUpdaterController alloc]
             initWithStartingUpdater:YES updaterDelegate:self userDriverDelegate:nil];
         NSMenuItem *updateItem = [menu addItemWithTitle:@"检查更新…"
@@ -294,6 +296,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     // Renders a settings pane straight to PNG. The window's layout cannot be
     // checked any other way, and screen capture needs permissions a build box
     // will not have. Same kind of affordance as --verify.
+    if (self.settingsPreview) { [self showSettings:nil]; return; }
     if (self.shotPath) {
         [self showSettings:nil];
         [self showPaneAtIndex:self.shotSection];
@@ -711,7 +714,7 @@ static NSImage *PebbleMenuBarIcon(void) {
 }
 
 - (BOOL)syncNativeDesktopBackground:(BOOL)restore explicitChange:(BOOL)explicitChange {
-    if (self.testPreviewPath || self.shotPath) return YES;
+    if (self.testPreviewPath || self.shotPath || self.settingsPreview) return YES;
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     NSString *staticPath = [defaults stringForKey:StaticWallpaperPathKey];
     if (staticPath && [NSFileManager.defaultManager fileExistsAtPath:staticPath]) return YES;
@@ -887,11 +890,15 @@ static NSImage *PebbleMenuBarIcon(void) {
     window.opaque = NO;
     window.backgroundColor = NSColor.clearColor;
 
-    NSVisualEffectView *glass = [NSVisualEffectView new];
-    glass.material = NSVisualEffectMaterialUnderWindowBackground;
-    glass.blendingMode = NSVisualEffectBlendingModeBehindWindow;
-    glass.state = NSVisualEffectStateActive;
-    glass.alphaValue = .35;
+    BOOL preview = self.settingsPreview || self.shotPath;
+    NSArray *arguments = NSProcessInfo.processInfo.arguments;
+    if (preview && [arguments containsObject:@"--preview-dark"]) window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    if (preview && [arguments containsObject:@"--preview-light"]) window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    if (self.settingsPreview) window.title = @"鹅卵石设置 · 开发预览";
+    PebbleSettingsSurface *surface = [[PebbleSettingsSurface alloc] initWithFrame:window.contentView.bounds
+        preferFrosted:preview && [arguments containsObject:@"--preview-frosted"]
+        forceSolid:preview && [arguments containsObject:@"--preview-solid"]];
+    [self pin:surface into:window.contentView inset:0];
 
     NSView *sidebar = [NSView new];
     sidebar.translatesAutoresizingMaskIntoConstraints = NO;
@@ -929,8 +936,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     body.translatesAutoresizingMaskIntoConstraints = NO;
     self.settingsBody = body;
 
-    NSView *root = window.contentView;
-    [self pin:glass into:root inset:0];
+    NSView *root = surface.contentView;
     [root addSubview:sidebar];
     [root addSubview:body];
     NSLayoutGuide *content = window.contentLayoutGuide;
@@ -949,7 +955,7 @@ static NSImage *PebbleMenuBarIcon(void) {
     ]];
 
     // Remembers where the user left it, which a settings window is expected to do.
-    [window setFrameAutosaveName:@"PebbleSettingsWindow"];
+    if (!self.settingsPreview && !self.shotPath) [window setFrameAutosaveName:@"PebbleSettingsWindow"];
     if (NSIsEmptyRect(window.frame) || !window.frameAutosaveName.length) [window center];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(settingsWillClose:)
                  name:NSWindowWillCloseNotification object:window];
@@ -1388,9 +1394,9 @@ static const NSInteger PassAuthorSeed = 13612;
     NSColor *cardColor = [NSColor colorWithName:nil dynamicProvider:^NSColor *(NSAppearance *appearance) {
         BOOL dark = [[appearance bestMatchFromAppearancesWithNames:@[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]]
                      isEqualToString:NSAppearanceNameDarkAqua];
-        return [NSColor colorWithSRGBRed:dark ? .17 : .89
-                                   green:dark ? .17 : .89
-                                    blue:dark ? .17 : .89 alpha:.55];
+        return [NSColor colorWithSRGBRed:dark ? .13 : .985
+                                   green:dark ? .15 : .985
+                                    blue:dark ? .18 : .975 alpha:.90];
     }];
     PebbleRoundedView *card = [self roundedViewFilled:cardColor radius:10];
     card.stroke = NSColor.separatorColor;
@@ -2501,6 +2507,7 @@ int main(int argc, const char *argv[]) {
             delegate.shotSection = atoi(argv[3]);
             if (argc == 5) delegate.shotPassNumber = atoi(argv[4]);
         }
+        if ([NSProcessInfo.processInfo.arguments containsObject:@"--preview-settings"]) delegate.settingsPreview = YES;
         application.delegate = delegate;
         [application run];
     }

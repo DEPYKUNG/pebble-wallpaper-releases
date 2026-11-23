@@ -37,3 +37,8 @@ python3 work/test_wallpaper_policy.py
 原生深色背景固定保存在 `~/Library/Application Support/Pebble Wallpaper/Desktop Backgrounds/`，不再依赖应用包路径。恢复逻辑记录每块屏幕的原图与接管 URL；用户外部修改优先，断开的屏幕和恢复失败的原图记录保留待处理。静态 PNG 的手机导出从已保存的 4K 图片排版，不依赖隐藏动态画面。
 
 `--verify` 还会检查导出菜单的屏幕标识、指定屏幕重新抛/上一颗、静态 PNG 的各手机尺寸、失败指令的反馈以及普通页面重载后的最新设置与石头。当前本机仅单屏，多屏选择与断连边界由独立模拟标识测试覆盖，尚未进行实体双屏断接验收。完整渲染检查包含高清图片处理，构建超时上限为 60 秒。
+
+
+设置背景由 `work/PebbleSettingsSurface.m` 管理。使用 macOS 26 SDK 构建时，通过可用性判断和弱链接，在 macOS 26 或更新系统使用 `NSGlassEffectView` Regular；macOS 13–15 或旧 SDK 构建使用 `NSVisualEffectView` 毛玻璃。单一材质承托整个设置窗口，alpha 保持 1，设置卡片以 90% 不透明度保证可读性。「减少透明度」开启时，材质内容下的实色衬底显示，并动态响应系统设置变化。
+
+仅设置预览（不接管系统壁纸或启动更新检查）：`"build/Pebble Wallpaper.app/Contents/MacOS/Pebble" --preview-settings`。可追加 `--preview-light`、`--preview-dark`、`--preview-frosted` 或 `--preview-solid` 检查不同样式；这些覆盖只在预览/截图模式生效。`--shoot` 的视图缓存截图用于布局检查，玻璃折射和背景模糊仍需实屏验证。

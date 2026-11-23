@@ -501,7 +501,7 @@ elif (contents / 'Frameworks/Sparkle.framework').exists():
 run('clang', '-arch', 'arm64', '-arch', 'x86_64', '-mmacosx-version-min=13.0',
     '-fobjc-arc', '-fblocks', '-O2', '-framework', 'AppKit', '-framework', 'WebKit',
     '-framework', 'CoreGraphics', '-framework', 'UniformTypeIdentifiers', '-I', str(generated),
-    *sparkle_flags, str(work / 'Pebble.m'), str(work / 'PebbleState.m'), str(work / 'PebbleWallpaperPolicy.m'), '-o', str(binary))
+    *sparkle_flags, str(work / 'Pebble.m'), str(work / 'PebbleState.m'), str(work / 'PebbleWallpaperPolicy.m'), str(work / 'PebbleSettingsSurface.m'), '-o', str(binary))
 run('codesign', '--force', '--sign', '-', str(app))
 run('codesign', '--verify', '--strict', '--deep', str(app))
 run('lipo', str(binary), '-verify_arch', 'arm64', 'x86_64')
