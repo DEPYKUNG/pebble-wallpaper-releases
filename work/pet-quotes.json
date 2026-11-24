@@ -1,531 +1,2070 @@
 [
-  "我们的人生是允许大开大合的。",
-  "我们不能停止想象其他生活的可能性。Another life is possible.",
-  "如果我们只想不做，就是把世界拱手让给那些恶毒的人，因为他们是真的会行动的。",
-  "爱就是时刻，时刻就是永恒。",
-  "保持旺盛，就永远领先版本一步。",
-  "暧昧是最上头的，一旦好了就没意思了。",
-  "生命并不长，不要再赶时间了。",
-  "最美的风景永远在路上。",
-  "任何瞬间的心动都不容易，不要怠慢了它。",
-  "这个时代唯一共读的文本就是友谊",
-  "在哲学上“敷衍”，在生活上认真。",
-  "年轻的时候喜欢说“加油”，现在说“挺住”。",
+  {
+    "text": "我们的人生是允许大开大合的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a27f68a41404ca3b66736b6"
+  },
+  {
+    "text": "我们不能停止想象其他生活的可能性。Another life is possible.",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/696c8bec109824f9e11b4d67"
+  },
+  {
+    "text": "如果我们只想不做，就是把世界拱手让给那些恶毒的人，因为他们是真的会行动的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a5627dbca0de6c44ae704f8"
+  },
+  {
+    "text": "爱就是时刻，时刻就是永恒。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a6b518f56a3f3491ba797cd"
+  },
+  {
+    "text": "保持旺盛，就永远领先版本一步。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/680b1ade7a449ae85899d3f1"
+  },
+  {
+    "text": "暧昧是最上头的，一旦好了就没意思了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a5f96446356eb2d9be64124"
+  },
+  {
+    "text": "生命并不长，不要再赶时间了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61ee26c84675a08411f51570"
+  },
+  {
+    "text": "最美的风景永远在路上。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68c97436a56ca3e0c4c11105"
+  },
+  {
+    "text": "任何瞬间的心动都不容易，不要怠慢了它。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62f69e5220298b975e35370d"
+  },
+  {
+    "text": "这个时代唯一共读的文本就是友谊",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6af3a73d14d01a26f8a8025d"
+  },
+  {
+    "text": "在哲学上“敷衍”，在生活上认真。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60188e92d0078ccd476a2d07"
+  },
+  {
+    "text": "年轻的时候喜欢说“加油”，现在说“挺住”。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5ff48d1fdee9c1e16d3607ca"
+  },
   "世界这么大，总有人会莫名其妙的喜欢你。你就做好你自己，就会有人来爱你。",
-  "“人类消失了地球会怎样？”“非常幸福。”",
-  "有趣的人生必然付出代价，越有趣代价越大。",
-  "感受到凉意是因为生活在温暖里啊。",
-  "亲密关系并非始于暴露身体，而是暴露脆弱。",
-  "关于时代的判词已经太多太多，不如在下坡的日子里，一起快乐滑梯。",
-  "很多时候生活的河流就被这些很小的瞬间所改变了。",
-  "敏感不是一个问题，敏感是一个天赋，只不过它是一个要被好好保护的天赋。",
-  "关心世界并不意味着你必须在24小时向世界敞开。",
-  "附着在身上的东西越少，你就会越自由。",
-  "上坡要努力，下坡要开心。",
-  "但凡是命运，你是逃不掉躲不开的。",
-  "爱就像鬼一样，当你遇到鬼，你就会知道那是鬼，当你遇到爱，你才知道什么是爱。",
-  "焦虑是自由带来的眩晕。",
-  "越是要求自己讲清楚，越容易离开真正让你心动的东西。",
-  "好的东西是生长出来的，而不是计划出来的。",
-  "你可以拿走我的时间，拿走我的爱情，但你不能拿走我的粗话吧。",
-  "没有物质的爱情就是一盘散沙，一段好姻缘差七百块钱。",
-  "保持内心平静，已经用尽了很大的力气。",
-  "如果你是一个活人，你的赛道就一定不垂直。",
-  "我自己都要花很长的时间，才知道怎么样会让自己幸福。",
-  "去扩容自己的世界！",
-  "坦诚自己需要关系，坦诚自己不想要一个人，不是一个虚弱的表现。",
-  "上班怎么不是一种教呢？",
-  "只有不上班的生活才能加滤镜。",
-  "不上班，健康都跟着好起来了。",
-  "世界之门向我们所有人都打开了。",
-  "旅游本身是一个享受，并不是一个打算。",
-  "先出发，出发以后你会发现你一定会准备好的。",
-  "示弱本质上也是一种隐秘的压迫。",
-  "分别心是苦的根源。",
-  "一个时代正在迅速地离开，一个时代正在迅速地降临。",
-  "生活本身是过程大于结果的。",
-  "焦虑的解法其实是具体的行动。",
+  {
+    "text": "“人类消失了地球会怎样？”“非常幸福。”",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/607fa4b92c5ef028a607775c"
+  },
+  {
+    "text": "有趣的人生必然付出代价，越有趣代价越大。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fb56fb183c34e85dd28d4c0"
+  },
+  {
+    "text": "感受到凉意是因为生活在温暖里啊。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60961c824b1c3b8d0f267b12"
+  },
+  {
+    "text": "亲密关系并非始于暴露身体，而是暴露脆弱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/617368bf3abf955f07fa4272"
+  },
+  {
+    "text": "关于时代的判词已经太多太多，不如在下坡的日子里，一起快乐滑梯。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6ae55910c96c8942ec150100"
+  },
+  {
+    "text": "很多时候生活的河流就被这些很小的瞬间所改变了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/665d224432caf8e958bc8d7f"
+  },
+  {
+    "text": "敏感不是一个问题，敏感是一个天赋，只不过它是一个要被好好保护的天赋。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67d4100de924d4525aa1f008"
+  },
+  {
+    "text": "关心世界并不意味着你必须在24小时向世界敞开。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a7c29eb17676351c570bf14"
+  },
+  {
+    "text": "附着在身上的东西越少，你就会越自由。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65dd839000ca19a600292454"
+  },
+  {
+    "text": "上坡要努力，下坡要开心。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6328f4b63210b0e9e7708a52"
+  },
+  {
+    "text": "但凡是命运，你是逃不掉躲不开的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a80644217676351c572581f"
+  },
+  {
+    "text": "爱就像鬼一样，当你遇到鬼，你就会知道那是鬼，当你遇到爱，你才知道什么是爱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6ad05650e742e36efcc340ef"
+  },
+  {
+    "text": "焦虑是自由带来的眩晕。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6ac61a6e195d838e2aee30d0"
+  },
+  {
+    "text": "越是要求自己讲清楚，越容易离开真正让你心动的东西。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6ac61a6e195d838e2aee30d0"
+  },
+  {
+    "text": "好的东西是生长出来的，而不是计划出来的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61ee26c84675a08411f51570"
+  },
+  {
+    "text": "你可以拿走我的时间，拿走我的爱情，但你不能拿走我的粗话吧。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6abfb113195d838e2aecb330"
+  },
+  {
+    "text": "没有物质的爱情就是一盘散沙，一段好姻缘差七百块钱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6ac78a5be742e36efcbfe26f"
+  },
+  {
+    "text": "保持内心平静，已经用尽了很大的力气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67d4100de924d4525aa1f008"
+  },
+  {
+    "text": "如果你是一个活人，你的赛道就一定不垂直。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6aaeb0ff0916f6f8b445e56c"
+  },
+  {
+    "text": "我自己都要花很长的时间，才知道怎么样会让自己幸福。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68fc9fee083a71a4eb30f1f2"
+  },
+  {
+    "text": "去扩容自己的世界！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/687bbdc7c596672715c821cc"
+  },
+  {
+    "text": "坦诚自己需要关系，坦诚自己不想要一个人，不是一个虚弱的表现。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68fc9fee083a71a4eb30f1f2"
+  },
+  {
+    "text": "上班怎么不是一种教呢？",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6831d0ed40ebba80829ccf27"
+  },
+  {
+    "text": "只有不上班的生活才能加滤镜。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6674012ec26e396a362a1af8"
+  },
+  {
+    "text": "不上班，健康都跟着好起来了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6845613179e285b9b8d16667"
+  },
+  {
+    "text": "世界之门向我们所有人都打开了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64f82abd67242482878abb92"
+  },
+  {
+    "text": "旅游本身是一个享受，并不是一个打算。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6608377c7ef604d5acae47a7"
+  },
+  {
+    "text": "先出发，出发以后你会发现你一定会准备好的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6837049238dcc57c646fd616"
+  },
+  {
+    "text": "示弱本质上也是一种隐秘的压迫。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6aba1466195d838e2aeb0579"
+  },
+  {
+    "text": "分别心是苦的根源。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a8bfde1ef65145dfcc47d26"
+  },
+  {
+    "text": "一个时代正在迅速地离开，一个时代正在迅速地降临。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6ab7d972195d838e2aea637a"
+  },
+  {
+    "text": "生活本身是过程大于结果的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a66e136a3fec224d5a3f00f"
+  },
+  {
+    "text": "焦虑的解法其实是具体的行动。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6690999e37236c546e922456"
+  },
   "我常常无法在关系中分辨这是喜欢还是爱。",
-  "我们要做社会人，不要做社会人儿",
-  "调休是对日历的不尊重！",
-  "小时候，以为所有人都知道怎么掖袖子、掖裤子，但是大了以后发现并不是理所当然的。",
-  "善良的创作会愿意把时间花在讲述平凡这件事上。",
-  "人生为什么一直要向上走啊？我可以向四面八方走啊！",
-  "宇宙会一直出同一道题，直到你给出不同答案。",
-  "胆小鬼，连幸福都会害怕，碰到棉花都会受伤。",
-  "拍照的本质上是在准备失去。",
-  "命运的齿轮还没开始转动，人生的链子已经掉完了！",
-  "你既然能学会批评自己，你也一定能学会接纳自己。",
-  "不用着急，我们有的是时间慢慢成为大人。",
-  "在意过去的人本质是害怕未来。",
-  "标签打败复杂，情绪打败准确，极端打败温和。",
-  "没有想象寸步难行。",
-  "高敏感是最容易生出智慧的。",
-  "一个不能承认自己错误的人，是无法接受别人对他的善意的。",
-  "所有偶遇都不是巧合，都是我的蓄谋已久。",
-  "生命总在你无法想象的地方生存。",
-  "在流水线上，人们可以轻易地理解何为异化。",
-  "蒲松龄看到了制度对男女不同的期待，各自有各自的悲哀，也就有了男鬼和女鬼两种故事。",
-  "工业糖精太齁，太伤人了，胰岛素直接爆了，这不行！",
-  "Agent绝对不是来抢你饭碗，是来替你吃苦的，你只要做那个监工就好了。",
-  "苦难没有明确的边界，可是一个人的感受力是有边界的。",
-  "心有遗憾的灵魂，会游走于另一个地方。",
-  "写不出来有可能是最好的结果。",
-  "兴冲冲地去做一件事情本就让人感到幸福。",
-  "宇宙充满混乱，但我们始终拥有选择。",
-  "不要活成你自己的统计学概率，活成一个这个世界的异常值。",
-  "我们要在 AI 面前捍卫无知无畏。",
-  "哦，原来确实没有人在背着我偷偷幸福！",
-  "她不要做神，她要做女巫。",
-  "主动举手才会被看见，要积极主动，要主动一点，找到自己的热爱，再去持续。",
-  "人不能被 AI 解放，人只能自己解放自己。",
+  {
+    "text": "我们要做社会人，不要做社会人儿",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6aa623ef9d32647781683c93"
+  },
+  {
+    "text": "调休是对日历的不尊重！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/644118b3a79cc8147005943a"
+  },
+  {
+    "text": "小时候，以为所有人都知道怎么掖袖子、掖裤子，但是大了以后发现并不是理所当然的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6aa045c9f03e74ee6b074632"
+  },
+  {
+    "text": "善良的创作会愿意把时间花在讲述平凡这件事上。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/680f1f967a449ae85825217c"
+  },
+  {
+    "text": "人生为什么一直要向上走啊？我可以向四面八方走啊！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68fca2d30156720321fb5710"
+  },
+  {
+    "text": "宇宙会一直出同一道题，直到你给出不同答案。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a522a024adef2b36562519a"
+  },
+  {
+    "text": "胆小鬼，连幸福都会害怕，碰到棉花都会受伤。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67b27aa280e35721a1296524"
+  },
+  {
+    "text": "拍照的本质上是在准备失去。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a9a0392f03e74ee6b04bda1"
+  },
+  {
+    "text": "命运的齿轮还没开始转动，人生的链子已经掉完了！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a90682b1352af56ff3d25ca"
+  },
+  {
+    "text": "你既然能学会批评自己，你也一定能学会接纳自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a9a8434f03e74ee6b050d7c"
+  },
+  {
+    "text": "不用着急，我们有的是时间慢慢成为大人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a9ab863a0210c197dcd8f54"
+  },
+  {
+    "text": "在意过去的人本质是害怕未来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a7db0ad36641f136d87bf44"
+  },
+  {
+    "text": "标签打败复杂，情绪打败准确，极端打败温和。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a8bfde1ef65145dfcc47d26"
+  },
+  {
+    "text": "没有想象寸步难行。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a8448e38156bf33621a4c94"
+  },
+  {
+    "text": "高敏感是最容易生出智慧的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a72b9d01b5e24969ce92a9f"
+  },
+  {
+    "text": "一个不能承认自己错误的人，是无法接受别人对他的善意的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a88e3b31352af56ff3a06dd"
+  },
+  {
+    "text": "所有偶遇都不是巧合，都是我的蓄谋已久。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6512d6300432a315788d25f3"
+  },
+  {
+    "text": "生命总在你无法想象的地方生存。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a4d11412e335a35a80fa724"
+  },
+  {
+    "text": "在流水线上，人们可以轻易地理解何为异化。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a794391c4079d62c57ffa7a"
+  },
+  {
+    "text": "蒲松龄看到了制度对男女不同的期待，各自有各自的悲哀，也就有了男鬼和女鬼两种故事。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68b43c9e5faf3686594c9443"
+  },
+  {
+    "text": "工业糖精太齁，太伤人了，胰岛素直接爆了，这不行！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a5f96446356eb2d9be64124"
+  },
+  {
+    "text": "Agent绝对不是来抢你饭碗，是来替你吃苦的，你只要做那个监工就好了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a78a7aac4079d62c57fd013"
+  },
+  {
+    "text": "苦难没有明确的边界，可是一个人的感受力是有边界的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a7c29eb17676351c570bf14"
+  },
+  {
+    "text": "心有遗憾的灵魂，会游走于另一个地方。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a7d302f008ed7314d77f364"
+  },
+  {
+    "text": "写不出来有可能是最好的结果。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a7c60d836641f136d8736a7"
+  },
+  {
+    "text": "兴冲冲地去做一件事情本就让人感到幸福。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6919fbaad5784cc806f93285"
+  },
+  {
+    "text": "宇宙充满混乱，但我们始终拥有选择。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6720836fbad346ebe6399017"
+  },
+  {
+    "text": "不要活成你自己的统计学概率，活成一个这个世界的异常值。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67a5a52cd74435e4a39da455"
+  },
+  {
+    "text": "我们要在 AI 面前捍卫无知无畏。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/686a2cde93fd2d72b8c29dc2"
+  },
+  {
+    "text": "哦，原来确实没有人在背着我偷偷幸福！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a75944a000a55a9bb0458c9"
+  },
+  {
+    "text": "她不要做神，她要做女巫。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a74cd80000a55a9bb040ced"
+  },
+  {
+    "text": "主动举手才会被看见，要积极主动，要主动一点，找到自己的热爱，再去持续。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64f8acc23fa4090b7459b54b"
+  },
+  {
+    "text": "人不能被 AI 解放，人只能自己解放自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/687271843246f7333bf93c25"
+  },
   "在一个插科打诨的时代，我想大声地思考。",
-  "女性气质是一个男人很好的一个医美。",
-  "原生家庭不参与重大决策。",
-  "我的快乐就这么小，就这么一杯水。",
-  "不上班，就是年轻人的一剂迷幻药。",
-  "当一个男性表达，我很了解女性主义，这本身就是一个伪命题。",
-  "她走入了一片被施了魔法的森林，一切都好像变了，真实和虚幻之间的界限也被模糊了。",
-  "不同的人遇到不同的人会变成不同的人。",
-  "读书训练的不是单纯获取信息的能力，而是处理复杂信息的能力。",
-  "一个人的成长往往不是由某一个宏大的时刻突然完成的。",
-  "我们在现实中，扁扁地受气，扁扁地被欺负，扁扁地看手机视频，出来玩的时候也要做拼豆这种扁扁的东西。",
-  "我们不是给定之物，我们是生生不息不断地成为的人。",
-  "我的生活一定是要充满声响的。",
-  "小美人鱼根本就不是为了王子向往爱情，而是思考有关生命的探索。",
-  "足球是圆的，充满未知与惊喜。",
-  "你可以有缺点，但你必须是你自己。",
-  "越是重大的决策，越需要相信一点点直觉。",
-  "好的长期朋友就像柜子里最漂亮的手办，平时不会想起，看到就会很幸福。",
-  "把世界对你的要求放到一边，在无人在意的角落偷偷翘起前脚掌，快乐地滑行一段时间。",
-  "其实门永远是开着的，只是看你推不推而已。",
-  "工作只是你生活的一部分，它不应该是你生活的全部。",
-  "在新的环境里边你会认识到新的自己，这个是很重要的事情。",
-  "其实你自己也知道，你缺的不是结果，而是到底想过怎样的人生。",
-  "每一勺蒯下去，都会有那种滋滋的翻沙声，那就是夏天的声音。",
-  "加缪说：“人世间的所有道理我都是在球场上学会的。”",
-  "小暑，梅雨结束，阳光普照。",
-  "工作越久，工作的狗屁值越高。",
-  "赞美要具体，要聊他做了什么，而不是天生的东西。",
-  "好奇心、创造力，不是管出来的，而是家长给予空间长出来的。",
-  "最不缺的是答案，最缺的是相信和执行。",
-  "想到在这么宏大的宇宙里，很多焦虑幽怨的事就不值一提了。",
-  "浪漫是我们普通人可以选择的人生态度，行事方式！",
-  "\"为什么恋爱这么开心的事，要让别人先帮你做呢？\"",
-  "女生会让女生变得更勇敢，在保护她的同时，也收获了更多勇气。",
-  "当一个孩子连无聊的权利都被剥夺，他怎么可能知道自己喜欢什么。",
-  "在夏天发生的故事，不管是情感的萌动和结束，都可以没有任何理由地出现，没有任何理由地消失，我们可以直面太阳。",
-  "庸俗的东西才值得追求，神性的东西只需要等待它的降临。",
-  "那是我第一次看到梅西，那时候他还是一个留着长发的青年，在整个庞大的绿茵场上，他的眼中没有其他人也没有其他事，只有他和他脚下的这只足球。",
-  "老师让这位同学指出他的国家，他在地图上找了半天，说：这个地图没有画我的国家。后来我才知道，这个绿色海角，叫佛德角。",
-  "你走了好长好长的路，长成了现在的你自己。请好好地拍拍自己的肩膀，抱抱自己，和自己说：你辛苦了，你好棒。",
-  "不要急着找到热爱，先诚实地活着。很多答案，都是后来长出来的。",
-  "屈原不是一个文弱的书生，他的诗里有比李白更早的豪气。",
-  "自一九八三年成立以来，中国女足一步步成为世界一流。",
-  "只要我慢慢地去努力，我可以去外面去过自己的生活，我可以不用困在这里。外面的世界很广阔。",
-  "大学里你对自己的塑造，对自己的想法，其实很大程度上决定了你的未来。",
-  "人人都说阿森纳是一支冠军球队，人们说戈多一定会来，应该在明年，应该在下一场比赛。但是你看，戈多永远不会来。",
-  "给家长的建议：如果你永远站在自己的认知里帮他去规划，那他永远也就站在你的认知里去规划自己的未来。",
-  "世界杯能让整个世界从各自的纷繁和杂乱当中停下来，我们一块进入到一个游戏时刻、聚众时刻。",
-  "现代足球不是突然被发明出来的，它是人类把一场节日群架，慢慢装进规则里的结果。",
-  "热爱没有那么玄的。你就去尝试几件事情，然后在某几件事情里你发现你获得了正反馈，它就有机会变成一个热爱。",
-  "进入到21世纪以来，央视获得男足世界杯的版权，从来都是两届一打包，没有单独出售过。",
-  "几乎本次所有世界杯的球场，在世界杯期间都会有一个临时的名字，绝大部分都是以自己所在的城市来命名的。",
-  "风浪从来都不是阻碍，那就是大海的本来面目。",
-  "教育的真谛可能不在于让孩子永远快乐，因为这个本身就是一个伪命题，而是在于培养他们与困境共处，在不确定性中前行的一种韧性。",
-  "自己做的事情少点解释，别人做的事情多点理解。",
-  "今天过得皱皱巴巴也没关系，因为只要把它重新摊开，背面还能再写很多行。",
-  "从前以为过不去的潮湿时刻，后来都成为滋养我们成长的雨水。",
-  "每个人都知道自己的天赋，只不过首先你要去聆听。",
-  "美妙人生的关键在于你能迷上什么东西。",
-  "让生活脱离怠速的快乐，以更大的速度前进。",
-  "一个人能观察落叶、鲜花、从细微处观赏一切，生活就不能把他怎么样。",
-  "找出一种忠于自己内心的舒适，就是勇气。",
-  "你能在两个选择之间做出对当下最有利的决定，那才是真正的主体性。",
-  "你理想中的未来是你行动的源动力。",
-  "有的时候我们会觉得不配，但做着做着就发现：越干越配。",
-  "就是在这种关关难过关关过的过程里，感受到价值感和生命的热烈。",
-  "当你把人生的价值定义为体验，一切经历都是收获。",
-  "我们要夺回一种名叫生机勃勃的无用。",
-  "有时候你只是换一种讲述自己的方式，就可能带来新的疗愈。",
-  "真正说热爱的时候，不是说你有多狂热，而是你愿不愿意承受痛苦。",
-  "如果不能后退，那就成为一只蟑螂，上上下下爬来爬去。",
-  "螺狮粉很像爱情给我的感觉，它是一种吃的人很享受，但是旁边的人不明所以，甚至觉得有点酸臭的行为。",
-  "当面与人人冲突固然是不符合我的做人原则，但忍气吞声更是让我怒火中烧。",
-  "时间节点的意义，是让你喊一个暂停，重新整理自己的人生。",
-  "围栏让人和人的关系更紧张，也让人对自然更不关心。",
-  "进山，头两天身体到了，心没到；两三天后，你才开始听见风、闻到泥土。",
-  "通过表达无知，你反而更可能探索到人生的一些真相。",
-  "日常的小幸福，它未必能激起生活的千层浪，但一定能填补生活干枯的池塘。",
-  "美是需要时间的，时尚需要舒缓的节奏，需要时间来反思和沉淀。",
-  "你能呼吸、能发热、能在夜里叹息、能在白昼里做梦，就足够了。",
-  "男性很普通，却迷之自信是没错的。我们要鼓励的是，女性即使很普通，也要自信。",
-  "在错误的时间遇到错误的人，这可真是太幸运了",
-  "你不能因为达不到 150 公里，就让自己变成零。",
-  "当你真正体验过被爱之后，你才会发现，让你更有力量的其实是去爱别人。",
-  "生活本就是充满奇迹的，如果你没有感受到，那说明你正在拼命阻挡你自己。",
-  "金庸讲出一个观点：直男喜欢妖女！",
-  "风会熄灭蜡烛，却能使火越烧越旺。",
-  "爱的需求总量没有变，但爱的供给正在变少。",
-  "青春不是年龄外显，是 state of mind。",
-  "对未来真正的慷慨，是把一切献给现在。",
-  "一个好作品，作者匿名也应该成立，它不靠粉丝关系成立。",
-  "孩子越小的时候人越重要，孩子越大的时候，知识越重要。",
-  "一个爱好的结果就是时间的载体，它让人把私人的时间变成能被看见的温度。",
-  "长期的幸福感源自基于自我选择的生活。",
-  "我们不是 aging，我们是不断地增长，不断地丰富自己的阅历。",
-  "其实女性可以去找到更多元化的榜样，回到自己，你希望呈现一个什么样的生命状态。",
-  "人生就好像一程车，重点不是上车的人可以陪你去到哪个站，而是你们一起欣赏过哪些风景。",
-  "我们需要有次序地、按量地、健康地释放“攻击性”。",
-  "走弯路是走路的一部分，花冤枉钱是花钱的一部分，不出战是战斗的一部分。",
-  "价值感高的人会让自己做重要的事。",
+  {
+    "text": "女性气质是一个男人很好的一个医美。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66cc1d80f78678cbe723ac0a"
+  },
+  {
+    "text": "原生家庭不参与重大决策。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69e1bad6e2c8be31557240c9"
+  },
+  {
+    "text": "我的快乐就这么小，就这么一杯水。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a688add56a3f3491ba65b9b"
+  },
+  {
+    "text": "不上班，就是年轻人的一剂迷幻药。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69da24c5e2c8be3155ef723a"
+  },
+  {
+    "text": "当一个男性表达，我很了解女性主义，这本身就是一个伪命题。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a5f4f7ea3fec224d5a1147a"
+  },
+  {
+    "text": "她走入了一片被施了魔法的森林，一切都好像变了，真实和虚幻之间的界限也被模糊了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a69aebeb581962ce2bd4c3a"
+  },
+  {
+    "text": "不同的人遇到不同的人会变成不同的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a65b5a76356eb2d9be886b3"
+  },
+  {
+    "text": "读书训练的不是单纯获取信息的能力，而是处理复杂信息的能力。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a65fb1c6356eb2d9be8a44a"
+  },
+  {
+    "text": "一个人的成长往往不是由某一个宏大的时刻突然完成的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a66106e6356eb2d9be8b277"
+  },
+  {
+    "text": "我们在现实中，扁扁地受气，扁扁地被欺负，扁扁地看手机视频，出来玩的时候也要做拼豆这种扁扁的东西。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a5a1af26356eb2d9be4352a"
+  },
+  {
+    "text": "我们不是给定之物，我们是生生不息不断地成为的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67c14277f8d1b678965efcd1"
+  },
+  {
+    "text": "我的生活一定是要充满声响的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/644252519361a4e7c3222954"
+  },
+  {
+    "text": "小美人鱼根本就不是为了王子向往爱情，而是思考有关生命的探索。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69e22f311e94ae692180ec46"
+  },
+  {
+    "text": "足球是圆的，充满未知与惊喜。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a4f6a8a1e32575f5eb3c2a0"
+  },
+  {
+    "text": "你可以有缺点，但你必须是你自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a50caf54adef2b36561e5db"
+  },
+  {
+    "text": "越是重大的决策，越需要相信一点点直觉。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a479d052e335a35a80d9932"
+  },
+  {
+    "text": "好的长期朋友就像柜子里最漂亮的手办，平时不会想起，看到就会很幸福。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6895757c638b0158798f66d9"
+  },
+  {
+    "text": "把世界对你的要求放到一边，在无人在意的角落偷偷翘起前脚掌，快乐地滑行一段时间。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689ed95751528e172ad0cd4c"
+  },
+  {
+    "text": "其实门永远是开着的，只是看你推不推而已。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6459f2e97d934b850502ee96"
+  },
+  {
+    "text": "工作只是你生活的一部分，它不应该是你生活的全部。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a4a7af02e335a35a80e7c18"
+  },
+  {
+    "text": "在新的环境里边你会认识到新的自己，这个是很重要的事情。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a229b397444b5722233edb5"
+  },
+  {
+    "text": "其实你自己也知道，你缺的不是结果，而是到底想过怎样的人生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a4a3b192e335a35a80e5aad"
+  },
+  {
+    "text": "每一勺蒯下去，都会有那种滋滋的翻沙声，那就是夏天的声音。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a289d1a97e115babe6c08a4"
+  },
+  {
+    "text": "加缪说：“人世间的所有道理我都是在球场上学会的。”",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a4b29a22e335a35a80eb0b9"
+  },
+  {
+    "text": "小暑，梅雨结束，阳光普照。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67fcdc8a59699d74dca4de61"
+  },
+  {
+    "text": "工作越久，工作的狗屁值越高。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6788c280f787119b3da386a1"
+  },
+  {
+    "text": "赞美要具体，要聊他做了什么，而不是天生的东西。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a45064a2e335a35a80c7e75"
+  },
+  {
+    "text": "好奇心、创造力，不是管出来的，而是家长给予空间长出来的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a453d85ffcf45052cfaf215"
+  },
+  {
+    "text": "最不缺的是答案，最缺的是相信和执行。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/691c4384cbba038b4221f202"
+  },
+  {
+    "text": "想到在这么宏大的宇宙里，很多焦虑幽怨的事就不值一提了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60eace1b38464275a6127751"
+  },
+  {
+    "text": "浪漫是我们普通人可以选择的人生态度，行事方式！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f1d41ec9504bbdb77d7ab09"
+  },
+  {
+    "text": "\"为什么恋爱这么开心的事，要让别人先帮你做呢？\"",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a3cf651c1e07e23d323c5d6"
+  },
+  {
+    "text": "女生会让女生变得更勇敢，在保护她的同时，也收获了更多勇气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a324bcc43a22a69558543a0"
+  },
+  {
+    "text": "当一个孩子连无聊的权利都被剥夺，他怎么可能知道自己喜欢什么。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a3924c99d2f5743683bf051"
+  },
+  {
+    "text": "在夏天发生的故事，不管是情感的萌动和结束，都可以没有任何理由地出现，没有任何理由地消失，我们可以直面太阳。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a301aeb43a22a6955845445"
+  },
+  {
+    "text": "庸俗的东西才值得追求，神性的东西只需要等待它的降临。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69fc45fa1b7bd50295a6a31c"
+  },
+  {
+    "text": "那是我第一次看到梅西，那时候他还是一个留着长发的青年，在整个庞大的绿茵场上，他的眼中没有其他人也没有其他事，只有他和他脚下的这只足球。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a3955892e335a35a80797d3"
+  },
+  {
+    "text": "老师让这位同学指出他的国家，他在地图上找了半天，说：这个地图没有画我的国家。后来我才知道，这个绿色海角，叫佛德角。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/667ded5448d63607c55282fe"
+  },
+  {
+    "text": "你走了好长好长的路，长成了现在的你自己。请好好地拍拍自己的肩膀，抱抱自己，和自己说：你辛苦了，你好棒。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a2f9b6843a22a695583fdb0"
+  },
+  {
+    "text": "不要急着找到热爱，先诚实地活着。很多答案，都是后来长出来的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a3033bd43a22a6955845c01"
+  },
+  {
+    "text": "屈原不是一个文弱的书生，他的诗里有比李白更早的豪气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64915f9c932f350aaeadcd9d"
+  },
+  {
+    "text": "自一九八三年成立以来，中国女足一步步成为世界一流。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69df9184e2c8be31554d338b"
+  },
+  {
+    "text": "只要我慢慢地去努力，我可以去外面去过自己的生活，我可以不用困在这里。外面的世界很广阔。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a2f9b6843a22a695583fdb0"
+  },
+  {
+    "text": "大学里你对自己的塑造，对自己的想法，其实很大程度上决定了你的未来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a2bdaeb43a22a695582a8d9"
+  },
+  {
+    "text": "人人都说阿森纳是一支冠军球队，人们说戈多一定会来，应该在明年，应该在下一场比赛。但是你看，戈多永远不会来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a2290d9b30e1571aea12e7b"
+  },
+  {
+    "text": "给家长的建议：如果你永远站在自己的认知里帮他去规划，那他永远也就站在你的认知里去规划自己的未来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a2922a4dbccffcfa9c6b7d0"
+  },
+  {
+    "text": "世界杯能让整个世界从各自的纷繁和杂乱当中停下来，我们一块进入到一个游戏时刻、聚众时刻。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a26a19e7444b57222356d40"
+  },
+  {
+    "text": "现代足球不是突然被发明出来的，它是人类把一场节日群架，慢慢装进规则里的结果。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a29097f3eedf1f4b2685899"
+  },
+  {
+    "text": "热爱没有那么玄的。你就去尝试几件事情，然后在某几件事情里你发现你获得了正反馈，它就有机会变成一个热爱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a25937c7444b5722234f11b"
+  },
+  {
+    "text": "进入到21世纪以来，央视获得男足世界杯的版权，从来都是两届一打包，没有单独出售过。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a26829eb30e1571aea2a001"
+  },
+  {
+    "text": "几乎本次所有世界杯的球场，在世界杯期间都会有一个临时的名字，绝大部分都是以自己所在的城市来命名的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6a26b8197444b572223579f9"
+  },
+  {
+    "text": "风浪从来都不是阻碍，那就是大海的本来面目。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69e887821e94ae6921e1977e"
+  },
+  {
+    "text": "教育的真谛可能不在于让孩子永远快乐，因为这个本身就是一个伪命题，而是在于培养他们与困境共处，在不确定性中前行的一种韧性。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/685ab11b4abe6e29cbcf95de"
+  },
+  {
+    "text": "自己做的事情少点解释，别人做的事情多点理解。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f5eaaa883c34e85ddd01d76"
+  },
+  {
+    "text": "今天过得皱皱巴巴也没关系，因为只要把它重新摊开，背面还能再写很多行。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69d39bc3b977fb2c4737686a"
+  },
+  {
+    "text": "从前以为过不去的潮湿时刻，后来都成为滋养我们成长的雨水。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69bd7fc53c625cc5ae5d1196"
+  },
+  {
+    "text": "每个人都知道自己的天赋，只不过首先你要去聆听。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67fff2f31f1db84a56be4344"
+  },
+  {
+    "text": "美妙人生的关键在于你能迷上什么东西。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60ae71b54580aa3d3f33d3a5"
+  },
+  {
+    "text": "让生活脱离怠速的快乐，以更大的速度前进。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/681cda6e03d258d864fc779f"
+  },
+  {
+    "text": "一个人能观察落叶、鲜花、从细微处观赏一切，生活就不能把他怎么样。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688a58f5edf3fa32d55221f2"
+  },
+  {
+    "text": "找出一种忠于自己内心的舒适，就是勇气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66434d7a251bd96e6c43ed18"
+  },
+  {
+    "text": "你能在两个选择之间做出对当下最有利的决定，那才是真正的主体性。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68ba90b45faf3686592860a6"
+  },
+  {
+    "text": "你理想中的未来是你行动的源动力。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67810007d6a4b57e143d0de8"
+  },
+  {
+    "text": "有的时候我们会觉得不配，但做着做着就发现：越干越配。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67f8bfff59699d74dc069a2e"
+  },
+  {
+    "text": "就是在这种关关难过关关过的过程里，感受到价值感和生命的热烈。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6525049d19dde7bf6a3f95fe"
+  },
+  {
+    "text": "当你把人生的价值定义为体验，一切经历都是收获。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6871366f60f8f77d400ed762"
+  },
+  {
+    "text": "我们要夺回一种名叫生机勃勃的无用。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69bfe4503c625cc5ae93cba1"
+  },
+  {
+    "text": "有时候你只是换一种讲述自己的方式，就可能带来新的疗愈。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6915b9d2cbba038b4262c231"
+  },
+  {
+    "text": "真正说热爱的时候，不是说你有多狂热，而是你愿不愿意承受痛苦。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688c67368e06fe8de7ca55f8"
+  },
+  {
+    "text": "如果不能后退，那就成为一只蟑螂，上上下下爬来爬去。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69ccc14ab977fb2c47d17ed6"
+  },
+  {
+    "text": "螺狮粉很像爱情给我的感觉，它是一种吃的人很享受，但是旁边的人不明所以，甚至觉得有点酸臭的行为。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/697064e7ef1cf272a798001f"
+  },
+  {
+    "text": "当面与人人冲突固然是不符合我的做人原则，但忍气吞声更是让我怒火中烧。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69df5b67e2c8be3155486cfd"
+  },
+  {
+    "text": "时间节点的意义，是让你喊一个暂停，重新整理自己的人生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/677bf6becda04ef4c1d33ea3"
+  },
+  {
+    "text": "围栏让人和人的关系更紧张，也让人对自然更不关心。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/686cf96d93fd2d72b826b7ef"
+  },
+  {
+    "text": "进山，头两天身体到了，心没到；两三天后，你才开始听见风、闻到泥土。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68fa37e3083a71a4ebf32fee"
+  },
+  {
+    "text": "通过表达无知，你反而更可能探索到人生的一些真相。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6778712a1e823e72d30e7f0f"
+  },
+  {
+    "text": "日常的小幸福，它未必能激起生活的千层浪，但一定能填补生活干枯的池塘。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68eb9e5b525f51df38f02cf7"
+  },
+  {
+    "text": "美是需要时间的，时尚需要舒缓的节奏，需要时间来反思和沉淀。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68f3b0ae22654730201f056b"
+  },
+  {
+    "text": "你能呼吸、能发热、能在夜里叹息、能在白昼里做梦，就足够了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/69223970cbba038b42d08d00"
+  },
+  {
+    "text": "男性很普通，却迷之自信是没错的。我们要鼓励的是，女性即使很普通，也要自信。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f72e99f83c34e85dd4bbfea"
+  },
+  {
+    "text": "在错误的时间遇到错误的人，这可真是太幸运了",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f9a074983c34e85dd2e7733"
+  },
+  {
+    "text": "你不能因为达不到 150 公里，就让自己变成零。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688b5744edf3fa32d575b1d3"
+  },
+  {
+    "text": "当你真正体验过被爱之后，你才会发现，让你更有力量的其实是去爱别人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6864f37760f8f77d4076d342"
+  },
+  {
+    "text": "生活本就是充满奇迹的，如果你没有感受到，那说明你正在拼命阻挡你自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60d96ed325da4f997b8ba5c3"
+  },
+  {
+    "text": "金庸讲出一个观点：直男喜欢妖女！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/604c1cb2cb4847efd227fe2d"
+  },
+  {
+    "text": "风会熄灭蜡烛，却能使火越烧越旺。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689d4c21759c1ff652d52326"
+  },
+  {
+    "text": "爱的需求总量没有变，但爱的供给正在变少。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68cd00c02c82c9dcca2d4075"
+  },
+  {
+    "text": "青春不是年龄外显，是 state of mind。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689309ce46542d8c41c370e2"
+  },
+  {
+    "text": "对未来真正的慷慨，是把一切献给现在。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67b866ab606e5c5940f6f970"
+  },
+  {
+    "text": "一个好作品，作者匿名也应该成立，它不靠粉丝关系成立。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68f3b0ae22654730201f056b"
+  },
+  {
+    "text": "孩子越小的时候人越重要，孩子越大的时候，知识越重要。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68b6c2b45faf368659a9f2b4"
+  },
+  {
+    "text": "一个爱好的结果就是时间的载体，它让人把私人的时间变成能被看见的温度。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68298751fcbc2e206b7832d6"
+  },
+  {
+    "text": "长期的幸福感源自基于自我选择的生活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6906d76043a4f4a9847c4b2a"
+  },
+  {
+    "text": "我们不是 aging，我们是不断地增长，不断地丰富自己的阅历。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67c14277f8d1b678965efcd1"
+  },
+  {
+    "text": "其实女性可以去找到更多元化的榜样，回到自己，你希望呈现一个什么样的生命状态。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/673ac65ff373fe5d4d20d670"
+  },
+  {
+    "text": "人生就好像一程车，重点不是上车的人可以陪你去到哪个站，而是你们一起欣赏过哪些风景。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6810eb96bba7c874efc3dcce"
+  },
+  {
+    "text": "我们需要有次序地、按量地、健康地释放“攻击性”。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68932ee046542d8c41cb3c33"
+  },
+  {
+    "text": "走弯路是走路的一部分，花冤枉钱是花钱的一部分，不出战是战斗的一部分。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6837049238dcc57c646fd616"
+  },
+  {
+    "text": "价值感高的人会让自己做重要的事。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6568b6100170d72d02c0b30e"
+  },
   "真正的喜悦莫过于你拥有一份不是任何东西可以给你的安全感。",
-  "不能把世界观之间的对立，视作是人与人之间的对立。",
-  "如果你对某件事的结束感到悲伤，那就说明它的过程一定非常美好。",
-  "人们并不因为看清了而改变，而是因为改变了才能看清。",
-  "人生道路虽长，但要紧处常常只有几步。",
-  "爱好是承载时间的方式，它让私人时间变得可被看见、有温度。",
-  "当一个道理一句话你觉得很对的时候，把它玩命落实到生活里，就够了。",
-  "生活就是这么奇妙，很多事后看清楚的东西，当时完全看不到，或者说当时觉得很清晰的东西，事后你回想起来会觉得说，啊，我当时为什么是这样子。",
-  "幸福不是某一个点的成功，而是整个生活系统的稳定。",
-  "爱是在行动中产生的，爱是一种决心。",
-  "不是靠近贵人，是吸引贵人。",
-  "意外被规定得特别好的浪漫，它都不浪漫，这是教条。",
-  "你在 AI 的创作里面，本质上核心是接力共创，所以其实共创很核心。",
-  "你知道自己焦虑，就让它在那儿；越急着解决，越容易叠加。",
-  "做得不够好的地方很容易被看到，没有做得更坏的地方反而不容易被感知。",
-  "快乐不是虚的。愉悦了自己，你看什么都觉得是快乐的。",
-  "大家要允许自己搞砸，在不影响他人的情况下，你可以试试看自己能搞砸到什么程度。",
-  "幸运是一种需要经营的东西，需要你一直在积累。",
-  "没有人会一直处于快乐或者幸福的状态，也不可以一直都沉沦在痛苦里，但是你只要灵活，跟肌肉一样，被来回地锻炼，就会越来越健康。",
-  "你不用怕开始，因为成功的路其实远没有你想象的拥挤。",
-  "你时间花在哪里，你的成果就产出在哪里，你就会成为什么样的人。",
-  "如果你不说，你的故事就只能由别人去说。",
-  "人的适应能力远比想象中的要多得多，所以尤其在年轻的时候，勇敢一点，不要让自己留遗憾，你能够收获到终身受用的东西，它是之后人到一定年龄阶段最大的底气。",
-  "早早找到要专注的领域是非常幸运的，但是兜兜转转找寻，慢慢慢慢，最后才找到的这个经历本身，那确实也是挺有意思的，这是另外一种不同的幸运。",
-  "人与世界发生连接的那一刻，就是幸福的开始。",
-  "不要一个人发闷气，不要喝闷酒，大家互相交流，互相担起别人的包袱。",
-  "如果你走在错误的道路上，那停下来就是对的。",
-  "幸福往往是碎片化的，但它仍然是幸福。",
-  "卡在原地只不过是人生一个真实的阶段。",
-  "体育运动是最小成本让人建立起积极正反馈的事情，它真的能够帮人构筑底层自信。当你在运动上获得一些小小成果之后，会发现只要努力，就可以慢慢打怪升级，积小胜为大胜。",
-  "人都是在回答自己最深的困惑，那些你忍不住想弄明白的，就是你该走的路。",
-  "有一些长期友谊，好像没有经常见面但依旧存在，它像一个放在柜子里的手办，时不时触碰一下，喜爱依旧没有变。",
-  "我负责传达善意，对方怎么想是他的课题。",
-  "一个人只要不双标，他有任何权利去决定自己的人生怎么过。",
-  "我是为了生命在当下的体验而来。在每一个当下时刻，我要做的，就是全然地允许，全然地经历，全然地享受。",
-  "这个世界不围绕你转，所以遇到你不喜欢和讨厌的人是大概率事件。",
-  "如果一个人放弃很喜欢的事情，身体里的某个部分就死掉了，变成了不完整的一个人。",
-  "很多时候我们很累，是因为生活中夹杂了太多选择。",
-  "在过一种新生活之前，你要能先想象出它。",
+  {
+    "text": "不能把世界观之间的对立，视作是人与人之间的对立。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688c7c84edf3fa32d59b77a9"
+  },
+  {
+    "text": "如果你对某件事的结束感到悲伤，那就说明它的过程一定非常美好。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688c6228edf3fa32d5963a31"
+  },
+  {
+    "text": "人们并不因为看清了而改变，而是因为改变了才能看清。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67f39ad9f9578163d687fe91"
+  },
+  {
+    "text": "人生道路虽长，但要紧处常常只有几步。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68860138a9dec9250066c812"
+  },
+  {
+    "text": "爱好是承载时间的方式，它让私人时间变得可被看见、有温度。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68298751fcbc2e206b7832d6"
+  },
+  {
+    "text": "当一个道理一句话你觉得很对的时候，把它玩命落实到生活里，就够了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689edf98f9040f9dc34b6432"
+  },
+  {
+    "text": "生活就是这么奇妙，很多事后看清楚的东西，当时完全看不到，或者说当时觉得很清晰的东西，事后你回想起来会觉得说，啊，我当时为什么是这样子。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/684435c36dbe9284e741eb6e"
+  },
+  {
+    "text": "幸福不是某一个点的成功，而是整个生活系统的稳定。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68e8afd8224325ea707f9f96"
+  },
+  {
+    "text": "爱是在行动中产生的，爱是一种决心。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68932ee046542d8c41cb3c33"
+  },
+  {
+    "text": "不是靠近贵人，是吸引贵人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6892ff9a638b01587937b665"
+  },
+  {
+    "text": "意外被规定得特别好的浪漫，它都不浪漫，这是教条。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689c6ea3759c1ff652bdafdb"
+  },
+  {
+    "text": "你在 AI 的创作里面，本质上核心是接力共创，所以其实共创很核心。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68e82298b97d3bce02b4f815"
+  },
+  {
+    "text": "你知道自己焦虑，就让它在那儿；越急着解决，越容易叠加。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68fa37e3083a71a4ebf32fee"
+  },
+  {
+    "text": "做得不够好的地方很容易被看到，没有做得更坏的地方反而不容易被感知。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68edee45224325ea70288e70"
+  },
+  {
+    "text": "快乐不是虚的。愉悦了自己，你看什么都觉得是快乐的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68939f1a638b01587952952f"
+  },
+  {
+    "text": "大家要允许自己搞砸，在不影响他人的情况下，你可以试试看自己能搞砸到什么程度。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67dcfc9edd11f9c8c1231a59"
+  },
+  {
+    "text": "幸运是一种需要经营的东西，需要你一直在积累。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68298751fcbc2e206b7832d6"
+  },
+  {
+    "text": "没有人会一直处于快乐或者幸福的状态，也不可以一直都沉沦在痛苦里，但是你只要灵活，跟肌肉一样，被来回地锻炼，就会越来越健康。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68ad38dc42cc2798e7708680"
+  },
+  {
+    "text": "你不用怕开始，因为成功的路其实远没有你想象的拥挤。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6837049238dcc57c646fd616"
+  },
+  {
+    "text": "你时间花在哪里，你的成果就产出在哪里，你就会成为什么样的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6778712a1e823e72d30e7f0f"
+  },
+  {
+    "text": "如果你不说，你的故事就只能由别人去说。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67e238d8dd11f9c8c1f0b2e8"
+  },
+  {
+    "text": "人的适应能力远比想象中的要多得多，所以尤其在年轻的时候，勇敢一点，不要让自己留遗憾，你能够收获到终身受用的东西，它是之后人到一定年龄阶段最大的底气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68820a9fa12f9ff06ad45d73"
+  },
+  {
+    "text": "早早找到要专注的领域是非常幸运的，但是兜兜转转找寻，慢慢慢慢，最后才找到的这个经历本身，那确实也是挺有意思的，这是另外一种不同的幸运。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67e2d16e243baa29373251e0"
+  },
+  {
+    "text": "人与世界发生连接的那一刻，就是幸福的开始。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/681440b747ebeede7e6e08f8"
+  },
+  {
+    "text": "不要一个人发闷气，不要喝闷酒，大家互相交流，互相担起别人的包袱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688c6e7b8e06fe8de7cbe542"
+  },
+  {
+    "text": "如果你走在错误的道路上，那停下来就是对的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/691c4384cbba038b4221f202"
+  },
+  {
+    "text": "幸福往往是碎片化的，但它仍然是幸福。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/679296dc247d51713ceb4461"
+  },
+  {
+    "text": "卡在原地只不过是人生一个真实的阶段。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64e87bae3fa4090b743eb242"
+  },
+  {
+    "text": "体育运动是最小成本让人建立起积极正反馈的事情，它真的能够帮人构筑底层自信。当你在运动上获得一些小小成果之后，会发现只要努力，就可以慢慢打怪升级，积小胜为大胜。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68eb293752f01d1dd2fb3ddf"
+  },
+  {
+    "text": "人都是在回答自己最深的困惑，那些你忍不住想弄明白的，就是你该走的路。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67fff2f31f1db84a56be4344"
+  },
+  {
+    "text": "有一些长期友谊，好像没有经常见面但依旧存在，它像一个放在柜子里的手办，时不时触碰一下，喜爱依旧没有变。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6895757c638b0158798f66d9"
+  },
+  {
+    "text": "我负责传达善意，对方怎么想是他的课题。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689b410c20a2906a4d353036"
+  },
+  {
+    "text": "一个人只要不双标，他有任何权利去决定自己的人生怎么过。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6899ced820a2906a4dff1856"
+  },
+  {
+    "text": "我是为了生命在当下的体验而来。在每一个当下时刻，我要做的，就是全然地允许，全然地经历，全然地享受。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/647ee18c5ed4bd1a4631803e"
+  },
+  {
+    "text": "这个世界不围绕你转，所以遇到你不喜欢和讨厌的人是大概率事件。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6899ced820a2906a4dff1856"
+  },
+  {
+    "text": "如果一个人放弃很喜欢的事情，身体里的某个部分就死掉了，变成了不完整的一个人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6695aa7231b23eb7bc4b880d"
+  },
+  {
+    "text": "很多时候我们很累，是因为生活中夹杂了太多选择。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/687e1f73a12f9ff06a46f319"
+  },
+  {
+    "text": "在过一种新生活之前，你要能先想象出它。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67414e8611045e78e538fca0"
+  },
   "人跟人其实共存就好，不需要相处那么多。",
-  "每个人都有过来人的总结，但是人总要自己过来。",
-  "如果你被告知要登火箭，不要去问应该坐哪个位置，先登上去就好。",
-  "把目标置顶，把情绪取消置顶。",
-  "注意力决定体验，体验决定人生。",
-  "旅行是最容易积累人生宝贵回忆的过程，丰富个体的精神世界。",
-  "你想要的并不会让你特别，但你和个人欲望之间的碰撞使你特别了起来。",
-  "真正的成长是我们不仅可以知道自己想的是什么，我们也可以听懂别人真正想表达的是什么。",
-  "植物最大的智慧，在于它专注自己的成长。",
-  "旧模式在新环境中失灵，恰是进化的开始。",
-  "走得快走得慢不是最重要的，走下去才是最重要的。",
-  "让你陷入困境的，不是你不知道的事情，而是你确信你知道，但其实是错误的事情。",
-  "不靠谱和接纳别人的不靠谱是快乐的先决条件。",
-  "去遇见，去跟这个世界发生碰撞。待在固有的规律里，待在惯性里，是看不见真实的自己的。",
-  "真诚不是无脑付出，而是敢给敢要的坦荡。",
-  "我有把自己哄好的能力，我感激我自己。",
-  "技能决定你能做什么，商业思维决定你值多少钱。",
-  "我们一直在追求稳定，却忘了关注我们幸不幸福。",
-  "顺着人性做生意，逆着人性做自己。",
-  "世界上没有顺风车，只是车上刚好有别人。",
-  "爱不仅仅是依赖和占有，更是一种自由的选择和对自我成长的尊重。",
-  "我们本身就足够美好，不需要更好更强不需要成就不需要证明。",
-  "我的生活没有原动力，生活给我一指头，我就动一下。",
-  "不稳定的生活状态让人和生活绑定，无法思考未来的发展。",
-  "这个世界没有废料，只有未被打开的人。",
-  "人生没有标准答案，世界作为参考答案。",
-  "通过做成一件件小事而逐渐形成对自己的肯定。",
-  "大家真的要把自己活成GDP和点击率吗？",
-  "学到的知识很大一部分会被忘记，但被忘记的知识的影子却会保护着你，让你避免陷入很多错觉。",
-  "真正的艺术家是在生活。",
-  "在乎我们的真实感受，并不以此为羞耻。",
-  "人生是不断的失控，好的人生是精准的失控。",
-  "幸福是很碎片化的，但那也是幸福。",
-  "青春是人生的实验课，错也错得很值得。",
-  "没有一种批判比自我批判更强烈，也没有一个法官比我们自己更严格。",
-  "最好的回报是回忆，回忆可以反复消费，而且越老越值钱。",
-  "不要过度美化那条未选择的道路。",
-  "我们有四处泛滥的情感，却没有值得铭记的爱。",
-  "痛苦源自有时间琢磨自己是不是快乐。",
-  "没有明确要成为谁，因为我们要成为自己。",
-  "比起教育，我们一直以来接收的都是知识。",
-  "人生很大一个功课是在学习如何接受自己的平凡。",
-  "“女生”前面不需要加任何定语，以这样的的姿态生活下去就是一种不简单。",
-  "比较是偷走幸福的小偷。",
-  "冷藏牛奶的溢价，是消费者为“新鲜幻觉”缴纳的智商税。",
-  "你唯一能够全盘控制的复仇就是过好你自己的生活。",
-  "选择的本质是放弃。",
-  "升降桌是伪需求，因为坐累了应该要起来活动一下，而不是站起来继续干活。",
-  "你觉得自己不是恋爱脑，是让你恋爱脑的那个人没出现 。",
-  "剧本是电影的最低点，但好电影不只是剧本。",
-  "你不需要辛苦一点，你需要幸福一点。",
-  "为了避免犯错误，避免了一切出彩。",
-  "不用跟自己的短板较劲。",
-  "创造力是将看起来不相关的事物关联起来的能力。",
-  "自己要先爱自己，不断地认识自己，提升自己，就不会因为别人的改变而感到受伤。",
-  "别总想着“避坑”，经验是“踏坑”踏出来的。",
-  "我们的肉身其实是宇宙借给我们的躯体。",
-  "做自己并不代表舒服，而是适合。",
-  "工资是低保，事业才是养老保险。",
-  "悲观者永远正确，乐观者永远前行。",
-  "圆满有时候是个中性词。",
-  "一辈子都想离经叛道，最终还是走向正轨。",
-  "婚姻就是人性的终极考验，它让我们的自我无处遁形。",
-  "爱情的银行要多存钱，这样出现矛盾的时候才有的取。",
-  "我们讲network，没有net，怎么work？",
-  "以为万事可以全靠努力，是一种傲慢。",
-  "每个叛逆的人，都只是想成为自己的乖孩子。",
-  "强者只看需求，弱者才看供给。",
-  "我们这时代的客观，就是里外都不是人的中肯。",
-  "自由从不降临于人类，人类必须上升至其高度。",
-  "human resource 根本不在乎human，只在乎resource。",
-  "不做暴躁的弱鸡，要做和平的猛兽。",
-  "现代人好多不在交流，而是交锋。",
-  "今天永远是余生最年轻的一天。",
-  "只有手握权力的人才能搞砸事情。",
-  "你应该知道，意义并不在词典里，意义就像水汽一样渗透到四处。",
-  "爱的反面不是不爱，爱的反面就是理性。",
-  "好的爱情是带对方见到更大的世界。",
-  "不下牌桌不是赖在牌桌上，而是要不断抓牌，总有一天你会抓到一张王。",
-  "在这个冷酷而混乱的世界里，也许终究存在着某种宏大的公平。",
-  "既然你的头脑那么发达，能创造这么多痛苦，那么也一定能创造很多让你幸福的事物。",
-  "旅行不是走马观花地看风景，而是一场与世界深度对话、与自我灵魂相拥的旅程。",
-  "希望卧室是合身的，适合蜷缩的地方。",
-  "不要把身边人的成功，想象成对自己的否定。",
-  "把爱情和路过的风景排在一个位置，它很好，我们可以反复去，也可以去错过它，不用非得在它身上停留。",
-  "做事但问应不应该，不问可不可能。",
-  "失败是人生的课题，而不是人生的结局。",
-  "关系的终结不像关系的建立，终结只需要自己一个人处理就够了。",
-  "绝对的才华可以让你走的更远，但是只有绝对的信任能让你站的更稳。",
-  "浪漫就是让你忽略性价比的事。",
-  "青年的反义词不是老年，而是平庸。",
-  "没有好好告别的人一定会重逢。",
-  "成年后养的第一个孩子是自己。",
-  "成功取决于你在低潮期的心态。",
-  "当你有时刻意地去讨好生活的时候，生活可能就不太理你。",
-  "规划好一切的出发，往往极为脆弱。",
-  "舒适圈可能是快乐也可能是痛苦。只是熟悉的感觉就会给你安全感。",
-  "这件事情它能让你忐忑，就是很爽的事情，这证明你没有过着重复的、千篇一律的生活。",
-  "我们有太少的思考和追究，太多的轻信和接受。",
-  "表达是比敷衍更尊重对方的方式。",
-  "离开故乡，它的作用才开始显现。",
-  "爱情和婚姻从来都不是因果的关系。",
+  {
+    "text": "每个人都有过来人的总结，但是人总要自己过来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/683dc20738dcc57c6430bedb"
+  },
+  {
+    "text": "如果你被告知要登火箭，不要去问应该坐哪个位置，先登上去就好。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6794ef2285b62bb5c9b2e19e"
+  },
+  {
+    "text": "把目标置顶，把情绪取消置顶。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68a585bb42cc2798e7839097"
+  },
+  {
+    "text": "注意力决定体验，体验决定人生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/672d808741963c65b0de7d61"
+  },
+  {
+    "text": "旅行是最容易积累人生宝贵回忆的过程，丰富个体的精神世界。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66b9b1d533591c27be740ef5"
+  },
+  {
+    "text": "你想要的并不会让你特别，但你和个人欲望之间的碰撞使你特别了起来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/673a65c745a88c424c665af8"
+  },
+  {
+    "text": "真正的成长是我们不仅可以知道自己想的是什么，我们也可以听懂别人真正想表达的是什么。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688764a8edf3fa32d5e8a14f"
+  },
+  {
+    "text": "植物最大的智慧，在于它专注自己的成长。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/684aa5781c88ae1166d595b5"
+  },
+  {
+    "text": "旧模式在新环境中失灵，恰是进化的开始。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/688749058e06fe8de71814b3"
+  },
+  {
+    "text": "走得快走得慢不是最重要的，走下去才是最重要的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66e0448fbfd7110df4ad7c6d"
+  },
+  {
+    "text": "让你陷入困境的，不是你不知道的事情，而是你确信你知道，但其实是错误的事情。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68a4735a293471fed46c3ef0"
+  },
+  {
+    "text": "不靠谱和接纳别人的不靠谱是快乐的先决条件。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689c6fdc9fb6883bb369cdcd"
+  },
+  {
+    "text": "去遇见，去跟这个世界发生碰撞。待在固有的规律里，待在惯性里，是看不见真实的自己的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/677bf6becda04ef4c1d33ea3"
+  },
+  {
+    "text": "真诚不是无脑付出，而是敢给敢要的坦荡。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/689b410c20a2906a4d353036"
+  },
+  {
+    "text": "我有把自己哄好的能力，我感激我自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68a32d1542cc2798e73188b0"
+  },
+  {
+    "text": "技能决定你能做什么，商业思维决定你值多少钱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/68a5f24f42cc2798e7961fb6"
+  },
+  {
+    "text": "我们一直在追求稳定，却忘了关注我们幸不幸福。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6670e5d0b6a84127297f3461"
+  },
+  {
+    "text": "顺着人性做生意，逆着人性做自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6756b67cbdb9877a977a9673"
+  },
+  {
+    "text": "世界上没有顺风车，只是车上刚好有别人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67bf0bdc606e5c59400448a3"
+  },
+  {
+    "text": "爱不仅仅是依赖和占有，更是一种自由的选择和对自我成长的尊重。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67a0d595d74435e4a3edd63d"
+  },
+  {
+    "text": "我们本身就足够美好，不需要更好更强不需要成就不需要证明。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67818b00d6a4b57e144e34d2"
+  },
+  {
+    "text": "我的生活没有原动力，生活给我一指头，我就动一下。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/683b2e2d80b4279d56d9370b"
+  },
+  {
+    "text": "不稳定的生活状态让人和生活绑定，无法思考未来的发展。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/663945b9565d3f8fe3204190"
+  },
+  {
+    "text": "这个世界没有废料，只有未被打开的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62ac60e54644baedb5b982ed"
+  },
+  {
+    "text": "人生没有标准答案，世界作为参考答案。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/675aad127d8426f692912a3a"
+  },
+  {
+    "text": "通过做成一件件小事而逐渐形成对自己的肯定。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66e7e5873a5ff0a0caca951f"
+  },
+  {
+    "text": "大家真的要把自己活成GDP和点击率吗？",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65fb1c602d9eae5d0a0aaa88"
+  },
+  {
+    "text": "学到的知识很大一部分会被忘记，但被忘记的知识的影子却会保护着你，让你避免陷入很多错觉。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/665068274efbc0c3dccd06d4"
+  },
+  {
+    "text": "真正的艺术家是在生活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6819986247ebeede7efbe7dd"
+  },
+  {
+    "text": "在乎我们的真实感受，并不以此为羞耻。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67e3c1f2af5840b3336f2b16"
+  },
+  {
+    "text": "人生是不断的失控，好的人生是精准的失控。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66443dc682b428eafdb21c68"
+  },
+  {
+    "text": "幸福是很碎片化的，但那也是幸福。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/679296dc247d51713ceb4461"
+  },
+  {
+    "text": "青春是人生的实验课，错也错得很值得。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/665f38f663c334a2fb5f84c6"
+  },
+  {
+    "text": "没有一种批判比自我批判更强烈，也没有一个法官比我们自己更严格。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65ba70ac6a43241529deabd6"
+  },
+  {
+    "text": "最好的回报是回忆，回忆可以反复消费，而且越老越值钱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6746e4438d1233fb0d7dfd98"
+  },
+  {
+    "text": "不要过度美化那条未选择的道路。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/664ddd11c59d1e5757f663ab"
+  },
+  {
+    "text": "我们有四处泛滥的情感，却没有值得铭记的爱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/662a03cbff598d65f227106e"
+  },
+  {
+    "text": "痛苦源自有时间琢磨自己是不是快乐。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66683ee6b6a8412729fbbda5"
+  },
+  {
+    "text": "没有明确要成为谁，因为我们要成为自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/667944cfd3fc5dd627ab953e"
+  },
+  {
+    "text": "比起教育，我们一直以来接收的都是知识。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/667b96c2c37399840c2d4f24"
+  },
+  {
+    "text": "人生很大一个功课是在学习如何接受自己的平凡。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66a84a9b7349f7a55774685e"
+  },
+  {
+    "text": "“女生”前面不需要加任何定语，以这样的的姿态生活下去就是一种不简单。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63a5728f8b36c9d5f556ffc3"
+  },
+  {
+    "text": "比较是偷走幸福的小偷。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/673e119a8d1233fb0dc52273"
+  },
+  {
+    "text": "冷藏牛奶的溢价，是消费者为“新鲜幻觉”缴纳的智商税。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/681b7d20db57cd35f70e093a"
+  },
+  {
+    "text": "你唯一能够全盘控制的复仇就是过好你自己的生活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/670e1df70d2f24f2893feca8"
+  },
+  {
+    "text": "选择的本质是放弃。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6837049238dcc57c646fd616"
+  },
+  {
+    "text": "升降桌是伪需求，因为坐累了应该要起来活动一下，而不是站起来继续干活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/679f231c247d51713c432252"
+  },
+  {
+    "text": "你觉得自己不是恋爱脑，是让你恋爱脑的那个人没出现 。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66b4820578f788007aa69a96"
+  },
+  {
+    "text": "剧本是电影的最低点，但好电影不只是剧本。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67d9680cdd11f9c8c1725d3d"
+  },
+  {
+    "text": "你不需要辛苦一点，你需要幸福一点。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67c517ecb0167b8db9143632"
+  },
+  {
+    "text": "为了避免犯错误，避免了一切出彩。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66732bd5b6a8412729f944fd"
+  },
+  {
+    "text": "不用跟自己的短板较劲。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6659993ead5aa5d8c2b6dcc1"
+  },
+  {
+    "text": "创造力是将看起来不相关的事物关联起来的能力。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61ee26c84675a08411f51570"
+  },
+  {
+    "text": "自己要先爱自己，不断地认识自己，提升自己，就不会因为别人的改变而感到受伤。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67a5a52cd74435e4a39da455"
+  },
+  {
+    "text": "别总想着“避坑”，经验是“踏坑”踏出来的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/663ba38bdf37950503bcc9e6"
+  },
+  {
+    "text": "我们的肉身其实是宇宙借给我们的躯体。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64305176a79cc81470e792e8"
+  },
+  {
+    "text": "做自己并不代表舒服，而是适合。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/673a65c745a88c424c665af8"
+  },
+  {
+    "text": "工资是低保，事业才是养老保险。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67bf6c4a05a90dfd0d15ae40"
+  },
+  {
+    "text": "悲观者永远正确，乐观者永远前行。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/677eb10a1962f0b75158bf80"
+  },
+  {
+    "text": "圆满有时候是个中性词。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/674694928d1233fb0d626830"
+  },
+  {
+    "text": "一辈子都想离经叛道，最终还是走向正轨。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/640d1a7870c30e59d5f13002"
+  },
+  {
+    "text": "婚姻就是人性的终极考验，它让我们的自我无处遁形。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6735b9daf373fe5d4d41b06a"
+  },
+  {
+    "text": "爱情的银行要多存钱，这样出现矛盾的时候才有的取。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60dc93b42283e99f69059776"
+  },
+  {
+    "text": "我们讲network，没有net，怎么work？",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67cad1d8e924d4525afb81cf"
+  },
+  {
+    "text": "以为万事可以全靠努力，是一种傲慢。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64e3ecb39bbf7224c152bcf9"
+  },
+  {
+    "text": "每个叛逆的人，都只是想成为自己的乖孩子。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6667191794977a26ef6b2685"
+  },
+  {
+    "text": "强者只看需求，弱者才看供给。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65caa4254ca142334a58efbe"
+  },
+  {
+    "text": "我们这时代的客观，就是里外都不是人的中肯。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60ecd13b52ea083b82c30891"
+  },
+  {
+    "text": "自由从不降临于人类，人类必须上升至其高度。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0e7c7d6d7660742767d932"
+  },
+  {
+    "text": "human resource 根本不在乎human，只在乎resource。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60041a98ee3ec78161e723f2"
+  },
+  {
+    "text": "不做暴躁的弱鸡，要做和平的猛兽。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64f872306884ccbb193628fb"
+  },
+  {
+    "text": "现代人好多不在交流，而是交锋。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60ac3692eb3e72d92188a8f3"
+  },
+  {
+    "text": "今天永远是余生最年轻的一天。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/647e770926cccd05eab5f129"
+  },
+  {
+    "text": "只有手握权力的人才能搞砸事情。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64e8c17f80c9ec4c5f481782"
+  },
+  {
+    "text": "你应该知道，意义并不在词典里，意义就像水汽一样渗透到四处。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/607724160f73421449bec29f"
+  },
+  {
+    "text": "爱的反面不是不爱，爱的反面就是理性。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66b1c488facd70cb5b4dae25"
+  },
+  {
+    "text": "好的爱情是带对方见到更大的世界。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66a722b733ddcbb53cca0c25"
+  },
+  {
+    "text": "不下牌桌不是赖在牌桌上，而是要不断抓牌，总有一天你会抓到一张王。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66d1997e470be105053594c9"
+  },
+  {
+    "text": "在这个冷酷而混乱的世界里，也许终究存在着某种宏大的公平。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6720836fbad346ebe6399017"
+  },
+  {
+    "text": "既然你的头脑那么发达，能创造这么多痛苦，那么也一定能创造很多让你幸福的事物。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/677a3e581e823e72d352179c"
+  },
+  {
+    "text": "旅行不是走马观花地看风景，而是一场与世界深度对话、与自我灵魂相拥的旅程。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/675ee93884447b1bd01139c6"
+  },
+  {
+    "text": "希望卧室是合身的，适合蜷缩的地方。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/621a7976508981ceb8b7d2e9"
+  },
+  {
+    "text": "不要把身边人的成功，想象成对自己的否定。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/629e25089670852dace80c74"
+  },
+  {
+    "text": "把爱情和路过的风景排在一个位置，它很好，我们可以反复去，也可以去错过它，不用非得在它身上停留。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67a2f1ce247d51713cb053e2"
+  },
+  {
+    "text": "做事但问应不应该，不问可不可能。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/658e9f9fcab6086ec17913fe"
+  },
+  {
+    "text": "失败是人生的课题，而不是人生的结局。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65f1d1e1676495707929c811"
+  },
+  {
+    "text": "关系的终结不像关系的建立，终结只需要自己一个人处理就够了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fd78f99dee9c1e16da50c34"
+  },
+  {
+    "text": "绝对的才华可以让你走的更远，但是只有绝对的信任能让你站的更稳。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66dee368ee04007d884955e5"
+  },
+  {
+    "text": "浪漫就是让你忽略性价比的事。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62f3822c03da6b049bdc0700"
+  },
+  {
+    "text": "青年的反义词不是老年，而是平庸。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63fcd6c058a686928cae7095"
+  },
+  {
+    "text": "没有好好告别的人一定会重逢。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6379faa6882ce82fb6458a49"
+  },
+  {
+    "text": "成年后养的第一个孩子是自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64bd4e0e108cc8270eb1bc3d"
+  },
+  {
+    "text": "成功取决于你在低潮期的心态。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65a0d5af926ad7aad0d6380b"
+  },
+  {
+    "text": "当你有时刻意地去讨好生活的时候，生活可能就不太理你。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66ac965d33ddcbb53cd71126"
+  },
+  {
+    "text": "规划好一切的出发，往往极为脆弱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/660adc472d9eae5d0a742782"
+  },
+  {
+    "text": "舒适圈可能是快乐也可能是痛苦。只是熟悉的感觉就会给你安全感。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0e6ba46d766074271809c3"
+  },
+  {
+    "text": "这件事情它能让你忐忑，就是很爽的事情，这证明你没有过着重复的、千篇一律的生活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/636ccc1f165a4944db4977ff"
+  },
+  {
+    "text": "我们有太少的思考和追究，太多的轻信和接受。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63cf1f1c6bcfd9410291325e"
+  },
+  {
+    "text": "表达是比敷衍更尊重对方的方式。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/613f2d9769010c74c3a68715"
+  },
+  {
+    "text": "离开故乡，它的作用才开始显现。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fd7f591dee9c1e16d79cdcf"
+  },
+  {
+    "text": "爱情和婚姻从来都不是因果的关系。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65c4743335dd8780eda4f74d"
+  },
   "这是一个没有悬念，只有悬崖的时代。",
-  "如果一直一个人给台阶，那么另一个人就在走下坡路。",
-  "婚姻不是终点，而是两个人共同成长的起点。",
-  "错误是人生的调料。",
-  "教育可以帮我们了解个体差异的成因，并且试着去理解他们。",
-  "爱情是课间十分钟，还得有45分钟干自己想干的事。",
-  "不是跟世界和解了，是被世界打趴下了。",
-  "意识到自己的渺小就很治愈了。",
-  "如果你一直想着退路，那这是一定干不好。",
-  "没有获得世俗意义上成功的人，要学会如何度过平凡而快乐的一生",
-  "不要让工作完全定义你的价值，而是自己去定义工作的意义。",
+  {
+    "text": "如果一直一个人给台阶，那么另一个人就在走下坡路。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63605b800828a2147e5d091d"
+  },
+  {
+    "text": "婚姻不是终点，而是两个人共同成长的起点。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6735bebb43dc3a438798fda9"
+  },
+  {
+    "text": "错误是人生的调料。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66d708034a0f950f8442e2ba"
+  },
+  {
+    "text": "教育可以帮我们了解个体差异的成因，并且试着去理解他们。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/674502563e619807d500fe5e"
+  },
+  {
+    "text": "爱情是课间十分钟，还得有45分钟干自己想干的事。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/67414e8611045e78e538fca0"
+  },
+  {
+    "text": "不是跟世界和解了，是被世界打趴下了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/649c0aa1f5604aa55e1491c4"
+  },
+  {
+    "text": "意识到自己的渺小就很治愈了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60eace1b38464275a6127751"
+  },
+  {
+    "text": "如果你一直想着退路，那这是一定干不好。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/600dee32e9ee1220ab26503e"
+  },
+  {
+    "text": "没有获得世俗意义上成功的人，要学会如何度过平凡而快乐的一生",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5e280faf418a84a0461fbd75"
+  },
+  {
+    "text": "不要让工作完全定义你的价值，而是自己去定义工作的意义。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/629fce3c9670852dace8285a"
+  },
   "为什么我们越来越不能长期做一件事？因为我们想马上得到反馈。",
-  "一个好的亲密关系是每一个人都需要一个放松且允许自己犯错误的空间。",
-  "不要对婚礼有太多的期待，也不要对婚姻有太多的期待，但你要对自己有期待！",
-  "我们本应被鼓励去发现或创造自己的真相，但事实上我们被无数强大的指令狂轰滥炸。",
-  "骨质还没疏松，演技已经稀碎。",
-  "爱好才是成年人的解药！",
-  "当你的环境越缩越小后，所有的小事都变得很显眼。",
-  "距离之于爱情，就好像风之于火，它吹熄那些微弱的，助长那些强烈的。",
-  "相遇不一定有结局，但一定有意义。",
-  "友情里的含爱量不见得比爱情低。",
-  "爱不是有一个顶峰，然后自然下落的过程。爱是一个不断爱上对方的过程。",
-  "爱自己的时候竭尽全力，爱别人的时候适可而止。",
-  "只要努力爱这个世界，这个世界会爱回来的。",
-  "爱是可以一起说不正确的话。",
-  "卡在原地也只是人生一个真实的阶段。",
-  "只有拥有自己的人，才能更好地享受爱。",
-  "卷也卷不动，躺也躺不平，我和我的45°人生。",
-  "甘于平庸就是衰老的开始，无论人和公司都是这样。",
-  "允许别人做别人，允许自己做自己。",
-  "瓶颈期其实是一种自我保护机制。",
-  "自信就是偶尔自卑也可以。",
-  "世界上有两种失败者：一种什么也不做的人，一种什么都想做好的人。",
-  "知识付费就像吃仙桃，人们一听完就觉得“我又行了”",
-  "当没有镜子可以照的时候，我们还能找到自己吗？",
-  "很多时候故事没有结束，只是我们用结束的角度去总结了它。",
-  "爱本身不会让人痛苦，欲望才会让人痛苦，因为欲望都是向外索取的，而爱是由内而外的散发。",
-  "付出是爱的表现，不是获得爱的方式。",
-  "死亡，不是禁忌与恐惧，而是生命的凝视与整理。",
-  "祛魅最好的方式是拥有。",
-  "讨好关系就是搞砸关系的开始。",
-  "女生关系是面对面，男生关系是肩并肩。",
-  "你的缺点也是你的记忆点和特点。",
-  "人生的诀窍在于早点开始发疯。",
-  "人生哪有岸，都是一片一片的海。",
-  "如果所有人都觉得你正常，你的理想是大家都能想到的，它对人类的理想总量没有增量。",
+  {
+    "text": "一个好的亲密关系是每一个人都需要一个放松且允许自己犯错误的空间。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f31e3179504bbdb7759dc2e"
+  },
+  {
+    "text": "不要对婚礼有太多的期待，也不要对婚姻有太多的期待，但你要对自己有期待！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6086e6d45282b779db6174c9"
+  },
+  {
+    "text": "我们本应被鼓励去发现或创造自己的真相，但事实上我们被无数强大的指令狂轰滥炸。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62da7e42fa15142e17251e6d"
+  },
+  {
+    "text": "骨质还没疏松，演技已经稀碎。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61f27f680c35c9f95dca153e"
+  },
+  {
+    "text": "爱好才是成年人的解药！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64f4b7d03fa4090b740d6d68"
+  },
+  {
+    "text": "当你的环境越缩越小后，所有的小事都变得很显眼。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62e927619f87279faacd88b2"
+  },
+  {
+    "text": "距离之于爱情，就好像风之于火，它吹熄那些微弱的，助长那些强烈的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6269071167427058b8451d81"
+  },
+  {
+    "text": "相遇不一定有结局，但一定有意义。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65caa4254ca142334a58efbe"
+  },
+  {
+    "text": "友情里的含爱量不见得比爱情低。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6653f1884efbc0c3dc41fd8e"
+  },
+  {
+    "text": "爱不是有一个顶峰，然后自然下落的过程。爱是一个不断爱上对方的过程。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64da39693fa4090b743c0091"
+  },
+  {
+    "text": "爱自己的时候竭尽全力，爱别人的时候适可而止。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65def96705414b70bce0dba3"
+  },
+  {
+    "text": "只要努力爱这个世界，这个世界会爱回来的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/644532799c5a80f4e4c44b10"
+  },
+  {
+    "text": "爱是可以一起说不正确的话。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63fd3632ae278c46816e045b"
+  },
+  {
+    "text": "卡在原地也只是人生一个真实的阶段。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64e87bae3fa4090b743eb242"
+  },
+  {
+    "text": "只有拥有自己的人，才能更好地享受爱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6550e0a50c723621c7fc5fab"
+  },
+  {
+    "text": "卷也卷不动，躺也躺不平，我和我的45°人生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6596ff4b926ad7aad0826bed"
+  },
+  {
+    "text": "甘于平庸就是衰老的开始，无论人和公司都是这样。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66a9077533ddcbb53c3251de"
+  },
+  {
+    "text": "允许别人做别人，允许自己做自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5ec3834d418a84a046fe8878"
+  },
+  {
+    "text": "瓶颈期其实是一种自我保护机制。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66533d754efbc0c3dc2aeb84"
+  },
+  {
+    "text": "自信就是偶尔自卑也可以。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/652a979919dde7bf6a6ed527"
+  },
+  {
+    "text": "世界上有两种失败者：一种什么也不做的人，一种什么都想做好的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/666d2f5cb6a8412729e74c92"
+  },
+  {
+    "text": "知识付费就像吃仙桃，人们一听完就觉得“我又行了”",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f92582883c34e85dd36c384"
+  },
+  {
+    "text": "当没有镜子可以照的时候，我们还能找到自己吗？",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65779535eaa64fd29eea931a"
+  },
+  {
+    "text": "很多时候故事没有结束，只是我们用结束的角度去总结了它。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/664e25ec4efbc0c3dc657931"
+  },
+  {
+    "text": "爱本身不会让人痛苦，欲望才会让人痛苦，因为欲望都是向外索取的，而爱是由内而外的散发。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65aa6c81d77f0b0c95960eb8"
+  },
+  {
+    "text": "付出是爱的表现，不是获得爱的方式。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6550e0a50c723621c7fc5fab"
+  },
+  {
+    "text": "死亡，不是禁忌与恐惧，而是生命的凝视与整理。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/662c3ae80face6e86c93a16e"
+  },
+  {
+    "text": "祛魅最好的方式是拥有。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64ad7cb4b21ecc647deed28f"
+  },
+  {
+    "text": "讨好关系就是搞砸关系的开始。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66829299077b88831b7c371d"
+  },
+  {
+    "text": "女生关系是面对面，男生关系是肩并肩。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5ebc6670418a84a0465a931a"
+  },
+  {
+    "text": "你的缺点也是你的记忆点和特点。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66023bf61519139e4f9aef60"
+  },
+  {
+    "text": "人生的诀窍在于早点开始发疯。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65c87c90b6c9256aeec4d81d"
+  },
+  {
+    "text": "人生哪有岸，都是一片一片的海。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64c9f86a99e1e7669ea6b91b"
+  },
+  {
+    "text": "如果所有人都觉得你正常，你的理想是大家都能想到的，它对人类的理想总量没有增量。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65e16b5b6144a933b1d968b5"
+  },
   "能够离开和放弃，但是还是选择在一起，才证明是爱。",
-  "被扒一层皮，皮还是会长回来，而且会更厚。",
-  "人的衰老是从原则的模糊开始的。",
-  "当一个人没有目标的时候，东南西北都不顺路，顺风逆风都是逆风。",
-  "人生就是一片苦海，我们都在里面泡着，偶尔飘过来两个棉花糖你吃一吃。",
-  "文学的意义就是告诉你，不正常也可以。",
-  "爱情本身也是某种病毒，虚弱的人更容易感染。",
-  "感性提升上限，理性提升下限。",
-  "别人眼中的你不是你，你眼中的你也不是你，你眼中的别人才是你。",
-  "爱上很容易，爱下去很难。",
-  "有些工作不是要能干的人，是要能忍的人。",
-  "用战术的勤奋掩饰战略的懒惰。",
-  "悲观者往往正确，乐观者往往成功。",
+  {
+    "text": "被扒一层皮，皮还是会长回来，而且会更厚。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6630cabc485813145082df10"
+  },
+  {
+    "text": "人的衰老是从原则的模糊开始的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/66138285847bd2aa8f220dab"
+  },
+  {
+    "text": "当一个人没有目标的时候，东南西北都不顺路，顺风逆风都是逆风。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6659adfdad5aa5d8c2bc623b"
+  },
+  {
+    "text": "人生就是一片苦海，我们都在里面泡着，偶尔飘过来两个棉花糖你吃一吃。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/648c2d0ce16019bcbcdd6ad9"
+  },
+  {
+    "text": "文学的意义就是告诉你，不正常也可以。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/645b17b7c6a59858a702f356"
+  },
+  {
+    "text": "爱情本身也是某种病毒，虚弱的人更容易感染。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64d606c7f50b650b2894cccd"
+  },
+  {
+    "text": "感性提升上限，理性提升下限。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65b799cca5fe30bcbfd79b0b"
+  },
+  {
+    "text": "别人眼中的你不是你，你眼中的你也不是你，你眼中的别人才是你。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65a789f5a9c35ccd8f88dd77"
+  },
+  {
+    "text": "爱上很容易，爱下去很难。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/661170d9bc518a1601707470"
+  },
+  {
+    "text": "有些工作不是要能干的人，是要能忍的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/661cd0075dae7932c6929908"
+  },
+  {
+    "text": "用战术的勤奋掩饰战略的懒惰。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/664f2985c59d1e575733e1dd"
+  },
+  {
+    "text": "悲观者往往正确，乐观者往往成功。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64fac3bb3fa4090b747c72c6"
+  },
   "可以死于无能，不能死于无知。",
-  "赢和输，不代表成功和失败。",
-  "莽撞的开始、拙劣的完成，总好过怀抱着完美主义一直迟迟不肯去做。",
-  "人真正需要的物件是很少的，定义你的不是你拥有的物件，而是你能创造什么，你的人生是一个怎样的故事。",
-  "All in 的状态是不可再生资源。",
-  "虚伪的爱何尝不是另一种暴力。",
-  "你都没完成，更别想完美了。",
-  "学校教育最重要的东西是，你把学校学的忘了后，唯一剩下的东西。",
-  "喜剧角色就是又弱又坚持的人。",
-  "打败欲望的是更高级的欲望。",
+  {
+    "text": "赢和输，不代表成功和失败。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/663c8a3df3517e63e4a87109"
+  },
+  {
+    "text": "莽撞的开始、拙劣的完成，总好过怀抱着完美主义一直迟迟不肯去做。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/662661cbc3e09d8f37bad56e"
+  },
+  {
+    "text": "人真正需要的物件是很少的，定义你的不是你拥有的物件，而是你能创造什么，你的人生是一个怎样的故事。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/662d1a155fb33c1b2bf65646"
+  },
+  {
+    "text": "All in 的状态是不可再生资源。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6571ab78d6e0ff5822d5bab2"
+  },
+  {
+    "text": "虚伪的爱何尝不是另一种暴力。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6561a0bf0500be931c07f72a"
+  },
+  {
+    "text": "你都没完成，更别想完美了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/657480c88593f10bf9f2eefe"
+  },
+  {
+    "text": "学校教育最重要的东西是，你把学校学的忘了后，唯一剩下的东西。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/656ee26e00d7623c8567b354"
+  },
+  {
+    "text": "喜剧角色就是又弱又坚持的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61f562f521c23a45ed5d674b"
+  },
+  {
+    "text": "打败欲望的是更高级的欲望。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65b32ca8513a776b579b3e01"
+  },
   "先达到再突破。",
-  "幽默是健康的良药。",
-  "不敏感是一种近视。",
-  "最大的废墟，当然在网络上。",
-  "为喜欢的事情努力，本身就是在积攒运气。",
-  "工作的意义就是去拿钱置换生活中的意义。",
-  "刑事律师可以看到坏人最好的一面，婚姻律师可以看到好人最坏的一面。",
-  "与人相守，靠的是品行的最低处。",
-  "黄金年代过去后，我们才知道我们曾拥有过黄金年代。",
-  "对星星来说，我们记录了他们消失的过程，我们其实是一座座星星的墓碑。",
-  "习惯性地寻找权威是人逃离自由的表现。",
-  "所谓的城市的色情，比如在黄昏时刻，我们能够感觉到城市是暧昧的。",
-  "拜佛和努力其实是一样的，你都不知道这有没有用。",
-  "所有小孩都认为自己会画画，所有大人则觉得自己不会画画。",
-  "骗人是解释成本最低的一种沟通方式。",
-  "没有白费的功夫，只有还没到的时机。",
-  "帮助他人最好的方式是，活出有其他生活方式的范例。",
-  "不断反思，不断困惑，是拥有心灵自由的代价。",
-  "随着年龄的增长，“勇敢”更多的是“理解”和“宽容”。",
-  "表达不是一个要按资排辈的事情。",
-  "时尚是一种挑选的品味，而不是什么都贵。",
-  "求同是本能，存异是修行。",
-  "单身人的特长：安慰失恋的人。",
-  "人生希望有两个词常有：失而复得和虚惊一场。",
-  "写作不是良药，而是一种抗争。",
-  "接受真实需要勇气，面对真实需要能量。",
-  "反叛者的反叛可以成为商品，批判者的批判，也可以成为商品。",
-  "想像一种语言就意味着想像一种生活形式。",
-  "宏大叙事中几句轻描淡写的曲折探索，几句阵痛，就是现实生活中普通人的大半生。",
-  "委屈是要被看见的，如果你一直蒙着眼睛，委屈就会以一种让你很委屈的方式提醒你。",
-  "浪费时间的过程，其实是人寻求本真的过程。",
-  "爱情是把胡言乱语也当真的游戏。",
-  "孩子是我们交给这个世界的人质。",
-  "婚姻已经太难了，就不要退而求其次了吧。",
-  "仪式感不是专门去做一辈子只有一次的事，仪式感是，日常的事，庄重的做。",
-  "希望有希望的无能，绝望有绝望的力量。",
-  "幸存的路径之一就是把身边人功能化。",
-  "我们希望没有风险的健康，没有风险的爱情，整个社会都想要安全。",
-  "撑住小鸟的不是它脚下脆弱的树枝，而是它随时能张开的翅膀。",
-  "宏大叙事中几句轻描淡写的曲折探索，几句镇痛，就是现实生活中普通人的大半生。",
-  "人应该像文学一样地生活，而不是文学应该变成像生活一样。",
-  "爱情发生的本质，除了荷尔蒙以外，最重要的是对那个人产生好奇心。",
-  "看到一个人的状态，就知道他喜欢不喜欢他的生活。",
-  "日常生活耽误我伟大。",
-  "允许别人做别人，允许自己做自己",
-  "如果一个城市没有了电影院，那暧昧的人要去哪里确立关系呢？",
-  "所有捷径都是弯路，所有弯路都是捷径。",
-  "商业机会诞生于专业知识与大众知识的信息差里面。",
-  "希望怎么被别人对待，就怎么对待别人。",
-  "勇敢的人先享受世界。",
-  "不得不沉默的时候，要承认软弱，不要诋毁勇敢者。",
-  "当一个时代被浪漫化，就说明这个时代真的过去了。",
-  "如果你一直想着退路，那这事一定干不好。",
-  "规则越多，自由越多，当规则不存在，则处处是规则。",
-  "很多人过着普通人的人生，但却背负着成功人士应该有的负担。",
-  "你的大脑如果自己不用，别人会拿来用。",
-  "只有幸福的人才有资格不长大。",
-  "为什么中国人形容死亡是撒手人寰？因为我们本身就是捏着拳头来到这个世界上的。",
+  {
+    "text": "幽默是健康的良药。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/660562c21519139e4f2dd587"
+  },
+  {
+    "text": "不敏感是一种近视。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62e2981963741c63ae007ebe"
+  },
+  {
+    "text": "最大的废墟，当然在网络上。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62ea95586ed362de16d50451"
+  },
+  {
+    "text": "为喜欢的事情努力，本身就是在积攒运气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/643bf1ffa79cc81470a7aef1"
+  },
+  {
+    "text": "工作的意义就是去拿钱置换生活中的意义。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/638442e95cdd708fa96a334d"
+  },
+  {
+    "text": "刑事律师可以看到坏人最好的一面，婚姻律师可以看到好人最坏的一面。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63e35647e99bdef7d340e2a9"
+  },
+  {
+    "text": "与人相守，靠的是品行的最低处。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64099c57092eb63cb0321fc9"
+  },
+  {
+    "text": "黄金年代过去后，我们才知道我们曾拥有过黄金年代。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62d1545192f0689a31f50149"
+  },
+  {
+    "text": "对星星来说，我们记录了他们消失的过程，我们其实是一座座星星的墓碑。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62fad124589d3394647c635b"
+  },
+  {
+    "text": "习惯性地寻找权威是人逃离自由的表现。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61f504b4a62e212731d62699"
+  },
+  {
+    "text": "所谓的城市的色情，比如在黄昏时刻，我们能够感觉到城市是暧昧的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62635cbc72f4ab83d325487f"
+  },
+  {
+    "text": "拜佛和努力其实是一样的，你都不知道这有没有用。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63ae94ffe7ab859986035a3c"
+  },
+  {
+    "text": "所有小孩都认为自己会画画，所有大人则觉得自己不会画画。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62b15200b515adbf1d3fe6a7"
+  },
+  {
+    "text": "骗人是解释成本最低的一种沟通方式。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6357a0bf9186d4e4c46a18be"
+  },
+  {
+    "text": "没有白费的功夫，只有还没到的时机。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/649d0142fb908e66d5aaec4e"
+  },
+  {
+    "text": "帮助他人最好的方式是，活出有其他生活方式的范例。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61a087e28ce87089b33d2b95"
+  },
+  {
+    "text": "不断反思，不断困惑，是拥有心灵自由的代价。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64ce58421cce4b2df6f713b5"
+  },
+  {
+    "text": "随着年龄的增长，“勇敢”更多的是“理解”和“宽容”。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fd7f591dee9c1e16d79cdcf"
+  },
+  {
+    "text": "表达不是一个要按资排辈的事情。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/646a31d11672628240a82ddc"
+  },
+  {
+    "text": "时尚是一种挑选的品味，而不是什么都贵。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/626cef5f67427058b8457ef5"
+  },
+  {
+    "text": "求同是本能，存异是修行。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/633a18331aeb0012dbc3304b"
+  },
+  {
+    "text": "单身人的特长：安慰失恋的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f4cbf669504bbdb77555ffa"
+  },
+  {
+    "text": "人生希望有两个词常有：失而复得和虚惊一场。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f3117e29504bbdb779fc6d4"
+  },
+  {
+    "text": "写作不是良药，而是一种抗争。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6594d3e82c0400adcf443503"
+  },
+  {
+    "text": "接受真实需要勇气，面对真实需要能量。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62afd7be81d8a64fd615ed11"
+  },
+  {
+    "text": "反叛者的反叛可以成为商品，批判者的批判，也可以成为商品。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64d0d70b80c9ec4c5f9e501d"
+  },
+  {
+    "text": "想像一种语言就意味着想像一种生活形式。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/649784753bd341b8a434361e"
+  },
+  {
+    "text": "宏大叙事中几句轻描淡写的曲折探索，几句阵痛，就是现实生活中普通人的大半生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61f36a5a0f1bf6fc1a77dd17"
+  },
+  {
+    "text": "委屈是要被看见的，如果你一直蒙着眼睛，委屈就会以一种让你很委屈的方式提醒你。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5e74543a418a84a046c4e539"
+  },
+  {
+    "text": "浪费时间的过程，其实是人寻求本真的过程。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63f594009f4ceec286af1ac5"
+  },
+  {
+    "text": "爱情是把胡言乱语也当真的游戏。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65bc5faeb6c9256aee76cae9"
+  },
+  {
+    "text": "孩子是我们交给这个世界的人质。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/657d7d5c6396a4645ac55922"
+  },
+  {
+    "text": "婚姻已经太难了，就不要退而求其次了吧。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6423816918e37153fd2e28dc"
+  },
+  {
+    "text": "仪式感不是专门去做一辈子只有一次的事，仪式感是，日常的事，庄重的做。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6086e6d45282b779db6174c9"
+  },
+  {
+    "text": "希望有希望的无能，绝望有绝望的力量。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6481a9bc6752b5f9de42e261"
+  },
+  {
+    "text": "幸存的路径之一就是把身边人功能化。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64d11ae4f50b650b283c1d8d"
+  },
+  {
+    "text": "我们希望没有风险的健康，没有风险的爱情，整个社会都想要安全。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62e9beb588a3150c3ae3540b"
+  },
+  {
+    "text": "撑住小鸟的不是它脚下脆弱的树枝，而是它随时能张开的翅膀。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0309e06d76607427063d4a"
+  },
+  {
+    "text": "宏大叙事中几句轻描淡写的曲折探索，几句镇痛，就是现实生活中普通人的大半生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61f36a5a0f1bf6fc1a77dd17"
+  },
+  {
+    "text": "人应该像文学一样地生活，而不是文学应该变成像生活一样。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62261208eeae2af1f67c1671"
+  },
+  {
+    "text": "爱情发生的本质，除了荷尔蒙以外，最重要的是对那个人产生好奇心。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fa13a1b83c34e85dd287745"
+  },
+  {
+    "text": "看到一个人的状态，就知道他喜欢不喜欢他的生活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61359d5a19159bc0ef2affe4"
+  },
+  {
+    "text": "日常生活耽误我伟大。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/642276d773768bea359b41eb"
+  },
+  {
+    "text": "允许别人做别人，允许自己做自己",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5ec3834d418a84a046fe8878"
+  },
+  {
+    "text": "如果一个城市没有了电影院，那暧昧的人要去哪里确立关系呢？",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5ef7f9696d76607427d51b16"
+  },
+  {
+    "text": "所有捷径都是弯路，所有弯路都是捷径。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f1197856d766074277ee4c8"
+  },
+  {
+    "text": "商业机会诞生于专业知识与大众知识的信息差里面。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6231bb15e002b5836f317b83"
+  },
+  {
+    "text": "希望怎么被别人对待，就怎么对待别人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/651ee01ec6c58b7e82a8e8d6"
+  },
+  {
+    "text": "勇敢的人先享受世界。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6499be92d6cdb597286cadb7"
+  },
+  {
+    "text": "不得不沉默的时候，要承认软弱，不要诋毁勇敢者。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/650325bd96875579715369af"
+  },
+  {
+    "text": "当一个时代被浪漫化，就说明这个时代真的过去了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/625838683a6f97eb9425d786"
+  },
+  {
+    "text": "如果你一直想着退路，那这事一定干不好。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/600dee32e9ee1220ab26503e"
+  },
+  {
+    "text": "规则越多，自由越多，当规则不存在，则处处是规则。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/609fff50d651108f4877fe7b"
+  },
+  {
+    "text": "很多人过着普通人的人生，但却背负着成功人士应该有的负担。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0e6ba46d766074271809c3"
+  },
+  {
+    "text": "你的大脑如果自己不用，别人会拿来用。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60b0dcd6e273a1e20b43dc1e"
+  },
+  {
+    "text": "只有幸福的人才有资格不长大。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6395e29fb2cc2ab478979f07"
+  },
+  {
+    "text": "为什么中国人形容死亡是撒手人寰？因为我们本身就是捏着拳头来到这个世界上的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/627e1e8e66d8ffdcd3898782"
+  },
   "大学只要1+1等于2就行了，工作希望1+1远大于2的。",
-  "父母最好的催婚方式是让孩子羡慕自己的婚姻。",
-  "活着就是在创作，创作反而是一种生活。",
-  "断片就是生活的全麻。",
-  "这个世界最大的情绪价值应当是时代提供的对未来的可能性的想象。",
-  "敏感的人也可以过好自己的一生。",
-  "一个人过得好是极少发生的事情，一般人过得还行。大多数人都是挺痛苦的。",
-  "特别要一样东西，和特别不要一样东西，都是执念。",
-  "戏剧就是，在舞台的聚光灯下，掰开自己的心。",
+  {
+    "text": "父母最好的催婚方式是让孩子羡慕自己的婚姻。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fac5f6383c34e85dd6b276f"
+  },
+  {
+    "text": "活着就是在创作，创作反而是一种生活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64350fde66e4c00c6acb7430"
+  },
+  {
+    "text": "断片就是生活的全麻。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6388d354a6ab012bf468aae5"
+  },
+  {
+    "text": "这个世界最大的情绪价值应当是时代提供的对未来的可能性的想象。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/632887b1aafc5c394512df95"
+  },
+  {
+    "text": "敏感的人也可以过好自己的一生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/642e59549361a4e7c3c9587c"
+  },
+  {
+    "text": "一个人过得好是极少发生的事情，一般人过得还行。大多数人都是挺痛苦的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/651cad28e474efa0de8d68a4"
+  },
+  {
+    "text": "特别要一样东西，和特别不要一样东西，都是执念。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6532652cf5d0788cb55ff626"
+  },
+  {
+    "text": "戏剧就是，在舞台的聚光灯下，掰开自己的心。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6528834b36a1383a66455006"
+  },
   "当我发现漠视一切之后，这个世界真美好。",
-  "对抗这个世界最有效的办法就是让他觉得你有病。",
-  "城市发展过程中必将产生大量废弃物，而其中大部分是人。",
-  "好人和好人的恋爱是有想象力的，好人和坏人的恋爱是千篇一律的。",
-  "怜悯之于爱，就像映照在水坑里的月亮之于月亮本身。",
-  "不要反思苦难的意义，要去反思苦难的原因。",
-  "在更大的时空尺度里，人的选择和遭遇都会被稀释，所以可以允许自己随便活一活。",
-  "幸福是比较出来的，可是精彩是你自己的。",
-  "世界上每一种失去都能被觉察，比如失去了一条腿。唯独自我的失去很多人都没有觉察到。",
-  "每一个成年人都应该自己活成一家公司，这家公司不管有没有营业执照，但是你得对自己的终生经营负责。",
-  "只有手握权力的人才能搞砸事情.",
-  "人人的成功都不可复制，所有的成功者都是幸存者。",
-  "利益最大化是用你喜欢的方式过一生。",
-  "焦虑是自由的眩晕。",
-  "大人也是草台班子而已啦！",
-  "你恨一个人的理由并不见得要掩盖你喜欢一个人的理由。",
-  "因为爱才是包容，否则可能只是退让。",
-  "共同的沉默也是一种交流。",
-  "恋爱是社会认可的精神错乱。",
-  "工作和谈恋爱一样，骗的了别人，骗不了自己。",
-  "坚持本身带有一些抵抗的意味。",
-  "不痛的爱，荡然无味。",
-  "如果有一个想法能让你坚持下去的话，有可能是上天觉得你们很般配的一个暗示。",
-  "嘴上常挂的东西不一定是第一志愿。",
-  "时代会用两个指头夹起一个人，从他身上挤出时代所需的那一滴善恶来。",
-  "善良的人才得精神病，坏人是不会自省的。",
-  "爱情是值得的，只是很难得。",
-  "金句更像是一种对文化的消费。",
-  "工作考验人的情绪比考验人的能力更多。",
-  "痛苦是深刻的，快乐是模糊的。",
-  "平静是你不介意发生什么。",
-  "开心是一件值得被鼓励的事，而不是偷偷摸摸地藏起来的事。",
-  "自驱力可能是好的，也可能是一种持续的自我剥削。",
-  "当财富成为唯一标准的时候，对于群体是撕扯而不是凝聚力，因为你永远在比较。",
-  "找不到答案的时候，先找自己。",
-  "下定义是一种束缚。",
-  "成年人不要为离别伤感，我们只计划重逢。",
-  "我宁可痛苦，我不要麻木，我不要我什么都不知道，然后我就很满足。",
-  "很多人过的不是生活，而是一种模式。",
-  "不是恐惧灾难，而是恐惧灾难无逻辑。",
-  "可以严肃讨论的话题最终都变成吃瓜… 连别人的苦痛都变成狂欢绚烂的烟花。",
-  "不要因为愧疚感停止进食，应该是满足感让自己停止进食。",
-  "生活对大部分人来讲是不能抵御的洪流，绝大部分人都生活在平静的绝望中。",
-  "文明进步的本质，是我们能够爱更丰富的对象。",
-  "同频是一种暂时性的状态，是会变化的，但是爱不是状态，爱是一种调频的能力。",
-  "完成比完美更重要。",
-  "行动是焦虑的解药，比较是焦虑的弹药。",
+  {
+    "text": "对抗这个世界最有效的办法就是让他觉得你有病。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/640838b6092eb63cb019e1ae"
+  },
+  {
+    "text": "城市发展过程中必将产生大量废弃物，而其中大部分是人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62d6ad1f92f0689a31f503c7"
+  },
+  {
+    "text": "好人和好人的恋爱是有想象力的，好人和坏人的恋爱是千篇一律的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62eb5a1a74a0df66caf8ba23"
+  },
+  {
+    "text": "怜悯之于爱，就像映照在水坑里的月亮之于月亮本身。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/619c21f915e2f7df2eca98b5"
+  },
+  {
+    "text": "不要反思苦难的意义，要去反思苦难的原因。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62f687eb20298b975e35370b"
+  },
+  {
+    "text": "在更大的时空尺度里，人的选择和遭遇都会被稀释，所以可以允许自己随便活一活。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/628a354d069769098b59a563"
+  },
+  {
+    "text": "幸福是比较出来的，可是精彩是你自己的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/650c60c25c88d2412680e456"
+  },
+  {
+    "text": "世界上每一种失去都能被觉察，比如失去了一条腿。唯独自我的失去很多人都没有觉察到。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0d22716d766074278ce7c9"
+  },
+  {
+    "text": "每一个成年人都应该自己活成一家公司，这家公司不管有没有营业执照，但是你得对自己的终生经营负责。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64cf509780c9ec4c5f828731"
+  },
+  {
+    "text": "只有手握权力的人才能搞砸事情.",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64e8c17f80c9ec4c5f481782"
+  },
+  {
+    "text": "人人的成功都不可复制，所有的成功者都是幸存者。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/65008b771bc87acb74fe34ea"
+  },
+  {
+    "text": "利益最大化是用你喜欢的方式过一生。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61a4a7458ce87089b33d30c7"
+  },
+  {
+    "text": "焦虑是自由的眩晕。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/622a274f9d2fcf46aa36d377"
+  },
+  {
+    "text": "大人也是草台班子而已啦！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62c76e36cb28958e6ceef92b"
+  },
+  {
+    "text": "你恨一个人的理由并不见得要掩盖你喜欢一个人的理由。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6114eb86682626cc19ee88cd"
+  },
+  {
+    "text": "因为爱才是包容，否则可能只是退让。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63dd30baa73b51c7a98620b0"
+  },
+  {
+    "text": "共同的沉默也是一种交流。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63d0a9f94879e7008cb9990f"
+  },
+  {
+    "text": "恋爱是社会认可的精神错乱。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62038ed262b1a332db35c44c"
+  },
+  {
+    "text": "工作和谈恋爱一样，骗的了别人，骗不了自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64b0ab75c5938851ec70ebf1"
+  },
+  {
+    "text": "坚持本身带有一些抵抗的意味。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f3b1cd89504bbdb7710bde3"
+  },
+  {
+    "text": "不痛的爱，荡然无味。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/631a34beefd60f3f6f350d7d"
+  },
+  {
+    "text": "如果有一个想法能让你坚持下去的话，有可能是上天觉得你们很般配的一个暗示。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62c1ac24ebfc753783b1f8e8"
+  },
+  {
+    "text": "嘴上常挂的东西不一定是第一志愿。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f9a074983c34e85dd2e7733"
+  },
+  {
+    "text": "时代会用两个指头夹起一个人，从他身上挤出时代所需的那一滴善恶来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62e168fdf22de7eed50b044d"
+  },
+  {
+    "text": "善良的人才得精神病，坏人是不会自省的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5e77133b418a84a0469fc3a9"
+  },
+  {
+    "text": "爱情是值得的，只是很难得。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/622334f20e153c60474c78f9"
+  },
+  {
+    "text": "金句更像是一种对文化的消费。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/613a16d89f0d73e73a39d39a"
+  },
+  {
+    "text": "工作考验人的情绪比考验人的能力更多。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f66102283c34e85dddec0ec"
+  },
+  {
+    "text": "痛苦是深刻的，快乐是模糊的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62399f9f8b76f3fd82bbac31"
+  },
+  {
+    "text": "平静是你不介意发生什么。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6462ef9e306513184c12abac"
+  },
+  {
+    "text": "开心是一件值得被鼓励的事，而不是偷偷摸摸地藏起来的事。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/644bedffb7b3c21b654f5ba1"
+  },
+  {
+    "text": "自驱力可能是好的，也可能是一种持续的自我剥削。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fda9d00dee9c1e16dac1966"
+  },
+  {
+    "text": "当财富成为唯一标准的时候，对于群体是撕扯而不是凝聚力，因为你永远在比较。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62eba49a98b30c414c44d6b8"
+  },
+  {
+    "text": "找不到答案的时候，先找自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62b51fc8c71db0c038b7aebc"
+  },
+  {
+    "text": "下定义是一种束缚。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62b25579c643b0fd78b50413"
+  },
+  {
+    "text": "成年人不要为离别伤感，我们只计划重逢。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63055c3cddb9e83959a7ac21"
+  },
+  {
+    "text": "我宁可痛苦，我不要麻木，我不要我什么都不知道，然后我就很满足。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60b703f7f38bcf7d331bad10"
+  },
+  {
+    "text": "很多人过的不是生活，而是一种模式。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62ea95586ed362de16d50451"
+  },
+  {
+    "text": "不是恐惧灾难，而是恐惧灾难无逻辑。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/642ce2d066e4c00c6a3caf84"
+  },
+  {
+    "text": "可以严肃讨论的话题最终都变成吃瓜… 连别人的苦痛都变成狂欢绚烂的烟花。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0545446d76607427336d3a"
+  },
+  {
+    "text": "不要因为愧疚感停止进食，应该是满足感让自己停止进食。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6426ef9ee5bd3188d1f91e36"
+  },
+  {
+    "text": "生活对大部分人来讲是不能抵御的洪流，绝大部分人都生活在平静的绝望中。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6426bfd13f40bdefe7f4aaf7"
+  },
+  {
+    "text": "文明进步的本质，是我们能够爱更丰富的对象。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6254510b3c7db9a604935369"
+  },
+  {
+    "text": "同频是一种暂时性的状态，是会变化的，但是爱不是状态，爱是一种调频的能力。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/64264e9899063af52f6995ab"
+  },
+  {
+    "text": "完成比完美更重要。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60065b6efbbfda19fc7a661d"
+  },
+  {
+    "text": "行动是焦虑的解药，比较是焦虑的弹药。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62f3a1e120298b975e3535df"
+  },
   "一个人可以不读文学而活得很好，但一个活的不怎么好的人很难不走向文学。",
-  "命运开始伤害你的时候，语言的伤害就无所谓了。",
-  "想都是问题，做才是答案。",
-  "人世间就是有很多铺垫是徒劳无功的。",
-  "不要恐惧任何的结果，不要恐惧感情的消逝。",
-  "人最宝贵的自由是时间自由。",
-  "自律是找到自己的规律。",
-  "保卫日常生活就是一种反战。",
-  "不能接受不确定性的人，本质上是主动放弃了自己人生的概率权。",
-  "世界是一个平面，线的面积为零，但几条交叉的线可以产生出一张网。",
-  "他们把我们放倒在地上，却不知道我们是种子。",
-  "亲人的去世不是一时的暴雨，而是一生的潮湿。",
-  "熬夜是所有人共谋的豁免权。",
-  "生活会给你很多苦吃再给你一点甜，这样才能吊着你继续活下去。要相信生活的狡猾。",
-  "真诚用错了人就是“自杀”！",
+  {
+    "text": "命运开始伤害你的时候，语言的伤害就无所谓了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63bff0a0eab1781ef439c006"
+  },
+  {
+    "text": "想都是问题，做才是答案。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63febf5b58a686928ccd18a5"
+  },
+  {
+    "text": "人世间就是有很多铺垫是徒劳无功的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63e8d5f80d7e8eaa72735dad"
+  },
+  {
+    "text": "不要恐惧任何的结果，不要恐惧感情的消逝。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63e23c3c0d7e8eaa721d2e63"
+  },
+  {
+    "text": "人最宝贵的自由是时间自由。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63ff06f44e4c05b42465d815"
+  },
+  {
+    "text": "自律是找到自己的规律。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63abbfa04bbe65bc73469f3b"
+  },
+  {
+    "text": "保卫日常生活就是一种反战。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62a1a8a8d02ea2b34ca88885"
+  },
+  {
+    "text": "不能接受不确定性的人，本质上是主动放弃了自己人生的概率权。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63fd641cb91c17e69c6eeb14"
+  },
+  {
+    "text": "世界是一个平面，线的面积为零，但几条交叉的线可以产生出一张网。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63e5328d0d7e8eaa72485104"
+  },
+  {
+    "text": "他们把我们放倒在地上，却不知道我们是种子。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63c8220878910ae65c913303"
+  },
+  {
+    "text": "亲人的去世不是一时的暴雨，而是一生的潮湿。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63c0921fc0d8da008cf3f700"
+  },
+  {
+    "text": "熬夜是所有人共谋的豁免权。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63ba41eb98003598862887d5"
+  },
+  {
+    "text": "生活会给你很多苦吃再给你一点甜，这样才能吊着你继续活下去。要相信生活的狡猾。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62f0f61ac0e29d41b4a5a7bd"
+  },
+  {
+    "text": "真诚用错了人就是“自杀”！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f6f2b7d83c34e85ddadada3"
+  },
   "很多人因为害怕而进入婚姻，也有很多人因为害怕而不进入婚姻。",
-  "“我发现，卡夫卡的作品和风格，好像没有大家说的那么难理解。”“时代帮助了我们做阅读理解。”",
-  "展示勇气本身就需要勇气。",
-  "我的一生被三种简单却又无比强烈的激情所控制：对爱的渴望，对知识的探索和对人类苦难的难以抑制的怜悯。",
-  "悲观意味着清醒，积极意味着勇气。",
-  "如果他过的生活是你所不想要的，你为什么要听他的建议？",
-  "就算是司空见惯的日子，也会因为身旁的人，值得被好好记住。",
-  "如果能重来，奋不顾身也不那么珍贵，孤注一掷也不那么壮烈了。",
+  {
+    "text": "“我发现，卡夫卡的作品和风格，好像没有大家说的那么难理解。”“时代帮助了我们做阅读理解。”",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62ba3767fe21c5fd1f090d7b"
+  },
+  {
+    "text": "展示勇气本身就需要勇气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6273f08e384f4ba14aa7d1cf"
+  },
+  {
+    "text": "我的一生被三种简单却又无比强烈的激情所控制：对爱的渴望，对知识的探索和对人类苦难的难以抑制的怜悯。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62b51fc8c71db0c038b7aebc"
+  },
+  {
+    "text": "悲观意味着清醒，积极意味着勇气。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/626249973db96e05d876f690"
+  },
+  {
+    "text": "如果他过的生活是你所不想要的，你为什么要听他的建议？",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6043b07b5e7f2b461bc59c7e"
+  },
+  {
+    "text": "就算是司空见惯的日子，也会因为身旁的人，值得被好好记住。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/625849cfe5ae1ebdfa972c02"
+  },
+  {
+    "text": "如果能重来，奋不顾身也不那么珍贵，孤注一掷也不那么壮烈了。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5feaeef2dee9c1e16df53c15"
+  },
   "不要幻想完美无瑕，要力争瑕不掩瑜。",
   "小时候让你变成怪小孩的东西，只要你不失去，长大后就会让你变得了不起。",
   "真正值得羡慕的生活是不需要别人羡慕的生活。",
@@ -533,44 +2072,146 @@
   "迷茫代表着你现在不满足，你知道有个更好的自己在那里。",
   "最好的聊天是提问，最好的回应是聆听。",
   "所谓的“醍醐灌顶的金句”实际是一种幻觉。 你只是被戳爽到了，不是真的开窍。",
-  "结婚要找一个“你在他身边静坐也会觉得很安心”的人。",
-  "黄蓉是郭靖的政治纲领，郭靖是黄蓉的道德准则。",
-  "纪念无名者比纪念知名者更难，历史的构建是献给无名者的记忆。",
-  "你可能会养出一个很有成就的小孩，但那些小孩很可能并不快乐。",
-  "我们的身份已经从我们的职业变成了我们的消费。",
-  "自由不是想做什么就做什么，而是随着年龄阅历经验的累积，可以拒接自己不想做的事",
-  "生命不必每时每刻都要冲刺，低沉时就当是放一个悠长假期。",
-  "看不惯这个世界说明你的内心还有一个理想的世界。",
-  "浪漫是没有后来。",
-  "任何成人关系都是彼此成就对方的自由。",
-  "大部分的付出者其实本身都是索取者，你的笑容让我开心，其实是我索取你的笑容。",
-  "如果我们的感情是缺少判断的，那么感情就是一文不值，就是滥情。",
-  "没有任何道路能通向真诚，真诚本身就是道路！",
-  "我们的研究发现，孩子成不成功跟父母关系不大，但是毁掉孩子，跟父母关系很大。",
-  "焦虑的反义词是具体。",
-  "不管你生不生小孩，你都必须有力量，才不会被社会主流所裹挟。",
-  "打压一个人最好的方式，就是让一个人忙到没有时间思考。",
-  "你看到有一个人向你推荐一部书，其实是这本书在向你推荐这个人。",
-  "越是轻视物质，越是要重视物质，才能不受物质所累。",
-  "所谓的爱，就是当对方犯错误时，如果没有犯到你的底线，你的态度是怎样的。",
-  "在人际互动中，你可以做一切事情，但无法控制结果。",
-  "很多人过的不是生活，而是一种“模式”。",
-  "我们透过荧幕看到偶像，其实看到的是投射在他身上的自己。",
+  {
+    "text": "结婚要找一个“你在他身边静坐也会觉得很安心”的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60d96ed325da4f997b8ba5c3"
+  },
+  {
+    "text": "黄蓉是郭靖的政治纲领，郭靖是黄蓉的道德准则。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fccab72dee9c1e16d048088"
+  },
+  {
+    "text": "纪念无名者比纪念知名者更难，历史的构建是献给无名者的记忆。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/624d105d6ef9f0cd754f152e"
+  },
+  {
+    "text": "你可能会养出一个很有成就的小孩，但那些小孩很可能并不快乐。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/606443f7b0f61e89dce95a99"
+  },
+  {
+    "text": "我们的身份已经从我们的职业变成了我们的消费。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6227d4809d2fcf46aa36aea4"
+  },
+  {
+    "text": "自由不是想做什么就做什么，而是随着年龄阅历经验的累积，可以拒接自己不想做的事",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0d22716d766074278ce786"
+  },
+  {
+    "text": "生命不必每时每刻都要冲刺，低沉时就当是放一个悠长假期。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6273be6d4cb83619f2aed702"
+  },
+  {
+    "text": "看不惯这个世界说明你的内心还有一个理想的世界。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5feb4665dee9c1e16d961483"
+  },
+  {
+    "text": "浪漫是没有后来。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62f3822c03da6b049bdc0700"
+  },
+  {
+    "text": "任何成人关系都是彼此成就对方的自由。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6089332050d00a2ff4cfe12c"
+  },
+  {
+    "text": "大部分的付出者其实本身都是索取者，你的笑容让我开心，其实是我索取你的笑容。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/628f61315cf4a5ad60ca0be5"
+  },
+  {
+    "text": "如果我们的感情是缺少判断的，那么感情就是一文不值，就是滥情。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/63230a50599af9d465565841"
+  },
+  {
+    "text": "没有任何道路能通向真诚，真诚本身就是道路！",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/602b00066d41cb06c4857f7d"
+  },
+  {
+    "text": "我们的研究发现，孩子成不成功跟父母关系不大，但是毁掉孩子，跟父母关系很大。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fb4819283c34e85dd5407b5"
+  },
+  {
+    "text": "焦虑的反义词是具体。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61a650a68ce87089b33d33db"
+  },
+  {
+    "text": "不管你生不生小孩，你都必须有力量，才不会被社会主流所裹挟。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f0264e26d766074279a8e29"
+  },
+  {
+    "text": "打压一个人最好的方式，就是让一个人忙到没有时间思考。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60c0d864dbed1678a5ccabd6"
+  },
+  {
+    "text": "你看到有一个人向你推荐一部书，其实是这本书在向你推荐这个人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fb5238383c34e85dd6db85e"
+  },
+  {
+    "text": "越是轻视物质，越是要重视物质，才能不受物质所累。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60f123bc88f3ac250b961680"
+  },
+  {
+    "text": "所谓的爱，就是当对方犯错误时，如果没有犯到你的底线，你的态度是怎样的。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f4e170c9504bbdb77566a1c"
+  },
+  {
+    "text": "在人际互动中，你可以做一切事情，但无法控制结果。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5e74543a418a84a046c4e576"
+  },
+  {
+    "text": "很多人过的不是生活，而是一种“模式”。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62ea95586ed362de16d50451"
+  },
+  {
+    "text": "我们透过荧幕看到偶像，其实看到的是投射在他身上的自己。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/613a16d89f0d73e73a39d39a"
+  },
   "好像被展示出来才是生活。",
   "人生最大的遗憾，是一个人无法同时拥有青春和对青春的感受。",
-  "自由是资本的诱饵。",
-  "很多人过的不是生活，而是一种模式”。",
+  {
+    "text": "自由是资本的诱饵。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/622a274f9d2fcf46aa36d377"
+  },
+  {
+    "text": "很多人过的不是生活，而是一种模式”。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62ea95586ed362de16d50451"
+  },
   "所有关系都开始于误解，所有关系都崩塌于了解。",
   "睡眠是死亡的小样，每天分给我们一点试吃，直到我们习惯它。",
-  "要用自己的标尺去衡量社会，而不是用社会的标尺去匹配我们。",
-  "结婚要找一个‘你在他身边静坐也会觉得很安心’的人。",
-  "落在一个群体里是百万分之一，落在一个人身上只有0和1的区别。",
-  "他不是真理的掌握者或垄断者，他是真理的探索者。",
+  {
+    "text": "要用自己的标尺去衡量社会，而不是用社会的标尺去匹配我们。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/62c2d46746a068daba924abe"
+  },
+  {
+    "text": "结婚要找一个‘你在他身边静坐也会觉得很安心’的人。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60d96ed325da4f997b8ba5c3"
+  },
+  {
+    "text": "落在一个群体里是百万分之一，落在一个人身上只有0和1的区别。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/6218a30430fca3133c0f82ee"
+  },
+  {
+    "text": "他不是真理的掌握者或垄断者，他是真理的探索者。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/61d8127c77fdf183af5de20e"
+  },
   "过一种不负责任的生活很容易，过一种稳定的家庭生活难得多。",
-  "Human Resource根本不在乎human，只在乎resource。",
+  {
+    "text": "Human Resource根本不在乎human，只在乎resource。",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60041a98ee3ec78161e723f2"
+  },
   "自由不是想做什么就做什么，而是随着年龄阅历经验的累积，可以拒接自己不想做的事。",
-  "现代人好多不在交流，而是交锋",
-  "离开故乡，它的作用才开始显现",
-  "送到嘴边的爱情跟梦想，都不过瘾",
-  "嘴上常挂的东西不一定是第一志愿哦"
+  {
+    "text": "现代人好多不在交流，而是交锋",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60ac3692eb3e72d92188a8f3"
+  },
+  {
+    "text": "离开故乡，它的作用才开始显现",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5fd7f591dee9c1e16d79cdcf"
+  },
+  {
+    "text": "送到嘴边的爱情跟梦想，都不过瘾",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/60e08f37761727bead2e6dc8"
+  },
+  {
+    "text": "嘴上常挂的东西不一定是第一志愿哦",
+    "episode": "https://www.xiaoyuzhoufm.com/episode/5f9a074983c34e85dd2e7733"
+  }
 ]
