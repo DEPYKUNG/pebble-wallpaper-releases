@@ -266,6 +266,11 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         NSMenuItem *sleep=[activities itemWithTitle:@"睡觉"];
         if(!podcast || !sleep || ![NSApp sendAction:podcast.action to:podcast.target from:podcast] ||
            ![pet.panel.contentView.accessibilityValue isEqual:@"录播客中"] || !pet.effects.message.length)exit(21);
+        NSView *podcastView=pet.panel.contentView;
+        NSBitmapImageRep *podcastPreview=[podcastView bitmapImageRepForCachingDisplayInRect:podcastView.bounds];
+        [podcastView cacheDisplayInRect:podcastView.bounds toBitmapImageRep:podcastPreview];
+        NSString *podcastPath=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"pet-podcast-preview.png"];
+        if(![[podcastPreview representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:podcastPath atomically:YES])exit(21);
         if(![NSApp sendAction:sleep.action to:sleep.target from:sleep] ||
            ![pet.panel.contentView.accessibilityValue isEqual:@"睡觉中"] || pet.effects.message)exit(21);
         NSPoint wakePoint=pet.panel.frame.origin;

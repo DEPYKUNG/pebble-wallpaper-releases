@@ -58,6 +58,60 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @interface PebblePetView : NSView
 @property (weak) PebblePetController *owner;
 @end
+// Light direction and fine matte grain match the rendered stone.
+static NSImage *PebblePodcastMicrophone(void) {
+    static NSImage *image;
+    if (image) return image;
+    image=[NSImage imageWithSize:NSMakeSize(38,53) flipped:NO drawingHandler:^BOOL(NSRect rect) {
+        NSColor *(^silver)(CGFloat)=^NSColor *(CGFloat light){
+            return [NSColor colorWithSRGBRed:light*.96 green:light*.99 blue:light alpha:1];
+        };
+        void (^shade)(NSBezierPath *,CGFloat,CGFloat,CGFloat)=^(NSBezierPath *path,CGFloat start,CGFloat end,CGFloat angle){
+            [[[NSGradient alloc] initWithStartingColor:silver(start) endingColor:silver(end)] drawInBezierPath:path angle:angle];
+        };
+        [[NSColor colorWithWhite:.17 alpha:.19] setFill];
+        [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(3,1,32,7)] fill];
+        shade([NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4,3,29,9)],.42,.79,90);
+        shade([NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4,5,29,8)],.61,.89,90);
+        shade([NSBezierPath bezierPathWithRoundedRect:NSMakeRect(16,8,5,21) xRadius:2 yRadius:2],.87,.41,0);
+        NSBezierPath *yoke=[NSBezierPath bezierPath];
+        [yoke moveToPoint:NSMakePoint(7,34)];
+        [yoke curveToPoint:NSMakePoint(30,34) controlPoint1:NSMakePoint(5,15) controlPoint2:NSMakePoint(32,15)];
+        yoke.lineWidth=2.6;
+        yoke.lineCapStyle=NSLineCapStyleRound;
+        [silver(.56) setStroke];
+        [yoke stroke];
+        NSBezierPath *head=[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(9,24,19,27) xRadius:8 yRadius:8];
+        shade(head,.95,.46,-24);
+        [NSGraphicsContext saveGraphicsState];
+        [head addClip];
+        uint32_t grain=713;
+        for (NSUInteger i=0;i<460;i++) {
+            grain=1664525u*grain+1013904223u;
+            CGFloat x=9+19*(grain>>16)/65535.0;
+            grain=1664525u*grain+1013904223u;
+            CGFloat y=24+27*(grain>>16)/65535.0;
+            [[NSColor colorWithWhite:(i%3==0?1:.18) alpha:.25] setFill];
+            NSRectFillUsingOperation(NSMakeRect(x,y,.40,.55),NSCompositingOperationSourceOver);
+        }
+        for (NSInteger row=0;row<8;row++) {
+            NSBezierPath *mesh=[NSBezierPath bezierPath];
+            CGFloat y=29+row*2.2;
+            [mesh moveToPoint:NSMakePoint(10,y)];
+            [mesh curveToPoint:NSMakePoint(27,y+.8) controlPoint1:NSMakePoint(15,y-1.0) controlPoint2:NSMakePoint(24,y-.8)];
+            [[NSColor colorWithWhite:.23 alpha:.37] setStroke];
+            mesh.lineWidth=.52;
+            [mesh stroke];
+        }
+        [NSGraphicsContext restoreGraphicsState];
+        shade([NSBezierPath bezierPathWithRoundedRect:NSMakeRect(9,23,19,6) xRadius:2 yRadius:2],.93,.46,0);
+        [[NSColor colorWithSRGBRed:.81 green:.30 blue:.25 alpha:1] setFill];
+        [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(17,24.5,2.7,2.7)] fill];
+        return YES;
+    }];
+    return image;
+}
+
 @implementation PebblePetView
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 - (BOOL)isOpaque { return NO; }
@@ -76,13 +130,12 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
     [owner.stoneImage drawInRect:art fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1];
     [NSGraphicsContext restoreGraphicsState];
     if (owner.activity==PebblePetActivityPodcast) {
-        CGFloat x=NSMaxX(art)-5, y=NSMinY(art)+7;
-        [[NSColor labelColor] setFill];
-        [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(x-11,y+13,14,24) xRadius:7 yRadius:7] fill];
-        [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(x-5,y+2,3,13) xRadius:1 yRadius:1] fill];
-        [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(x-15,y,23,3) xRadius:1 yRadius:1] fill];
-        [NSColor.systemRedColor setFill];
-        [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(x+7,y+31,6,6)] fill];
+        CGFloat scale=MAX(.92,MIN(1.30,NSWidth(self.bounds)/204.0));
+        NSSize size=NSMakeSize(38*scale,53*scale);
+        CGFloat right=MIN(NSMaxX(self.bounds)-4,NSMaxX(art)+22);
+        NSRect mic=NSMakeRect(right-size.width,NSMinY(art)-4,size.width,size.height);
+        [PebblePodcastMicrophone() drawInRect:mic fromRect:NSZeroRect
+                                   operation:NSCompositingOperationSourceOver fraction:1];
     } else if (owner.activity==PebblePetActivitySleep) {
         CGFloat y=MIN(NSHeight(self.bounds)-24,NSMaxY(art)-4);
         [@"z Z" drawAtPoint:NSMakePoint(NSMaxX(art)-22,y) withAttributes:@{
