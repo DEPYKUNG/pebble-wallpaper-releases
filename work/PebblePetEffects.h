@@ -13,6 +13,7 @@ typedef NS_ENUM(NSInteger, PebblePetMessagePriority) {
 - (BOOL)showMessage:(NSString *)message priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration;
 - (BOOL)showMessage:(NSString *)message episodeURL:(NSURL *)url priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration;
 - (BOOL)showUpdateWithAction:(void (^)(void))action;
+- (BOOL)showFocusChoice:(NSString *)message restart:(void (^)(void))restart rest:(void (^)(void))rest;
 - (void)addRippleAt:(NSPoint)point color:(NSColor *)color;
 - (void)updateAtTime:(NSTimeInterval)time anchor:(NSRect)anchor visible:(NSRect)visible;
 - (void)clear;

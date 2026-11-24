@@ -45,6 +45,8 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property CGFloat skipDistance;
 @property NSTimeInterval nextSpeech,impactUntil;
 @property (copy) NSDate *focusDeadline;
+@property BOOL takingFocusBreak;
+- (void)beginFocusInterval:(BOOL)rest;
 - (void)startSkipping:(NSPoint)velocity;
 - (void)cancelPlay;
 - (NSRect)effectAnchor;
@@ -629,9 +631,14 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion||NSProcessInfo.processInfo.lowPowerModeEnabled;
     NSRect visible=(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame;
     if(!self.dragging && !self.menuOpen) {
-        if (self.focusDeadline && self.focusDeadline.timeIntervalSinceNow <= 0 &&
-            [self showMessage:@"专注结束，休息一下吧。" priority:PebblePetMessageInteraction duration:8]) {
+        if (self.focusDeadline && self.focusDeadline.timeIntervalSinceNow <= 0) {
+            BOOL finishedBreak = self.takingFocusBreak;
             self.focusDeadline = nil;
+            self.takingFocusBreak = NO;
+            __weak PebblePetController *weakSelf = self;
+            [self.effects showFocusChoice:finishedBreak ? @"休息结束，准备好了吗？" : @"专注结束。再来一轮，还是歇一会？"
+                                  restart:^{ [weakSelf beginFocusInterval:NO]; }
+                                     rest:finishedBreak ? (void (^)(void))nil : ^{ [weakSelf beginFocusInterval:YES]; }];
             self.nextWander = now + 15;
             self.nextSpeech = now + 45;
             if (!reduced) self.celebrateUntil = now + .7;
@@ -796,26 +803,33 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 - (void)toggleFocus:(id)sender {
     if (self.focusDeadline) {
         self.focusDeadline = nil;
+        BOOL wasBreak = self.takingFocusBreak;
+        self.takingFocusBreak = NO;
         NSTimeInterval now = CACurrentMediaTime();
         self.nextWander = now + 15;
         self.nextSpeech = now + 45;
-        [self showMessage:@"已结束专注。" priority:PebblePetMessageInteraction duration:4];
+        [self showMessage:wasBreak ? @"已结束休息。" : @"已结束专注。" priority:PebblePetMessageInteraction duration:4];
         return;
     }
+    [self beginFocusInterval:NO];
+}
+
+- (void)beginFocusInterval:(BOOL)rest {
     [self summon:nil];
-    self.focusDeadline = [NSDate dateWithTimeIntervalSinceNow:25 * 60];
+    self.takingFocusBreak = rest;
+    self.focusDeadline = [NSDate dateWithTimeIntervalSinceNow:(rest ? 5 : 25) * 60];
     self.celebrateUntil = 0;
     self.angle = 0;
     self.stretch = 1;
     [self.petView setNeedsDisplay:YES];
-    [self showMessage:@"开始专注 · 25 分钟" priority:PebblePetMessageInteraction duration:4];
+    [self showMessage:rest ? @"休息一下 · 5 分钟" : @"开始专注 · 25 分钟" priority:PebblePetMessageInteraction duration:4];
 }
 
 - (NSMenu *)petMenu {
     NSMenu *menu=[NSMenu new];
     NSInteger remaining = (NSInteger)ceil(MAX(0, self.focusDeadline.timeIntervalSinceNow));
     NSString *focusTitle = self.focusDeadline
-        ? [NSString stringWithFormat:@"结束专注（%02ld:%02ld）", (long)(remaining / 60), (long)(remaining % 60)]
+        ? [NSString stringWithFormat:@"结束%@（%02ld:%02ld）", self.takingFocusBreak ? @"休息" : @"专注", (long)(remaining / 60), (long)(remaining % 60)]
         : @"陪我专注 · 25 分钟";
     NSMenuItem *focus = [menu addItemWithTitle:focusTitle action:@selector(toggleFocus:) keyEquivalent:@""];
     focus.target = self;

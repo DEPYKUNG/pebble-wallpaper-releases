@@ -22,6 +22,9 @@ static const CGFloat EpisodeColumnGap = 8;
 @property NSURL *episodeURL;
 @property NSAttributedString *episodeTitle;
 @property (copy) void (^updateAction)(void);
+@property NSButton *restartButton, *restButton;
+@property (copy) void (^restartFocus)(void);
+@property (copy) void (^beginBreak)(void);
 - (void)openEpisode:(id)sender;
 @property BOOL tailAbove;
 @property NSView *glassBacking;
@@ -37,6 +40,13 @@ static const CGFloat EpisodeColumnGap = 8;
     } else if (self.episodeURL) {
         [NSWorkspace.sharedWorkspace openURL:self.episodeURL];
     }
+}
+- (void)chooseFocus:(NSButton *)sender {
+    void (^action)(void) = sender == self.restartButton ? self.restartFocus : self.beginBreak;
+    self.restartFocus = nil;
+    self.beginBreak = nil;
+    self.restartButton.enabled = self.restButton.enabled = NO;
+    if (action) action();
 }
 - (BOOL)isOpaque{return NO;}
 - (void)updateGlassFrame {
@@ -161,6 +171,9 @@ static const CGFloat EpisodeColumnGap = 8;
         [url.host.lowercaseString isEqualToString:@"www.xiaoyuzhoufm.com"] &&
         [url.path rangeOfString:@"^/episode/[0-9a-fA-F]{24}$" options:NSRegularExpressionSearch].location != NSNotFound;
     view.updateAction = nil;
+    view.restartFocus = nil;
+    view.beginBreak = nil;
+    view.restartButton.hidden = view.restButton.hidden = YES;
     view.episodeButton.enabled = YES;
     view.episodeButton.attributedTitle = view.episodeTitle;
     view.episodeButton.accessibilityLabel = @"去小宇宙听";
@@ -214,6 +227,27 @@ static const CGFloat EpisodeColumnGap = 8;
     return YES;
 }
 
+- (BOOL)showFocusChoice:(NSString *)message restart:(void (^)(void))restart rest:(void (^)(void))rest {
+    if (![self showMessage:message priority:PebblePetMessageInteraction duration:25]) return NO;
+    PebblePetBubbleView *view = (PebblePetBubbleView *)self.bubblePanel.contentView;
+    if (!view.restartButton) {
+        view.restartButton = [NSButton buttonWithTitle:@"再来一轮" target:view action:@selector(chooseFocus:)];
+        view.restButton = [NSButton buttonWithTitle:@"休息 5 分钟" target:view action:@selector(chooseFocus:)];
+        [view addSubview:view.restartButton];
+        [view addSubview:view.restButton];
+    }
+    view.restartFocus = restart;
+    view.beginBreak = rest;
+    view.restartButton.enabled = view.restButton.enabled = YES;
+    view.restartButton.hidden = NO;
+    view.restButton.hidden = rest == nil;
+    NSSize size = self.bubblePanel.frame.size;
+    size.height += 32;
+    [self.bubblePanel setContentSize:size];
+    view.label.frame = NSMakeRect(18,54,204,size.height-66);
+    return YES;
+}
+
 - (void)addRippleAt:(NSPoint)point color:(NSColor *)color {
     if(NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion)return;
     while(self.ripples.count>=6){[self.ripples.firstObject[@"panel"] close];[self.ripples removeObjectAtIndex:0];}
@@ -237,6 +271,18 @@ static const CGFloat EpisodeColumnGap = 8;
         view.tailAbove=NSMidY(frame)<NSMidY(anchor);
         [view updateGlassFrame];
         NSRect label=view.label.frame;label.origin.y=view.tailAbove?14:22;view.label.frame=label;view.needsDisplay=YES;
+        if (view.restartFocus) {
+            CGFloat base = label.origin.y;
+            label.origin.y += 32;
+            view.label.frame = label;
+            view.restartButton.frame = NSMakeRect(view.beginBreak ? 18 : 68,base,100,25);
+            view.restButton.frame = NSMakeRect(122,base,100,25);
+            NSPoint mouse = [self.bubblePanel convertPointFromScreen:NSEvent.mouseLocation];
+            BOOL overButton = NSPointInRect(mouse,view.restartButton.frame) ||
+                (view.beginBreak && NSPointInRect(mouse,view.restButton.frame));
+            self.bubblePanel.ignoresMouseEvents = !overButton;
+            if (NSPointInRect(mouse,view.bounds)) self.expiry = MAX(self.expiry,time+.5);
+        }
         if (view.episodeURL) {
             view.linkedText.frame = label;
             view.episodeButton.frame = NSMakeRect(NSMaxX(label)+EpisodeColumnGap, NSMaxY(label)-17, EpisodeColumnWidth, 19);
