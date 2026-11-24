@@ -59,31 +59,60 @@ BOOL PebblePetShouldSkip(NSPoint velocity) {
 PebblePetSkip PebblePetBeginSkip(PebblePetBody body, NSRect visible, NSSize size, NSUInteger limit) {
     body.position=PebblePetConstrainFrame((NSRect){body.position,size},visible).origin;
     double vx=isfinite(body.velocity.x)?body.velocity.x:0;
-    double direction=vx<0?-1:1;
-    body.velocity=NSMakePoint(direction*MAX(320,MIN(900,fabs(vx))),190);
+    double vy=isfinite(body.velocity.y)?body.velocity.y:0;
+    double floorY=NSMinY(visible);
+    double speed=MAX(280,MIN(900,fabs(vx)));
+    double lift=MAX(-220,MIN(210,vy));
+    if (body.position.y-floorY<12) lift=MAX(lift,130+speed*.075);
+    body.velocity=NSMakePoint(copysign(speed,vx),lift);
     body.resting=NO;
-    return (PebblePetSkip){body,body.position.y,190,0,MAX(3,MIN(7,limit)),YES};
+    return (PebblePetSkip){.body=body,.waterline=floorY,.limit=MAX(3,MIN(7,limit)),.active=YES};
 }
+
 PebblePetSkip PebblePetAdvanceSkip(PebblePetSkip skip, NSRect visible, NSSize size, double elapsed) {
-    if(!skip.active)return skip;
+    if (!skip.active) return skip;
     double dt=isfinite(elapsed)?MAX(0,MIN(.05,elapsed)):0;
-    skip.waterline=MAX(NSMinY(visible),MIN(NSMaxY(visible)-size.height,skip.waterline));
-    skip.body.velocity.y-=1100*dt;
-    NSPoint proposed=NSMakePoint(skip.body.position.x+skip.body.velocity.x*dt,
-                                skip.body.position.y+skip.body.velocity.y*dt);
-    NSRect bounded=PebblePetConstrainFrame((NSRect){proposed,size},visible);
-    if(proposed.x!=bounded.origin.x){
-        skip.active=NO;skip.body.velocity.x*=-.25;
-    } else if(proposed.y<=skip.waterline && skip.body.velocity.y<0) {
-        bounded.origin.y=skip.waterline;skip.bounces++;
-        if(skip.bounces>=skip.limit || fabs(skip.body.velocity.x)<180) {
-            skip.active=NO;skip.body.velocity=NSMakePoint(skip.body.velocity.x*.3,55);
-        } else {
-            skip.hop*=.8;skip.body.velocity.x*=.84;
-            skip.body.velocity.y=MAX(65,skip.hop);
+    if (dt==0) return skip;
+    const double gravity=1100;
+    skip.waterline=NSMinY(visible);
+    NSPoint position=skip.body.position, velocity=skip.body.velocity;
+    if (skip.sliding) {
+        const double drag=8;
+        double decay=exp(-drag*dt);
+        position.x+=velocity.x*(1-decay)/drag;
+        position.y=skip.waterline;
+        velocity.x*=decay;
+    } else {
+        double height=MAX(0,position.y-skip.waterline);
+        double contact=(velocity.y+sqrt(velocity.y*velocity.y+2*gravity*height))/gravity;
+        double flight=MIN(dt,contact);
+        position.x+=velocity.x*flight;
+        position.y+=velocity.y*flight-.5*gravity*flight*flight;
+        velocity.y-=gravity*flight;
+        if (contact<=dt && position.x>=NSMinX(visible) && position.x<=NSMaxX(visible)-size.width) {
+            position.y=skip.waterline;
+            skip.impactPosition=position;
+            skip.bounces++;
+            if (skip.bounces>=skip.limit || fabs(velocity.x)<150) {
+                skip.sliding=YES;
+                velocity=NSMakePoint(velocity.x*.6,0);
+            } else {
+                skip.hop=skip.bounces==1?MAX(150,MIN(230,-velocity.y*.48)):skip.hop*.79;
+                velocity=NSMakePoint(velocity.x*.85,skip.hop);
+            }
         }
-    } else if(proposed.y>NSMaxY(visible)-size.height) skip.body.velocity.y=-fabs(skip.body.velocity.y)*.3;
-    skip.body.position=bounded.origin;skip.body.resting=NO;
+    }
+    NSRect bounded=PebblePetConstrainFrame((NSRect){position,size},visible);
+    if (bounded.origin.x!=position.x) {
+        skip.active=NO;
+        velocity=NSZeroPoint;
+    } else if (skip.sliding && fabs(velocity.x)<5) {
+        skip.active=NO;
+        velocity=NSZeroPoint;
+    } else if (bounded.origin.y<position.y) {
+        velocity.y=MIN(0,velocity.y);
+    }
+    skip.body=(PebblePetBody){bounded.origin,velocity,!skip.active && bounded.origin.y<=skip.waterline};
     return skip;
 }
 NSRect PebblePetBubbleFrame(NSRect anchor, NSRect visible, NSSize size) {

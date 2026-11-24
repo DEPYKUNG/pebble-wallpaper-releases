@@ -160,7 +160,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     self.petSkipButton=[self actionButton:@"漂一下" action:@selector(skipPet:)];
     self.petSayButton=[self actionButton:@"说句话" action:@selector(sayPet:)];
     NSView *skipping=[self cardWithRows:@[
-        [self rowWithSymbol:@"repeat" title:@"横甩打水漂" subtitle:@"快速横向甩出，在松手高度连续弹跳" control:self.petSkippingSwitch],
+        [self rowWithSymbol:@"repeat" title:@"横甩打水漂" subtitle:@"快速横向甩出，在屏幕下方连跳并滑停" control:self.petSkippingSwitch],
         [self rowWithSymbol:@"gauge" title:@"最多弹跳" subtitle:@"遇到屏幕边缘会提前落定" control:self.petSkipLimitPicker],
         [self rowWithSymbol:@"compass-drawing" title:@"试试打水漂" subtitle:@"减少动态效果开启时暂停大幅运动" control:self.petSkipButton],
     ]];
