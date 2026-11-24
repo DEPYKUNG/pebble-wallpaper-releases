@@ -367,6 +367,19 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if(restored.skippingEnabled || restored.speechEnabled || !restored.casualSpeech || restored.skipLimit!=7)exit(20);
         [restored invalidate];
         PebblePetEffects *effects=[PebblePetEffects new];
+        NSURL *episode = [NSURL URLWithString:@"https://www.xiaoyuzhoufm.com/episode/695e6552c1e012a7abe361d0"];
+        [effects showMessage:@"慢一点。" episodeURL:episode priority:PebblePetMessageInteraction duration:5];
+        NSSize shortSize = effects.bubblePanel.frame.size;
+        NSString *longQuote = [@"我们不能停止想象其他生活的可能性。" stringByPaddingToLength:96
+                                        withString:@"我们不能停止想象其他生活的可能性。" startingAtIndex:0];
+        [effects showMessage:longQuote episodeURL:episode priority:PebblePetMessageInteraction duration:5];
+        NSView *linkedBubble = effects.bubblePanel.contentView;
+        NSTextView *linkedText = [linkedBubble valueForKey:@"linkedText"];
+        if (effects.bubblePanel.frame.size.width <= shortSize.width ||
+            effects.bubblePanel.frame.size.height <= shortSize.height ||
+            [linkedText.layoutManager glyphRangeForTextContainer:linkedText.textContainer].length != linkedText.layoutManager.numberOfGlyphs ||
+            ![linkedText.string isEqualToString:longQuote]) exit(20);
+        [effects clear];
         if(![effects showMessage:@"提醒展示接口" priority:PebblePetMessageReminder duration:5] ||
            [effects showMessage:@"闲聊" priority:PebblePetMessageAmbient duration:5] || ![effects.message isEqual:@"提醒展示接口"])exit(20);
         NSScreen *screen=NSScreen.screens.firstObject;
