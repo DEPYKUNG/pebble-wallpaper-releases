@@ -63,6 +63,13 @@ app = staging / 'Pebble Wallpaper.app'
 contents = app / 'Contents'
 resources = contents / 'Resources'
 resources.mkdir(parents=True, exist_ok=True)
+quotes = work / ('pet-quotes.local.json' if args.app_only and (work / 'pet-quotes.local.json').exists() else 'pet-quotes.json')
+bundled_quotes = resources / 'pet-quotes.json'
+if quotes.exists():
+    shutil.copyfile(quotes, bundled_quotes)
+else:
+    bundled_quotes.unlink(missing_ok=True)
+
 try:
     notes = recent_releases(json.loads((work / 'changelog.json').read_text()), args.version, args.build,
                             local_test=args.local_update_test)
