@@ -10,9 +10,16 @@
 @end
 @interface PebblePetBubbleView : NSView
 @property NSTextField *label;
+@property NSTextView *linkedText;
+@property NSButton *episodeButton;
+@property NSURL *episodeURL;
+- (void)openEpisode:(id)sender;
 @property BOOL tailAbove;
 @end
 @implementation PebblePetBubbleView
+- (void)openEpisode:(id)sender {
+    if (self.episodeURL) [NSWorkspace.sharedWorkspace openURL:self.episodeURL];
+}
 - (BOOL)isOpaque{return NO;}
 - (void)drawRect:(NSRect)dirty {
     NSRect box=NSInsetRect(self.bounds,6,6);if(!self.tailAbove)box.origin.y+=6;box.size.height-=6;
@@ -67,6 +74,9 @@
     _speechEnabled=enabled;if(!enabled){self.message=nil;self.expiry=0;[self.bubblePanel close];self.bubblePanel=nil;}
 }
 - (BOOL)showMessage:(NSString *)text priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration {
+    return [self showMessage:text episodeURL:nil priority:priority duration:duration];
+}
+- (BOOL)showMessage:(NSString *)text episodeURL:(NSURL *)url priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration {
     if(!self.speechEnabled || ![text isKindOfClass:NSString.class])return NO;
     text=[text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     if(!text.length)return NO;
@@ -81,13 +91,59 @@
         view.label=[NSTextField wrappingLabelWithString:@""];view.label.font=[NSFont systemFontOfSize:13];view.label.textColor=NSColor.labelColor;
         view.label.alignment=NSTextAlignmentCenter;view.label.frame=NSMakeRect(18,22,204,38);
         view.label.autoresizingMask=NSViewWidthSizable|NSViewHeightSizable;
-        [view addSubview:view.label];self.bubblePanel.contentView=view;
+        [view addSubview:view.label];
+        view.linkedText = [[NSTextView alloc] initWithFrame:NSMakeRect(18,22,204,68)];
+        view.linkedText.drawsBackground = NO;
+        view.linkedText.editable = NO;
+        view.linkedText.selectable = NO;
+        view.linkedText.textContainerInset = NSZeroSize;
+        view.linkedText.textContainer.lineFragmentPadding = 0;
+        [view addSubview:view.linkedText];
+        view.episodeButton = [NSButton buttonWithTitle:@"去小宇宙听" target:view action:@selector(openEpisode:)];
+        view.episodeButton.bordered = NO;
+        view.episodeButton.toolTip = @"打开小宇宙单集";
+        view.episodeButton.accessibilityLabel = @"去小宇宙听";
+        NSURL *asset = [NSBundle.mainBundle URLForResource:@"pet-episode-planet" withExtension:@"png"];
+        NSImage *planet = asset ? [[NSImage alloc] initWithContentsOfURL:asset] : nil;
+        planet.size = NSMakeSize(12,10);
+        NSAttributedString *style = [[NSAttributedString alloc] initWithString:@"去" attributes:@{
+            NSFontAttributeName:[NSFont systemFontOfSize:10], NSForegroundColorAttributeName:NSColor.secondaryLabelColor}];
+        NSMutableAttributedString *title = [style mutableCopy];
+        if (planet) {
+            NSTextAttachment *attachment = [NSTextAttachment new];
+            attachment.attachmentCell = [[NSTextAttachmentCell alloc] initImageCell:planet];
+            [title appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+        }
+        [title appendAttributedString:[[NSAttributedString alloc] initWithString:@"小宇宙听"
+                                                                      attributes:[style attributesAtIndex:0 effectiveRange:nil]]];
+        view.episodeButton.attributedTitle = title;
+        [view addSubview:view.episodeButton];
+        self.bubblePanel.contentView=view;
     }
     PebblePetBubbleView *view=(PebblePetBubbleView *)self.bubblePanel.contentView;
     CGFloat height=ceil([text boundingRectWithSize:NSMakeSize(204,1000) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:view.label.font}].size.height);
-    height=MAX(18,MIN(68,height));[self.bubblePanel setContentSize:NSMakeSize(240,height+34)];
+    BOOL validLink = [url.scheme.lowercaseString isEqualToString:@"https"] &&
+        [url.host.lowercaseString isEqualToString:@"www.xiaoyuzhoufm.com"] &&
+        [url.path rangeOfString:@"^/episode/[0-9a-fA-F]{24}$" options:NSRegularExpressionSearch].location != NSNotFound;
+    view.episodeURL = validLink ? url : nil;
+    view.label.hidden = validLink;
+    view.linkedText.hidden = view.episodeButton.hidden = !validLink;
+    self.bubblePanel.ignoresMouseEvents = YES;
+    if (validLink) {
+        NSTextView *body = view.linkedText;
+        body.frame = NSMakeRect(18,22,204,162);
+        body.textContainer.containerSize = NSMakeSize(204,162);
+        body.textContainer.exclusionPaths = @[[NSBezierPath bezierPathWithRect:NSMakeRect(123,0,81,16)]];
+        NSAttributedString *copy = [[NSAttributedString alloc] initWithString:text attributes:@{
+            NSFontAttributeName:view.label.font, NSForegroundColorAttributeName:NSColor.labelColor}];
+        [body.textStorage setAttributedString:copy];
+        [body.layoutManager ensureLayoutForTextContainer:body.textContainer];
+        height = ceil([body.layoutManager usedRectForTextContainer:body.textContainer].size.height);
+    }
+    height=MAX(18,MIN(validLink?162:68,height));[self.bubblePanel setContentSize:NSMakeSize(240,height+34)];
     view.label.frame=NSMakeRect(18,22,204,height);view.label.maximumNumberOfLines=4;
     view.label.stringValue=text;
+    if (validLink) view.linkedText.frame = view.label.frame;
     self.bubblePanel.contentView.accessibilityLabel=text;
     self.bubblePanel.contentView.needsDisplay=YES;
     self.bubblePanel.alphaValue=1;
@@ -116,6 +172,14 @@
         PebblePetBubbleView *view=(PebblePetBubbleView *)self.bubblePanel.contentView;
         view.tailAbove=NSMidY(frame)<NSMidY(anchor);
         NSRect label=view.label.frame;label.origin.y=view.tailAbove?14:22;view.label.frame=label;view.needsDisplay=YES;
+        if (view.episodeURL) {
+            view.linkedText.frame = label;
+            view.episodeButton.frame = NSMakeRect(141, NSMaxY(label)-17, 81, 19);
+            NSPoint mouse = [self.bubblePanel convertPointFromScreen:NSEvent.mouseLocation];
+            BOOL overLink = NSPointInRect(mouse, view.episodeButton.frame);
+            self.bubblePanel.ignoresMouseEvents = !overLink;
+            if (NSPointInRect(mouse, view.bounds)) self.expiry = MAX(self.expiry, time + .5);
+        }
         self.bubblePanel.alphaValue=MAX(0,MIN(1,(self.expiry-time)/.18));
         if(!self.bubblePanel.isVisible){
             [self.bubblePanel orderFrontRegardless];

@@ -11,6 +11,7 @@ typedef NS_ENUM(NSInteger, PebblePetMessagePriority) {
 @property (nonatomic, readonly) NSString *message;
 @property (nonatomic, readonly) NSUInteger rippleCount;
 - (BOOL)showMessage:(NSString *)message priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration;
+- (BOOL)showMessage:(NSString *)message episodeURL:(NSURL *)url priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration;
 - (void)addRippleAt:(NSPoint)point color:(NSColor *)color;
 - (void)updateAtTime:(NSTimeInterval)time anchor:(NSRect)anchor visible:(NSRect)visible;
 - (void)clear;

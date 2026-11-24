@@ -38,7 +38,7 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property PebblePetSkip skipState;
 @property (nonatomic, readwrite) PebblePetEffects *effects;
 @property NSColor *stoneColor;
-@property (copy) NSArray<NSString *> *quotes;
+@property (copy) NSArray *quotes;
 @property NSUInteger lastQuoteIndex;
 @property BOOL skipEnding;
 @property NSUInteger finishedSkips;
@@ -342,10 +342,11 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSURL *quoteURL=[NSBundle.mainBundle URLForResource:@"pet-quotes" withExtension:@"json"];
     NSData *quoteData=quoteURL ? [NSData dataWithContentsOfURL:quoteURL] : nil;
     id records=quoteData ? [NSJSONSerialization JSONObjectWithData:quoteData options:0 error:NULL] : nil;
-    NSMutableArray<NSString *> *quotes=[NSMutableArray array];
+    NSMutableArray *quotes=[NSMutableArray array];
     if ([records isKindOfClass:NSArray.class]) {
         for (id record in records) {
-            if ([record isKindOfClass:NSString.class] && [record length]) [quotes addObject:record];
+            NSString *text = [record isKindOfClass:NSDictionary.class] ? record[@"text"] : record;
+            if ([text isKindOfClass:NSString.class] && text.length) [quotes addObject:record];
         }
     }
     _quotes=[quotes copy];
@@ -502,13 +503,19 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     return accepted;
 }
 - (void)speakQuoteWithPriority:(PebblePetMessagePriority)priority {
-    NSArray<NSString *> *words=self.quotes.count ? self.quotes :
+    NSArray *words=self.quotes.count ? self.quotes :
         @[@"在呢。", @"慢一点，也没关系。", @"今天也稳稳当当。", @"先抛一颗石头，再往前走。"];
     BOOL excludePrevious=words.count>1 && self.lastQuoteIndex<words.count;
     NSUInteger index=arc4random_uniform((uint32_t)(words.count-excludePrevious));
     if (excludePrevious && index>=self.lastQuoteIndex) index++;
-    NSString *quote=words[index];
-    if ([self showMessage:quote priority:priority duration:MAX(5,MIN(15,quote.length/7.0))]) {
+    if (self.suspended || self.invalidated || !self.stoneImage) return;
+    id entry = words[index];
+    NSString *quote = [entry isKindOfClass:NSDictionary.class] ? entry[@"text"] : entry;
+    id link = [entry isKindOfClass:NSDictionary.class] ? entry[@"episode"] : nil;
+    NSURL *url = [link isKindOfClass:NSString.class] ? [NSURL URLWithString:link] : nil;
+    if ([self.effects showMessage:quote episodeURL:url priority:priority duration:MAX(5,MIN(15,quote.length/7.0))]) {
+        [self.effects updateAtTime:CACurrentMediaTime() anchor:self.effectAnchor
+                          visible:(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame];
         self.lastQuoteIndex=index;
     }
 }

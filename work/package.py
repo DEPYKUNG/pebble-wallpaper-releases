@@ -64,6 +64,7 @@ contents = app / 'Contents'
 resources = contents / 'Resources'
 resources.mkdir(parents=True, exist_ok=True)
 quotes = work / ('pet-quotes.local.json' if args.app_only and (work / 'pet-quotes.local.json').exists() else 'pet-quotes.json')
+shutil.copyfile(work / 'pet-episode-planet.png', resources / 'pet-episode-planet.png')
 bundled_quotes = resources / 'pet-quotes.json'
 if quotes.exists():
     shutil.copyfile(quotes, bundled_quotes)
