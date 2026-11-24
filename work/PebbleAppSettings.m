@@ -66,7 +66,7 @@
     }];
     [sidebar addSubview:list];
 
-    self.panes = @[[self generalPane], [self petPane], [NSView new], [self passPane], [self aboutPane]];
+    self.panes = @[[self generalPane], [self petPane], [NSView new], [NSView new], [self aboutPane]];
     NSView *body = [NSView new];
     body.translatesAutoresizingMaskIntoConstraints = NO;
     self.settingsBody = body;
@@ -113,7 +113,8 @@
     }
     // Keep the panes alive so the pass card keeps its stone across tab changes.
     for (NSView *view in self.settingsBody.subviews.copy) [view removeFromSuperview];
-    NSView *pane = index == FavoritesPaneIndex ? [self favoritesPane] : self.panes[index];
+    NSView *pane = index == FavoritesPaneIndex ? [self favoritesPane] :
+        (index == PassPaneIndex ? [self passPane] : self.panes[index]);
     pane.translatesAutoresizingMaskIntoConstraints = NO;
     [self.settingsBody addSubview:pane];
     [NSLayoutConstraint activateConstraints:@[
@@ -547,9 +548,21 @@
         restore.tag = remove.tag = index; restore.enabled = available;
         NSButton *pet = [self actionButton:@"用作桌宠" action:@selector(restoreFavoritePet:)];
         pet.tag = index;
-        NSStackView *controls = [NSStackView stackViewWithViews:@[restore, pet, remove]];
+        NSButton *pass = [self actionButton:@"看石头证" action:@selector(showJournalPass:)];
+        pass.tag = index;
+        NSStackView *controls = [NSStackView stackViewWithViews:@[pass, restore, pet, remove]];
         NSString *title = [NSString stringWithFormat:@"石头 %lu", (unsigned long)index + 1];
-        [rows addObject:[self rowWithSymbol:nil title:title subtitle:[stone[@"colors"] firstObject] control:controls]];
+        NSDictionary *sources = @{@"wallpaper":@"桌面壁纸", @"rethrow":@"重新抛", @"pet":@"桌宠", @"skip":@"打水漂"};
+        NSString *source = sources[stone[@"collectionSource"] ?: @""];
+        NSNumber *timestamp = stone[@"collectedAt"];
+        NSString *subtitle = [stone[@"colors"] firstObject];
+        if (timestamp && source) {
+            NSDate *date = [NSDate dateWithTimeIntervalSince1970:timestamp.doubleValue];
+            NSString *day = [NSDateFormatter localizedStringFromDate:date dateStyle:NSDateFormatterMediumStyle
+                                                           timeStyle:NSDateFormatterNoStyle];
+            subtitle = [NSString stringWithFormat:@"%@ · %@", day, source];
+        }
+        [rows addObject:[self rowWithSymbol:nil title:title subtitle:subtitle control:controls]];
     }];
     NSView *collection = rows.count ? [self cardWithRows:rows] : [self caption:@"还没有收藏的石头"];
     return [self paneWithCards:@[[self cardWithRows:@[scope, save]], collection]];

@@ -691,6 +691,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         if(!wasResting && body.resting)[self savePlacement];
         if(body.resting && self.skipEnding) {
             NSUInteger count=self.finishedSkips;self.skipEnding=NO;[self savePlacement];
+            if (count) self.skippedWithCurrentStone = YES;
             NSInteger distance = lround(self.skipDistance);
             NSInteger bestCount = [self.defaults integerForKey:@"PetBestSkipCount"];
             NSInteger bestDistance = [self.defaults integerForKey:@"PetBestSkipDistance"];

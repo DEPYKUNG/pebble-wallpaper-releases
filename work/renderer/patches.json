@@ -52,7 +52,7 @@
   {
     "name": "restore-api",
     "before": "z.current=x,x();",
-    "after": "z.current=x;window.pebbleThrow=()=>x();window.pebbleRestore=x;window.pebblePrevious=()=>{if(window.pebbleHistory.previous)x(window.pebbleHistory.previous)};x(window.pebbleHistory?.current);"
+    "after": "z.current=x;window.pebbleThrow=()=>{x();window.pebbleLastThrow=F.seed};window.pebbleRestore=x;window.pebblePrevious=()=>{if(window.pebbleHistory.previous)x(window.pebbleHistory.previous)};x(window.pebbleConfig.passStone ?? window.pebbleHistory?.current);"
   },
   {
     "name": "stone-seed",

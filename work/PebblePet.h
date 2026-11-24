@@ -9,6 +9,7 @@
 @property (nonatomic) BOOL skippingEnabled,speechEnabled,casualSpeech;
 @property (nonatomic) NSInteger skipLimit;
 @property (nonatomic, readonly) BOOL skipping;
+@property (nonatomic) BOOL skippedWithCurrentStone;
 @property (nonatomic, readonly) PebblePetEffects *effects;
 @property (nonatomic) NSInteger sizeIndex;
 @property (nonatomic, copy) void (^syncStone)(void);
