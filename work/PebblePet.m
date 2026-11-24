@@ -13,7 +13,7 @@ static NSRect PebbleStoneDrawRect(NSRect art) {
 
 typedef NS_ENUM(NSInteger, PebblePetActivity) {
     PebblePetActivityNone, PebblePetActivityPodcast, PebblePetActivitySleep,
-    PebblePetActivityCamp, PebblePetActivityCook, PebblePetActivityHeadphones
+    PebblePetActivityCamp, PebblePetActivityCook, PebblePetActivityHeadphones, PebblePetActivitySmash
 };
 @class PebblePetView;
 @interface PebblePetPanel : NSPanel @end
@@ -229,6 +229,39 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [NSGraphicsContext restoreGraphicsState];
 }
 
+static CGFloat PebbleBoxHeight(double elapsed) {
+    CGFloat crush=MAX(0,MIN(1,(elapsed-.55)/.14));
+    return 22-17*crush;
+}
+
+static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
+    CGFloat height=PebbleBoxHeight(elapsed);
+    CGFloat width=MIN(44,MAX(24,NSWidth(stone)*.43));
+    CGFloat x=NSMidX(stone)-width/2, y=NSMinY(stone)-2;
+    NSColor *paper=[NSColor colorWithSRGBRed:.78 green:.65 blue:.47 alpha:1];
+    NSColor *fold=[NSColor colorWithSRGBRed:.48 green:.34 blue:.23 alpha:1];
+    [[NSColor colorWithWhite:.17 alpha:.17] setFill];
+    [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(x-4,y-3,width+8,7)] fill];
+    FillPetProp([NSBezierPath bezierPathWithRoundedRect:NSMakeRect(x,y,width,height) xRadius:2 yRadius:2],paper,fold);
+    [[NSColor colorWithSRGBRed:.88 green:.76 blue:.57 alpha:.8] setFill];
+    NSRectFillUsingOperation(NSMakeRect(NSMidX(stone)-3,y+1,6,MAX(1,height-2)),NSCompositingOperationSourceOver);
+    [fold setStroke];
+    NSBezierPath *crease=[NSBezierPath bezierPath];
+    [crease moveToPoint:NSMakePoint(x+2,y+height*.58)];
+    [crease lineToPoint:NSMakePoint(x+width-2,y+height*.58)];
+    crease.lineWidth=.7;
+    [crease stroke];
+    double burst=(elapsed-.55)/.35;
+    if (!motion || burst<0 || burst>=1) return;
+    for (NSInteger index=-2;index<=2;index++) {
+        if (!index) continue;
+        [[paper colorWithAlphaComponent:1-burst] setFill];
+        CGFloat dx=index*(width*.22+burst*8);
+        CGFloat dy=sin(burst*M_PI)*(5+abs((int)index)*3);
+        NSRectFillUsingOperation(NSMakeRect(NSMidX(stone)+dx,y+height+dy,3,2),NSCompositingOperationSourceOver);
+    }
+}
+
 @implementation PebblePetView
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 - (BOOL)isOpaque { return NO; }
@@ -236,6 +269,15 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     PebblePetController *owner=self.owner;
     if (!owner.stoneImage) return;
     NSRect art=[owner artRect];
+    NSRect stone=PebbleStoneDrawRect(art);
+    if (owner.activity==PebblePetActivitySmash) {
+        BOOL motion=!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+        double elapsed=motion?MAX(0,CACurrentMediaTime()-owner.activityStart):1;
+        DrawPebbleBox(stone,elapsed,motion);
+        double flight=MIN(1,elapsed/.55);
+        CGFloat lift=motion?26*4*flight*(1-flight):0;
+        stone.origin.y+=PebbleBoxHeight(elapsed)+lift;
+    }
     [NSGraphicsContext saveGraphicsState];
     NSShadow *shadow=[NSShadow new];shadow.shadowColor=[NSColor colorWithWhite:0 alpha:.22];
     shadow.shadowBlurRadius=8;shadow.shadowOffset=NSMakeSize(0,-3);[shadow set];
@@ -244,7 +286,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [transform rotateByDegrees:owner.angle];
     [transform scaleXBy:1/owner.stretch yBy:owner.stretch];
     [transform translateXBy:-NSMidX(art) yBy:-NSMidY(art)];[transform concat];
-    [owner.stoneImage drawInRect:PebbleStoneDrawRect(art) fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1];
+    [owner.stoneImage drawInRect:stone fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1];
     if (owner.activity==PebblePetActivityHeadphones)
         DrawPetOuting(owner.activity,art,self.bounds,0,owner.bitmap);
     [NSGraphicsContext restoreGraphicsState];
@@ -425,9 +467,9 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     self.activity=activity;
     self.automaticActivity=automatic;
     self.activityStart=now;
-    self.activityEnd=now+(activity==PebblePetActivitySleep?18:15);
+    self.activityEnd=now+(activity==PebblePetActivitySleep?18:(activity==PebblePetActivitySmash?4:15));
     self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,YES};
-    NSArray *activityNames=@[@"", @"录播客中", @"睡觉中", @"露营中", @"野炊中", @"戴着耳机"];
+    NSArray *activityNames=@[@"", @"录播客中", @"睡觉中", @"露营中", @"野炊中", @"戴着耳机", @"砸纸箱中"];
     self.petView.accessibilityValue=activityNames[activity];
     self.petView.needsDisplay=YES;
     if (automatic && !self.casualSpeech) return;
@@ -448,6 +490,9 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 }
 - (void)wearHeadphones:(id)sender {
     [self startActivity:PebblePetActivityHeadphones automatic:NO at:CACurrentMediaTime()];
+}
+- (void)smashBox:(id)sender {
+    [self startActivity:PebblePetActivitySmash automatic:NO at:CACurrentMediaTime()];
 }
 - (void)cancelPlay {
     if (self.activity!=PebblePetActivityNone) [self endActivityAt:CACurrentMediaTime()];
@@ -523,6 +568,12 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     p=NSMakePoint((x*cos(angle)-y*sin(angle))*self.stretch+NSMidX(art),
                   (x*sin(angle)+y*cos(angle))/self.stretch+NSMidY(art));
     art=PebbleStoneDrawRect(art);
+    if (self.activity==PebblePetActivitySmash) {
+        BOOL motion=!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+        double elapsed=motion?MAX(0,CACurrentMediaTime()-self.activityStart):1;
+        double flight=MIN(1,elapsed/.55);
+        art.origin.y+=PebbleBoxHeight(elapsed)+(motion?104*flight*(1-flight):0);
+    }
     if (!NSPointInRect(p,art)) return NO;
     NSInteger px=MAX(0,MIN(self.bitmap.pixelsWide-1,(p.x-NSMinX(art))/NSWidth(art)*self.bitmap.pixelsWide));
     NSInteger py=MAX(0,MIN(self.bitmap.pixelsHigh-1,(1-(p.y-NSMinY(art))/NSHeight(art))*self.bitmap.pixelsHigh));
@@ -575,7 +626,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
                 default: break;
             }
             self.angle=reduced?0:self.angle+(pose-self.angle)*MIN(1,dt*6);
-            self.stretch=reduced?1:1+sin(elapsed*2)*.014;
+            self.stretch=(reduced || self.activity==PebblePetActivitySmash)?1:1+sin(elapsed*2)*.014;
             self.petView.needsDisplay=YES;
         } else if(self.skipState.active) {
             NSUInteger previous=self.skipState.bounces;
@@ -588,7 +639,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             if(!self.skipState.active){self.skipEnding=YES;self.finishedSkips=self.skipState.bounces;}
         } else {
             if(body.resting && self.roaming && !self.skipEnding && !reduced && now>self.nextWander) {
-                NSUInteger choice=arc4random_uniform(PebblePetActivityHeadphones+1);
+                NSUInteger choice=arc4random_uniform(PebblePetActivitySmash+1);
                 if (choice!=0) {
                     [self startActivity:(PebblePetActivity)choice automatic:YES at:now];
                     body=self.body;
@@ -706,8 +757,8 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSMenuItem *sleep=[activities.submenu addItemWithTitle:@"睡觉" action:@selector(takeNap:) keyEquivalent:@""];
     podcast.target=self;
     sleep.target=self;
-    NSArray *outings=@[@"露营",@"野炊",@"戴耳机"];
-    SEL outingActions[]={@selector(camp:),@selector(cook:),@selector(wearHeadphones:)};
+    NSArray *outings=@[@"露营",@"野炊",@"戴耳机",@"砸纸箱"];
+    SEL outingActions[]={@selector(camp:),@selector(cook:),@selector(wearHeadphones:),@selector(smashBox:)};
     for (NSUInteger index=0;index<outings.count;index++) {
         NSMenuItem *item=[activities.submenu addItemWithTitle:outings[index] action:outingActions[index] keyEquivalent:@""];
         item.target=self;
