@@ -13,7 +13,7 @@ static NSRect PebbleStoneDrawRect(NSRect art) {
 
 typedef NS_ENUM(NSInteger, PebblePetActivity) {
     PebblePetActivityNone, PebblePetActivityPodcast, PebblePetActivitySleep,
-    PebblePetActivityCamp, PebblePetActivityCook, PebblePetActivityHeadphones, PebblePetActivitySmash
+    PebblePetActivityCamp, PebblePetActivityCook, PebblePetActivityHeadphones
 };
 @class PebblePetView;
 @interface PebblePetPanel : NSPanel @end
@@ -50,9 +50,6 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property PebblePetActivity activity;
 @property NSTimeInterval activityStart,activityEnd;
 @property BOOL automaticActivity,justWoke;
-@property (strong) NSPanel *glassPanel;
-@property NSPoint smashOrigin,smashTarget;
-@property NSTimeInterval smashFlight;
 - (void)startActivity:(PebblePetActivity)activity automatic:(BOOL)automatic at:(NSTimeInterval)now;
 - (void)endActivityAt:(NSTimeInterval)now;
 - (void)recordPodcast:(id)sender;
@@ -232,78 +229,6 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [NSGraphicsContext restoreGraphicsState];
 }
 
-@interface PebbleGlassView : NSView
-@property CGFloat impactProgress, impulse, rebound;
-@property NSPoint contact;
-@property NSRect pane;
-@end
-@implementation PebbleGlassView
-- (void)drawRect:(NSRect)dirtyRect {
-    NSRect pane=self.pane;
-    CGFloat progress=self.impactProgress;
-    NSColor *edge=[NSColor colorWithSRGBRed:.23 green:.34 blue:.37 alpha:.65];
-    NSColor *light=[NSColor colorWithWhite:1 alpha:.80];
-    NSBezierPath *sheet=[NSBezierPath bezierPathWithRect:pane];
-    if (progress<=.18) {
-        NSColor *clear=[NSColor colorWithSRGBRed:.77 green:.91 blue:.90 alpha:.05];
-        NSColor *reflection=[NSColor colorWithWhite:1 alpha:.22];
-        [[[NSGradient alloc] initWithStartingColor:reflection endingColor:clear] drawInBezierPath:sheet angle:36];
-        [edge setStroke];sheet.lineWidth=.75;[sheet stroke];
-        NSBezierPath *bevel=[NSBezierPath bezierPath];
-        [bevel moveToPoint:NSMakePoint(NSMinX(pane)+1,NSMinY(pane)+1)];
-        [bevel lineToPoint:NSMakePoint(NSMinX(pane)+1,NSMaxY(pane)-1)];
-        [bevel lineToPoint:NSMakePoint(NSMaxX(pane)-1,NSMaxY(pane)-1)];
-        [light setStroke];bevel.lineWidth=.8;[bevel stroke];
-        [NSGraphicsContext saveGraphicsState];
-        [sheet addClip];
-        NSBezierPath *glint=[NSBezierPath bezierPath];
-        [glint moveToPoint:NSMakePoint(NSMinX(pane)-4,NSMidY(pane)+5)];
-        [glint lineToPoint:NSMakePoint(NSMaxX(pane)+4,NSMidY(pane)+43)];
-        [[NSColor colorWithWhite:1 alpha:.25] setStroke];glint.lineWidth=2.2;[glint stroke];
-        [NSGraphicsContext restoreGraphicsState];
-        if (progress<0) return;
-    }
-    NSPoint hit=self.contact;
-    NSPoint rim[]={NSMakePoint(NSMinX(pane),NSMinY(pane)),NSMakePoint(NSMidX(pane)+5,NSMinY(pane)),
-        NSMakePoint(NSMaxX(pane),NSMinY(pane)),NSMakePoint(NSMaxX(pane),NSMidY(pane)-15),
-        NSMakePoint(NSMaxX(pane),NSMidY(pane)+6),NSMakePoint(NSMaxX(pane),NSMaxY(pane)),
-        NSMakePoint(NSMidX(pane)-4,NSMaxY(pane)),NSMakePoint(NSMinX(pane),NSMaxY(pane)),
-        NSMakePoint(NSMinX(pane),NSMidY(pane)+15)};
-    NSPoint knees[9];
-    for (NSUInteger i=0;i<9;i++) {
-        CGFloat fraction=.39+.08*(i%4);
-        knees[i]=NSMakePoint(hit.x+(rim[i].x-hit.x)*fraction+(i%2?1.7:-1.4),
-                            hit.y+(rim[i].y-hit.y)*fraction+(i%3?2:-1.8));
-    }
-    CGFloat scatter=MAX(0,(progress-.18)/.82);
-    for (NSUInteger i=0;i<9;i++) {
-        NSUInteger next=(i+1)%9;
-        NSPoint a=rim[i],b=rim[next];
-        if (scatter==0) {
-            NSBezierPath *crack=[NSBezierPath bezierPath];
-            [crack moveToPoint:hit];[crack lineToPoint:knees[i]];[crack lineToPoint:a];
-            [edge setStroke];crack.lineWidth=.65;[crack stroke];
-            NSBezierPath *branch=[NSBezierPath bezierPath];
-            [branch moveToPoint:knees[i]];
-            [branch lineToPoint:NSMakePoint((knees[i].x+knees[next].x)*.5+1,(knees[i].y+knees[next].y)*.5-2)];
-            [branch lineToPoint:knees[next]];
-            [light setStroke];branch.lineWidth=.55;[branch stroke];
-            continue;
-        }
-        CGFloat dx=(a.x+b.x-2*hit.x)*scatter*self.impulse*(.26+.07*(i%4));
-        CGFloat dy=(a.y+b.y-2*hit.y)*scatter*self.impulse*.11-(8+i%3*4)*scatter*scatter;
-        NSBezierPath *shard=[NSBezierPath bezierPath];
-        NSPoint vertices[]={hit,knees[i],a,b,knees[next]};
-        [shard moveToPoint:NSMakePoint(hit.x+dx,hit.y+dy)];
-        for (NSUInteger j=1;j<5;j++) [shard lineToPoint:NSMakePoint(vertices[j].x+dx,vertices[j].y+dy)];
-        [shard closePath];
-        CGFloat fade=1-scatter*.83;
-        [[NSColor colorWithWhite:1 alpha:(.13+.07*(i%3))*fade] setFill];[shard fill];
-        [[edge colorWithAlphaComponent:.65*fade] setStroke];shard.lineWidth=.7;[shard stroke];
-    }
-}
-@end
-
 @implementation PebblePetView
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 - (BOOL)isOpaque { return NO; }
@@ -335,6 +260,8 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         CGFloat size=round(MAX(44,MIN(58,NSWidth(self.bounds)*.25)));
         CGFloat x=MIN(NSMaxX(self.bounds)-size-5,NSMaxX(art)-size*.45);
         CGFloat y=MIN(NSMaxY(self.bounds)-size-5,NSMaxY(art)-size*.18);
+        if (!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion)
+            y+=2.5*sin((CACurrentMediaTime()-owner.activityStart)*1.5);
         NSRect badge=NSMakeRect(x,y,size,size);
         NSBezierPath *bubble=[NSBezierPath bezierPathWithRoundedRect:badge xRadius:size*.34 yRadius:size*.34];
         [bubble moveToPoint:NSMakePoint(x+8,y+6)];
@@ -487,58 +414,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     if(self.interactionEnded)self.interactionEnded();
 }
 - (NSRect)effectAnchor {return NSOffsetRect(self.artRect,NSMinX(self.panel.frame),NSMinY(self.panel.frame));}
-- (void)placeGlassOnOppositeEdge {
-    NSScreen *screen=self.panel.screen ?: NSScreen.screens.firstObject;
-    if (!screen) return;
-    NSRect visible=screen.visibleFrame, frame=self.panel.frame;
-    NSRect stone=PebbleStoneDrawRect(self.artRect);
-    BOOL toRight=NSMidX(frame)<=NSMidX(visible);
-    NSInteger w=self.bitmap.pixelsWide,h=self.bitmap.pixelsHigh;
-    NSPoint tip=NSMakePoint(toRight?NSMaxX(stone):NSMinX(stone),NSMidY(stone));
-    // Find the leading opaque pixel, including its height on an asymmetric stone.
-    BOOL found=NO;
-    for (NSInteger column=0;column<w && !found;column++) {
-        NSInteger px=toRight?w-1-column:column;
-        for (NSInteger py=0;py<h;py++) {
-            if ([self.bitmap colorAtX:px y:py].alphaComponent<.5) continue;
-            tip=NSMakePoint(NSMinX(stone)+NSWidth(stone)*(px+(toRight?1:0))/w,
-                            NSMaxY(stone)-NSHeight(stone)*(py+.5)/h);
-            found=YES;
-            break;
-        }
-    }
-    self.angle=0;
-    self.stretch=1;
-    CGFloat margin=toRight?NSWidth(frame)-tip.x:tip.x;
-    CGFloat width=MAX(64,margin+52),height=102;
-    CGFloat x=toRight?NSMaxX(visible)-width:NSMinX(visible);
-    CGFloat y=tip.y+NSMinY(frame)-height/2;
-    NSRect prop=PebblePetConstrainFrame(NSMakeRect(x,y,width,height),visible);
-    self.smashOrigin=frame.origin;
-    CGFloat contactX=toRight?NSMinX(prop)+17:NSMaxX(prop)-17;
-    frame.origin.x=contactX-tip.x;
-    frame.origin.y=NSMidY(prop)-tip.y;
-    self.smashTarget=PebblePetConstrainFrame(frame,visible).origin;
-    self.smashFlight=MAX(.65,MIN(1.45,fabs(self.smashTarget.x-self.smashOrigin.x)/850));
-    NSPanel *panel=[[PebblePetPanel alloc] initWithContentRect:prop styleMask:NSWindowStyleMaskBorderless|NSWindowStyleMaskNonactivatingPanel backing:NSBackingStoreBuffered defer:NO];
-    panel.opaque=NO;panel.backgroundColor=NSColor.clearColor;panel.hasShadow=NO;
-    panel.ignoresMouseEvents=YES;panel.releasedWhenClosed=NO;panel.hidesOnDeactivate=NO;
-    panel.level=self.panel.level+1;panel.collectionBehavior=self.panel.collectionBehavior;
-    PebbleGlassView *view=[[PebbleGlassView alloc] initWithFrame:NSMakeRect(0,0,width,height)];
-    view.contact=NSMakePoint(contactX-NSMinX(prop),self.smashTarget.y+tip.y-NSMinY(prop));
-    view.pane=NSMakeRect(toRight?17:width-47,9,30,height-18);
-    double speed=fabs(self.smashTarget.x-self.smashOrigin.x)/self.smashFlight;
-    double mass=PebblePetMass(frame.size);
-    view.impulse=MAX(.45,MIN(1.8,mass*speed/850));
-    view.rebound=(toRight?-1:1)*MIN(32,speed*.025/mass);
-    view.impactProgress=-1;
-    panel.contentView=view;
-    self.glassPanel=panel;
-    [panel orderFrontRegardless];
-}
 - (void)endActivityAt:(NSTimeInterval)now {
-    [self.glassPanel close];
-    self.glassPanel=nil;
     self.activity=PebblePetActivityNone;
     self.automaticActivity=NO;
     self.petView.accessibilityValue=nil;
@@ -552,12 +428,11 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     self.activity=activity;
     self.automaticActivity=automatic;
     self.activityStart=now;
-    self.activityEnd=now+(activity==PebblePetActivitySleep?18:(activity==PebblePetActivitySmash?4:15));
+    self.activityEnd=now+(activity==PebblePetActivitySleep?18:15);
     self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,YES};
-    NSArray *activityNames=@[@"", @"录播客中", @"睡觉中", @"露营中", @"野炊中", @"戴着耳机", @"砸玻璃中"];
+    NSArray *activityNames=@[@"", @"录播客中", @"睡觉中", @"露营中", @"野炊中", @"戴着耳机"];
     self.petView.accessibilityValue=activityNames[activity];
     self.petView.needsDisplay=YES;
-    if (activity==PebblePetActivitySmash) [self placeGlassOnOppositeEdge];
     if (automatic && !self.casualSpeech) return;
     if (activity==PebblePetActivityPodcast) [self say:nil];
     if (activity==PebblePetActivityCook) [self showMessage:@"开饭啦。" priority:PebblePetMessageInteraction duration:5];
@@ -576,9 +451,6 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 }
 - (void)wearHeadphones:(id)sender {
     [self startActivity:PebblePetActivityHeadphones automatic:NO at:CACurrentMediaTime()];
-}
-- (void)smashGlass:(id)sender {
-    [self startActivity:PebblePetActivitySmash automatic:NO at:CACurrentMediaTime()];
 }
 - (void)cancelPlay {
     if (self.activity!=PebblePetActivityNone) [self endActivityAt:CACurrentMediaTime()];
@@ -697,32 +569,16 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         PebblePetBody body=self.body;
         if (self.activity!=PebblePetActivityNone) {
             CGFloat elapsed=now-self.activityStart;
-            if (self.activity==PebblePetActivitySmash && self.glassPanel) {
-                double progress=MIN(1,MAX(0,elapsed/self.smashFlight));
-                PebbleGlassView *glass=(PebbleGlassView *)self.glassPanel.contentView;
-                glass.impactProgress=progress<1?-1:MIN(1,(elapsed-self.smashFlight)/.65);
-                glass.needsDisplay=YES;
-                if (elapsed>self.smashFlight+.9) [self.glassPanel orderOut:nil];
-                if (!reduced) {
-                    double travel=progress;
-                    NSPoint point=NSMakePoint(self.smashOrigin.x+(self.smashTarget.x-self.smashOrigin.x)*travel,
-                        self.smashOrigin.y+(self.smashTarget.y-self.smashOrigin.y)*travel+28*4*progress*(1-progress));
-                    double recoil=MIN(1,MAX(0,(elapsed-self.smashFlight-.035)/.22));
-                    point.x+=glass.rebound*(1-pow(1-recoil,2));
-                    point.y+=fabs(glass.rebound)*recoil*(1-recoil);
-                    body.position=PebblePetConstrainFrame((NSRect){point,self.panel.frame.size},visible).origin;
-                }
-            }
             CGFloat pose=0;
             switch(self.activity) {
                 case PebblePetActivitySleep: pose=-20;break;
-                case PebblePetActivityPodcast: pose=sin(elapsed*5)*4;break;
-                case PebblePetActivityHeadphones: pose=sin(elapsed*4)*7;break;
+                case PebblePetActivityPodcast: pose=-2+sin(elapsed*3)*2;break;
+                case PebblePetActivityHeadphones: pose=sin(elapsed*3.6)*3;break;
                 case PebblePetActivityCook: pose=MAX(0,sin(elapsed*4))*4;break;
                 default: break;
             }
             self.angle=reduced?0:self.angle+(pose-self.angle)*MIN(1,dt*6);
-            self.stretch=(reduced || self.activity==PebblePetActivitySmash)?1:1+sin(elapsed*2)*.014;
+            self.stretch=1;
             self.petView.needsDisplay=YES;
         } else if(self.skipState.active) {
             NSUInteger previous=self.skipState.bounces;
@@ -735,7 +591,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             if(!self.skipState.active){self.skipEnding=YES;self.finishedSkips=self.skipState.bounces;}
         } else {
             if(body.resting && self.roaming && !self.skipEnding && !reduced && now>self.nextWander) {
-                NSUInteger choice=arc4random_uniform(PebblePetActivitySmash+1);
+                NSUInteger choice=arc4random_uniform(PebblePetActivityHeadphones+1);
                 if (choice!=0) {
                     [self startActivity:(PebblePetActivity)choice automatic:YES at:now];
                     body=self.body;
@@ -853,8 +709,8 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSMenuItem *sleep=[activities.submenu addItemWithTitle:@"睡觉" action:@selector(takeNap:) keyEquivalent:@""];
     podcast.target=self;
     sleep.target=self;
-    NSArray *outings=@[@"露营",@"野炊",@"戴耳机",@"砸玻璃"];
-    SEL outingActions[]={@selector(camp:),@selector(cook:),@selector(wearHeadphones:),@selector(smashGlass:)};
+    NSArray *outings=@[@"露营",@"野炊",@"戴耳机"];
+    SEL outingActions[]={@selector(camp:),@selector(cook:),@selector(wearHeadphones:)};
     for (NSUInteger index=0;index<outings.count;index++) {
         NSMenuItem *item=[activities.submenu addItemWithTitle:outings[index] action:outingActions[index] keyEquivalent:@""];
         item.target=self;
@@ -872,5 +728,5 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [self savePlacement];[self cancelPlay];self.invalidated=YES;[self.timer invalidate];self.timer=nil;[self.panel close];
     self.syncStone=nil;self.dismissPet=nil;self.openSettings=nil;self.interactionEnded=nil;
 }
-- (void)dealloc {[self.glassPanel close];[self.effects clear];[self.timer invalidate];[self.panel orderOut:nil];}
+- (void)dealloc {[self.effects clear];[self.timer invalidate];[self.panel orderOut:nil];}
 @end
