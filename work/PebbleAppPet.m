@@ -27,7 +27,13 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     if (!self.pet) {
         self.pet=[[PebblePetController alloc] initWithDefaults:NSUserDefaults.standardUserDefaults];
         __weak PebbleApp *weakSelf=self;
-        self.pet.syncStone=^{[weakSelf syncPetStone];};
+        self.pet.syncStone=^{[weakSelf syncPetFromWallpaper:nil];};
+        self.pet.collectStone=^{
+            PebbleApp *app=weakSelf;
+            if (!app.petStoneSnapshot) return;
+            [app storeFavoriteStone:app.petStoneSnapshot];
+            [app.pet showMessage:@"已收藏这颗石头。" priority:PebblePetMessageInteraction duration:4];
+        };
         self.pet.dismissPet=^{[weakSelf togglePet:nil];};
         self.pet.openSettings=^{[weakSelf showPetSettings:nil];};
         self.pet.interactionEnded=^{
@@ -42,6 +48,19 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     [self.pet setSuspended:self.screenLocked || self.displaysAsleep || self.sessionInactive || !NSScreen.screens.count];
     [self syncPetControls];
 }
+- (void)restoreFavoritePet:(NSButton *)sender {
+    if ((NSUInteger)sender.tag >= self.favorites.count) return;
+    self.petFavoriteStone = self.favorites[sender.tag];
+    self.petGeneration++;
+    [self summonPet:nil];
+}
+
+- (void)syncPetFromWallpaper:(id)sender {
+    self.petFavoriteStone = nil;
+    self.petGeneration++;
+    [self syncPetStone];
+}
+
 - (void)syncPetStone {
     if (!self.pet || self.petSyncScheduled) return;
     self.petSyncScheduled=YES;
@@ -53,10 +72,17 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if (!web) web=(WKWebView *)self.desktopWindows.allValues.firstObject.contentView;
         if (!web || web.loading) return; // didFinishNavigation will request a fresh sprite.
         NSUInteger generation=++self.petGeneration;
-        [self performWallpaperScript:@"window.pebblePetFrame?.()" inWeb:web reportErrors:NO completion:^(id encoded,NSError *error){
+        NSString *script = self.petFavoriteStone
+            ? [NSString stringWithFormat:@"(()=>{const stone=%@;return {stone,png:window.pebbleFavoritePet(stone)}})()",
+                [self jsonForPebble:self.petFavoriteStone]]
+            : @"({stone:window.pebbleSnapshot?.(),png:window.pebblePetFrame?.()})";
+        [self performWallpaperScript:script inWeb:web reportErrors:NO completion:^(id result,NSError *error){
             if (generation!=self.petGeneration || self.pet!=pet || error) return;
+            if (![result isKindOfClass:NSDictionary.class]) return;
+            id encoded=result[@"png"];
             NSData *data=[encoded isKindOfClass:NSString.class]?[[NSData alloc] initWithBase64EncodedString:encoded options:0]:nil;
-            if (![pet setStonePNG:data]) NSLog(@"Desktop pet sprite unavailable; keeping the last valid image.");
+            if ([pet setStonePNG:data]) self.petStoneSnapshot = PebbleNormalizeStone(result[@"stone"], self.stoneTextures);
+            else NSLog(@"Desktop pet sprite unavailable; keeping the last valid image.");
             [self syncPetControls];
             if (self.petPreview) {
                 for(NSWindow *window in self.desktopWindows.allValues)[window orderOut:nil];
@@ -116,7 +142,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     self.petRoamSwitch=[self switchOn:YES action:@selector(togglePetRoaming:)];
     self.petSizePicker=[[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
     [self.petSizePicker addItemsWithTitles:@[@"小",@"中",@"大"]];self.petSizePicker.target=self;self.petSizePicker.action=@selector(selectPetSize:);
-    NSStackView *actions=[NSStackView stackViewWithViews:@[[self actionButton:@"同步石头" action:@selector(syncPetStone)],
+    NSStackView *actions=[NSStackView stackViewWithViews:@[[self actionButton:@"同步石头" action:@selector(syncPetFromWallpaper:)],
         [self actionButton:@"收回右下角" action:@selector(summonPet:)]]];actions.spacing=8;
     NSView *card=[self cardWithRows:@[
         [self rowWithSymbol:@"smile" title:@"开启桌宠" subtitle:@"把当前石头带到窗口旁，点一下打招呼" control:self.petSwitch],
@@ -199,12 +225,13 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         "try{faces('on');png=window.pebblePetFrame();faces('off');off=window.pebblePetFrame();"
         "for(let i=0;i<12;i++)window.pebblePetFrame();}"
         "finally{window.pebbleConfig.faces=oldConfig;if(current)current.faces=oldRecord;}"
-        "return {png,faceVisible:png!==off,alive:!document.querySelector('canvas').getContext('webgl').isContextLost(),"
+        "const stone=window.pebbleSnapshot();const favoriteMatches=window.pebbleFavoritePet(stone)===window.pebblePetFrame();"
+        "return {png,favoriteMatches,faceVisible:png!==off,alive:!document.querySelector('canvas').getContext('webgl').isContextLost(),"
         "unchanged:before===JSON.stringify(window.pebbleSnapshot())}})()";
     [web evaluateJavaScript:script completionHandler:^(NSDictionary *result,NSError *error){
         NSData *png=[result[@"png"] isKindOfClass:NSString.class]?[[NSData alloc] initWithBase64EncodedString:result[@"png"] options:0]:nil;
         NSBitmapImageRep *bitmap=png?[NSBitmapImageRep imageRepWithData:png]:nil;
-        if(error || ![result[@"faceVisible"] boolValue] || ![result[@"alive"] boolValue] || ![result[@"unchanged"] boolValue] || bitmap.pixelsWide!=640 || bitmap.pixelsHigh!=640 ||
+        if(error || ![result[@"favoriteMatches"] boolValue] || ![result[@"faceVisible"] boolValue] || ![result[@"alive"] boolValue] || ![result[@"unchanged"] boolValue] || bitmap.pixelsWide!=640 || bitmap.pixelsHigh!=640 ||
            !bitmap.hasAlpha || [bitmap colorAtX:0 y:0].alphaComponent>.01 || [bitmap colorAtX:320 y:320].alphaComponent<.1){
             NSLog(@"Pet export failed: error=%@ alive=%@ unchanged=%@ size=%ldx%ld alpha=%d",error,result[@"alive"],result[@"unchanged"],(long)bitmap.pixelsWide,(long)bitmap.pixelsHigh,bitmap.hasAlpha);exit(18);
         }
@@ -251,6 +278,9 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             [liveBubble cacheDisplayInRect:liveBubble.bounds toBitmapImageRep:livePNG];
             NSString *livePath=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"pet-skipping-bubble.png"];
             if(![[livePNG representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:livePath atomically:YES])exit(20);
+            if ([defaults integerForKey:@"PetBestSkipCount"] <= 0 ||
+                [defaults integerForKey:@"PetBestSkipDistance"] <= 0 ||
+                ![pet.effects.message containsString:@"新纪录"]) exit(20);
             NSLog(@"Live timer skipping, visible ripples, settling and completion speech verified: %@",pet.effects.message);
             [pet setSuspended:YES];if(pet.effects.message || pet.effects.rippleCount)exit(20);
         }
@@ -283,6 +313,13 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             NSMenuItem *item=[activities itemWithTitle:outingTitles[i]];
             if(!item || ![NSApp sendAction:item.action to:item.target from:item] ||
                ![pet.panel.contentView.accessibilityValue isEqual:outingValues[i]])exit(21);
+            if (i == 0) {
+                SEL toggle = NSSelectorFromString(@"toggleCampLamp");
+                [NSApp sendAction:toggle to:pet from:nil];
+                if (![[pet valueForKey:@"campLampOn"] boolValue]) exit(21);
+                [NSApp sendAction:toggle to:pet from:nil];
+                if ([[pet valueForKey:@"campLampOn"] boolValue]) exit(21);
+            }
             NSBitmapImageRep *preview=[podcastView bitmapImageRepForCachingDisplayInRect:podcastView.bounds];
             [podcastView cacheDisplayInRect:podcastView.bounds toBitmapImageRep:preview];
             NSString *path=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:outingFiles[i]];

@@ -12,6 +12,7 @@
 @property (nonatomic, readonly) PebblePetEffects *effects;
 @property (nonatomic) NSInteger sizeIndex;
 @property (nonatomic, copy) void (^syncStone)(void);
+@property (nonatomic, copy) void (^collectStone)(void);
 @property (nonatomic, copy) void (^dismissPet)(void);
 @property (nonatomic, copy) void (^openSettings)(void);
 @property (nonatomic, copy) void (^interactionEnded)(void);

@@ -42,6 +42,7 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property NSUInteger lastQuoteIndex;
 @property BOOL skipEnding;
 @property NSUInteger finishedSkips;
+@property CGFloat skipDistance;
 @property NSTimeInterval nextSpeech,impactUntil;
 @property (copy) NSDate *focusDeadline;
 - (void)startSkipping:(NSPoint)velocity;
@@ -61,7 +62,12 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 - (void)endDrag;
 - (NSMenu *)petMenu;
 
+@property BOOL campLampOn;
+@property CGFloat campApproach;
+- (NSRect)baseArtRect;
 - (NSRect)artRect;
+- (BOOL)containsCampLampAtScreenPoint:(NSPoint)point;
+- (void)toggleCampLamp;
 @end
 @interface PebblePetView : NSView
 @property (weak) PebblePetController *owner;
@@ -140,7 +146,7 @@ static void FillPetProp(NSBezierPath *shape, NSColor *light, NSColor *dark) {
     [NSGraphicsContext restoreGraphicsState];
 }
 
-static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds, CGFloat phase, NSBitmapImageRep *stone) {
+static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds, CGFloat phase, NSBitmapImageRep *stone, BOOL lampOn) {
     [NSGraphicsContext saveGraphicsState];
     NSAffineTransform *position=[NSAffineTransform transform];
     CGFloat scale=MAX(.8,MIN(1.25,NSWidth(bounds)/204));
@@ -184,9 +190,14 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         [door lineToPoint:NSMakePoint(36,4)];[door closePath];
         FillPetProp(door,[NSColor colorWithSRGBRed:.89 green:.73 blue:.42 alpha:1],
                     [NSColor colorWithSRGBRed:.30 green:.34 blue:.24 alpha:1]);
-        CGFloat lamp=4+sin(phase*2)*.55;
-        [[NSColor colorWithSRGBRed:1 green:.80 blue:.36 alpha:.85] setFill];
-        [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(23-lamp/2,13,lamp,lamp+2)] fill];
+        if (lampOn) {
+            [[NSColor colorWithSRGBRed:1 green:.72 blue:.24 alpha:.24] setFill];
+            [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(13,7,20,20)] fill];
+        }
+        NSColor *lampColor = lampOn ? [NSColor colorWithSRGBRed:1 green:.85 blue:.45 alpha:1]
+                                   : [NSColor colorWithWhite:.37 alpha:1];
+        FillPetProp([NSBezierPath bezierPathWithRoundedRect:NSMakeRect(19,11,8,11) xRadius:2 yRadius:2],
+                    lampColor, [NSColor colorWithWhite:.22 alpha:1]);
     } else if (activity==PebblePetActivityCook) {
         NSColor *steel=[NSColor colorWithSRGBRed:.28 green:.34 blue:.37 alpha:1];
         NSColor *highlight=[NSColor colorWithSRGBRed:.62 green:.72 blue:.72 alpha:1];
@@ -248,7 +259,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [transform translateXBy:-NSMidX(art) yBy:-NSMidY(art)];[transform concat];
     [owner.stoneImage drawInRect:stone fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1];
     if (owner.activity==PebblePetActivityHeadphones)
-        DrawPetOuting(owner.activity,art,self.bounds,0,owner.bitmap);
+        DrawPetOuting(owner.activity,art,self.bounds,0,owner.bitmap,NO);
     [NSGraphicsContext restoreGraphicsState];
     if (owner.activity==PebblePetActivityPodcast) {
         CGFloat scale=MAX(.92,MIN(1.30,NSWidth(self.bounds)/204.0));
@@ -285,7 +296,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     }
     if (owner.activity>=PebblePetActivityCamp && owner.activity<=PebblePetActivityCook) {
         BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-        DrawPetOuting(owner.activity,art,self.bounds,reduced?0:CACurrentMediaTime()-owner.activityStart,owner.bitmap);
+        DrawPetOuting(owner.activity,owner.baseArtRect,self.bounds,reduced?0:CACurrentMediaTime()-owner.activityStart,owner.bitmap,owner.campLampOn);
     }
     if (owner.celebrateUntil>CACurrentMediaTime()) {
         CGFloat progress=1-(owner.celebrateUntil-CACurrentMediaTime())/.7;
@@ -299,9 +310,13 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         }
     }
 }
-- (void)mouseDown:(NSEvent *)event { [self.owner beginDrag]; }
-- (void)mouseDragged:(NSEvent *)event { [self.owner continueDrag]; }
-- (void)mouseUp:(NSEvent *)event { [self.owner endDrag]; }
+- (void)mouseDown:(NSEvent *)event {
+    NSPoint point = [self.window convertPointToScreen:event.locationInWindow];
+    if ([self.owner containsCampLampAtScreenPoint:point]) [self.owner toggleCampLamp];
+    else [self.owner beginDrag];
+}
+- (void)mouseDragged:(NSEvent *)event { if (self.owner.dragging) [self.owner continueDrag]; }
+- (void)mouseUp:(NSEvent *)event { if (self.owner.dragging) [self.owner endDrag]; }
 - (void)rightMouseDown:(NSEvent *)event {
     self.owner.menuOpen=YES;
     [NSMenu popUpContextMenu:self.owner.petMenu withEvent:event forView:self];
@@ -352,7 +367,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     _nextWander=CACurrentMediaTime()+8;
     return self;
 }
-- (NSRect)artRect {
+- (NSRect)baseArtRect {
     NSRect frame=NSInsetRect(self.petView.bounds,24,26);
     NSSize image=self.stoneImage.size;
     if (image.width>0 && image.height>0) {
@@ -361,6 +376,26 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     }
     return frame;
 }
+- (NSRect)artRect {
+    return NSOffsetRect(self.baseArtRect, self.campApproach, 0);
+}
+
+- (BOOL)containsCampLampAtScreenPoint:(NSPoint)point {
+    if (self.activity != PebblePetActivityCamp) return NO;
+    NSRect bounds = self.petView.bounds, art = self.baseArtRect;
+    CGFloat scale = MAX(.8, MIN(1.25, NSWidth(bounds)/204));
+    CGFloat x = MIN(NSMaxX(bounds)-56*scale-4, NSMaxX(art)-26*scale);
+    CGFloat y = NSMinY(art)-3;
+    NSRect target = NSMakeRect(x+15*scale, y+8*scale,16*scale,17*scale);
+    return NSPointInRect(point, NSOffsetRect(target, NSMinX(self.panel.frame), NSMinY(self.panel.frame)));
+}
+
+- (void)toggleCampLamp {
+    self.campLampOn = !self.campLampOn;
+    self.activityEnd = CACurrentMediaTime() + 15;
+    self.petView.needsDisplay = YES;
+}
+
 - (BOOL)setStonePNG:(NSData *)data {
     if (self.invalidated || data.length>4*1024*1024) return NO;
     NSBitmapImageRep *source=data?[NSBitmapImageRep imageRepWithData:data]:nil;
@@ -417,6 +452,8 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 - (NSRect)effectAnchor {return NSOffsetRect(self.artRect,NSMinX(self.panel.frame),NSMinY(self.panel.frame));}
 - (void)endActivityAt:(NSTimeInterval)now {
     self.activity=PebblePetActivityNone;
+    self.campLampOn = NO;
+    self.campApproach = 0;
     self.automaticActivity=NO;
     self.petView.accessibilityValue=nil;
     self.nextWander=now+20+arc4random_uniform(16);
@@ -480,6 +517,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 }
 - (void)startSkipping:(NSPoint)velocity {
     [self cancelPlay];
+    self.skipDistance = 0;
     NSRect visible=(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame;
     self.skipState=PebblePetBeginSkip((PebblePetBody){self.panel.frame.origin,velocity,NO},visible,self.panel.frame.size,self.skipLimit);
     self.body=self.skipState.body;self.nextWander=CACurrentMediaTime()+15;
@@ -578,6 +616,11 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         if (self.activity!=PebblePetActivityNone) {
             CGFloat elapsed=now-self.activityStart;
             CGFloat pose=0;
+            if (self.activity == PebblePetActivityCamp) {
+                CGFloat target = self.campLampOn ? 9 : 0;
+                self.campApproach += (target-self.campApproach)*(reduced ? 1 : MIN(1,dt*7));
+                pose = self.campLampOn ? -3 : 0;
+            }
             switch(self.activity) {
                 case PebblePetActivitySleep: pose=-20;break;
                 case PebblePetActivityPodcast: pose=-2+sin(elapsed*3)*2;break;
@@ -590,8 +633,10 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             self.petView.needsDisplay=YES;
         } else if(self.skipState.active) {
             NSUInteger previous=self.skipState.bounces;
+            CGFloat previousX = self.skipState.body.position.x;
             self.skipState=PebblePetAdvanceSkip(self.skipState,visible,self.panel.frame.size,dt);
             body=self.skipState.body;
+            self.skipDistance += fabs(body.position.x - previousX);
             if(self.skipState.bounces>previous) {
                 self.impactUntil=now+.11;
                 [self.effects addRippleAt:[self stoneContactAtPanelOrigin:self.skipState.impactPosition] color:self.stoneColor];
@@ -616,7 +661,17 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         if(!wasResting && body.resting)[self savePlacement];
         if(body.resting && self.skipEnding) {
             NSUInteger count=self.finishedSkips;self.skipEnding=NO;[self savePlacement];
-            [self showMessage:count?[NSString stringWithFormat:@"漂了 %lu 下，落稳啦。",(unsigned long)count]:@"换个方向，再漂一次。" priority:PebblePetMessageInteraction duration:5];
+            NSInteger distance = lround(self.skipDistance);
+            NSInteger bestCount = [self.defaults integerForKey:@"PetBestSkipCount"];
+            NSInteger bestDistance = [self.defaults integerForKey:@"PetBestSkipDistance"];
+            BOOL record = count && ((NSInteger)count > bestCount || distance > bestDistance);
+            if (record) {
+                [self.defaults setInteger:MAX(bestCount, (NSInteger)count) forKey:@"PetBestSkipCount"];
+                [self.defaults setInteger:MAX(bestDistance, distance) forKey:@"PetBestSkipDistance"];
+            }
+            NSString *message = count ? [NSString stringWithFormat:@"漂了 %lu 下 · %ld 点%@",
+                (unsigned long)count, (long)distance, record ? @" · 新纪录！" : @""] : @"换个方向，再漂一次。";
+            [self showMessage:message priority:PebblePetMessageInteraction duration:5];
             if(self.interactionEnded)self.interactionEnded();
         }
         if(!self.focusDeadline && self.activity==PebblePetActivityNone && body.resting && self.casualSpeech && self.speechEnabled && now>self.nextSpeech && !NSProcessInfo.processInfo.lowPowerModeEnabled) {
@@ -629,7 +684,9 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             self.stretch=reduced?1:(now<self.impactUntil?.975:1);
         }
     }
-    self.panel.ignoresMouseEvents=!self.dragging && ![self containsStoneAtScreenPoint:NSEvent.mouseLocation];
+    NSPoint pointer = NSEvent.mouseLocation;
+    self.panel.ignoresMouseEvents = !self.dragging && ![self containsStoneAtScreenPoint:pointer] &&
+        ![self containsCampLampAtScreenPoint:pointer];
     [self.effects updateAtTime:now anchor:self.effectAnchor visible:visible];
     if(!reduced || !self.body.resting || self.celebrateUntil>now)self.petView.needsDisplay=YES;
 }
@@ -701,6 +758,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 }
 - (void)toggleQuiet:(id)sender {self.roaming=!self.roaming;}
 - (void)selectSize:(NSMenuItem *)sender {self.sizeIndex=sender.tag;}
+- (void)collectFromMenu:(id)sender { if (self.collectStone) self.collectStone(); }
 - (void)syncFromMenu:(id)sender {if(self.syncStone) self.syncStone();}
 - (void)showSettings:(id)sender {if(self.openSettings)self.openSettings();}
 - (void)dismiss:(id)sender {if(self.dismissPet) self.dismissPet();}
@@ -731,10 +789,20 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSMenuItem *focus = [menu addItemWithTitle:focusTitle action:@selector(toggleFocus:) keyEquivalent:@""];
     focus.target = self;
     [menu addItem:NSMenuItem.separatorItem];
+    NSMenuItem *collect = [menu addItemWithTitle:@"收藏这颗" action:@selector(collectFromMenu:) keyEquivalent:@""];
+    collect.target = self;
+    collect.enabled = self.collectStone != nil && self.stoneImage != nil;
     NSArray *titles=@[@"打个招呼",@"同步当前石头",@"收回右下角",@"自由活动"];
     SEL actions[]={@selector(greet:),@selector(syncFromMenu:),@selector(summon:),@selector(toggleQuiet:)};
     for (NSUInteger i=0;i<titles.count;i++) {NSMenuItem *item=[menu addItemWithTitle:titles[i] action:actions[i] keyEquivalent:@""];item.target=self;if(i==3)item.state=self.roaming;}
     NSMenuItem *skip=[menu addItemWithTitle:@"打个水漂" action:@selector(skip:) keyEquivalent:@""];skip.target=self;skip.enabled=self.skippingEnabled;
+    NSInteger bestCount = [self.defaults integerForKey:@"PetBestSkipCount"];
+    if (bestCount > 0) {
+        NSInteger bestDistance = [self.defaults integerForKey:@"PetBestSkipDistance"];
+        NSMenuItem *record = [menu addItemWithTitle:[NSString stringWithFormat:@"水漂最佳 · %ld 下 / %ld 点",
+            (long)bestCount, (long)bestDistance] action:nil keyEquivalent:@""];
+        record.enabled = NO;
+    }
     NSMenuItem *say=[menu addItemWithTitle:@"说句话" action:@selector(say:) keyEquivalent:@""];say.target=self;say.enabled=self.speechEnabled;
     NSMenuItem *activities=[menu addItemWithTitle:@"做点什么" action:nil keyEquivalent:@""];
     activities.submenu=[NSMenu new];

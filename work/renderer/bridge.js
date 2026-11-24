@@ -125,7 +125,7 @@ function validPebble(stone) {
 }
 
 function pebbleFaces() {
-    return window.pebbleHistory?.current?.faces ?? window.pebbleConfig.faces;
+    return window.pebblePetFaces ?? window.pebbleHistory?.current?.faces ?? window.pebbleConfig.faces;
 }
 
 function snapshotPebble(pebble, faces = pebbleFaces() ?? '') {
@@ -233,6 +233,19 @@ window.pebbleReleasePet = releasePebblePet;
 
 // Find a broad view rather than assuming yaw=0 faces the camera. This preserves
 // the original shape, including stones that are naturally long and narrow.
+function renderFavoritePet(stone, atlas) {
+    const previous = window.pebbleRestoring;
+    window.pebbleRestoring = stone;
+    window.pebblePetFaces = stone.faces;
+    try {
+        const shape = Bg({family:"mixed", grain:.3, shading:.52, thickness:.48});
+        return renderPebblePet({...shape, ...stone}, atlas);
+    } finally {
+        window.pebbleRestoring = previous;
+        delete window.pebblePetFaces;
+    }
+}
+
 function renderPebblePet(stone, atlas) {
     if (!petScratch) {
         const probe = document.createElement('canvas');
