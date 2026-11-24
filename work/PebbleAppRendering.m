@@ -192,7 +192,7 @@
             NSLog(@"Wallpaper command failed: %@", error);
             if ([error.domain isEqual:WKErrorDomain] && error.code == WKErrorWebContentProcessTerminated)
                 [self recoverRenderer:web error:error];
-            if (report) [self showWallpaperError:@"画面可能正在加载或恢复，请稍后重试。也可从菜单栏选择「恢复壁纸显示」。"];
+            if (report) [self showWallpaperError:[NSString stringWithFormat:@"画面可能正在加载或恢复，请稍后重试。也可从菜单栏选择「%@」。", ReloadWallpaperTitle]];
         }
         if (completion) completion(result, error);
     };
@@ -373,7 +373,7 @@
     PebbleRendererRecovery *state = [self.rendererRecovery objectForKey:web];
     if (!state || state.pending) return;
     if (state.attempts >= 3) {
-        NSLog(@"Renderer recovery stopped after three attempts: %@. Use 恢复壁纸显示 to retry.", error);
+        NSLog(@"Renderer recovery stopped after three attempts: %@. Use %@ to retry.", error, ReloadWallpaperTitle);
         return;
     }
     state.pending = YES;

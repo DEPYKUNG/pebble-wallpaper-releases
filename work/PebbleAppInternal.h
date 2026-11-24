@@ -17,6 +17,7 @@
 #import <Sparkle/Sparkle.h>
 #endif
 
+static NSString *const ReloadWallpaperTitle = @"重新加载动态壁纸画面";
 static NSString *const WallpaperTitle = @"鹅卵石";
 static NSString *const PausedPreference = @"WallpaperPaused";
 typedef struct {
