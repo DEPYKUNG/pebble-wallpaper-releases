@@ -26,6 +26,7 @@
 - (void)skip:(id)sender;
 - (void)say:(id)sender;
 - (BOOL)showMessage:(NSString *)message priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration;
+- (BOOL)showUpdateWithAction:(void (^)(void))action;
 - (void)invalidate;
 // Pointer samples are explicit so the real gesture path can be regression-tested.
 - (void)beginDragAtPoint:(NSPoint)point time:(NSTimeInterval)time;

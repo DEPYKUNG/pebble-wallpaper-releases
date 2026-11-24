@@ -367,6 +367,14 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if(restored.skippingEnabled || restored.speechEnabled || !restored.casualSpeech || restored.skipLimit!=7)exit(20);
         [restored invalidate];
         PebblePetEffects *effects=[PebblePetEffects new];
+        __block NSUInteger updateClicks = 0;
+        if (![effects showUpdateWithAction:^{ updateClicks++; }] ||
+            ![effects.message isEqualToString:@"更新到最新版"]) exit(20);
+        NSButton *updateBubble = [effects.bubblePanel.contentView valueForKey:@"episodeButton"];
+        [updateBubble performClick:nil];
+        [updateBubble performClick:nil];
+        if (updateClicks != 1) exit(20);
+        [effects clear];
         NSURL *episode = [NSURL URLWithString:@"https://www.xiaoyuzhoufm.com/episode/695e6552c1e012a7abe361d0"];
         [effects showMessage:@"慢一点。" episodeURL:episode priority:PebblePetMessageInteraction duration:5];
         NSSize shortSize = effects.bubblePanel.frame.size;

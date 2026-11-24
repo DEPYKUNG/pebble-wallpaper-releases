@@ -496,6 +496,14 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     PebblePetSkip state=self.skipState;state.active=NO;self.skipState=state;
     self.skipEnding=NO;self.finishedSkips=0;[self.effects clear];
 }
+- (BOOL)showUpdateWithAction:(void (^)(void))action {
+    if (self.suspended || self.invalidated || !self.stoneImage) return NO;
+    if (![self.effects showUpdateWithAction:action]) return NO;
+    [self.effects updateAtTime:CACurrentMediaTime() anchor:self.effectAnchor
+                      visible:(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame];
+    return YES;
+}
+
 - (BOOL)showMessage:(NSString *)message priority:(PebblePetMessagePriority)priority duration:(NSTimeInterval)duration {
     if(self.suspended || self.invalidated || !self.stoneImage)return NO;
     BOOL accepted=[self.effects showMessage:message priority:priority duration:duration];
