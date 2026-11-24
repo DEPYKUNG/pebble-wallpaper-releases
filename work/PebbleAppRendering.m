@@ -120,11 +120,15 @@
 
 // These images must survive app replacement and moving the application bundle.
 - (void)refreshDisplays:(NSNotification *)notification {
-    [self syncNativeDesktopBackground:NO];
+    [self syncNativeDesktopBackground:self.petOnlyMode];
     NSString *staticPath = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
     BOOL staticMode = !self.testPreviewPath && staticPath &&
                       [NSFileManager.defaultManager fileExistsAtPath:staticPath];
     self.staticWallpaperMode = staticMode;
+    self.dynamicModeItem.state = !staticMode && !self.petOnlyMode;
+    self.staticModeItem.state = staticMode;
+    self.petOnlyModeItem.state = self.petOnlyMode;
+    BOOL hideWallpaper = staticMode || self.petOnlyMode;
     NSMutableSet<NSNumber *> *connected = [NSMutableSet set];
     for (NSScreen *screen in NSScreen.screens) {
         NSNumber *display = screen.deviceDescription[@"NSScreenNumber"];
@@ -135,7 +139,7 @@
             [window setFrame:screen.frame display:YES];
             [self placeDesktopControlOnScreen:screen display:display];
             NSPanel *panel = self.desktopControls[display];
-            if (staticMode) {
+            if (hideWallpaper) {
                 [window orderOut:nil];
                 [panel orderOut:nil];
             } else {
@@ -163,9 +167,9 @@
         }
         window.contentView = [self newRendererWithConfig:config desktop:YES];
         self.desktopWindows[display] = window;
-        if (!staticMode) [window orderFrontRegardless];
+        if (!hideWallpaper) [window orderFrontRegardless];
         [self placeDesktopControlOnScreen:screen display:display];
-        if (staticMode) [self.desktopControls[display] orderOut:nil];
+        if (hideWallpaper) [self.desktopControls[display] orderOut:nil];
     }
     for (NSNumber *display in self.desktopWindows.allKeys) {
         if ([connected containsObject:display]) continue;

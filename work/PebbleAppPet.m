@@ -4,7 +4,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
 
 @implementation PebbleApp (Pet)
 - (void)configurePetMenu:(NSMenu *)menu {
-    NSMenuItem *entry=[menu addItemWithTitle:@"桌宠" action:nil keyEquivalent:@""];
+    NSMenuItem *entry=[menu addItemWithTitle:@"桌宠控制" action:nil keyEquivalent:@""];
     NSMenu *petMenu=[NSMenu new];entry.submenu=petMenu;
     self.petEnabledItem=[self addItem:@"开启桌宠" action:@selector(togglePet:) toMenu:petMenu];
     self.petRoamingItem=[self addItem:@"自由活动" action:@selector(togglePetRoaming:) toMenu:petMenu];

@@ -13,6 +13,7 @@
 
 - (BOOL)syncNativeDesktopBackground:(BOOL)restore explicitChange:(BOOL)explicitChange {
     if (self.testPreviewPath || self.shotPath || self.settingsPreview || self.petPreview) return YES;
+    if (self.petOnlyMode && !restore) return YES;
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     NSString *staticPath = [defaults stringForKey:StaticWallpaperPathKey];
     if (staticPath && [NSFileManager.defaultManager fileExistsAtPath:staticPath]) return YES;
@@ -189,7 +190,12 @@
 }
 
 - (void)setStaticWallpaper:(id)sender {
+    if (self.petOnlyMode) {
+        [self showWallpaperError:@"请先在「显示模式」中切换到动态壁纸。"];
+        return;
+    }
     [self withWallpaperPNGForSize:WallpaperSizes[0] completion:^(NSData *png) {
+        if (self.petOnlyMode) return;
         NSFileManager *files = NSFileManager.defaultManager;
         NSURL *directory = [[files URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject
                             URLByAppendingPathComponent:@"Pebble Wallpaper/Static Wallpapers" isDirectory:YES];
@@ -240,7 +246,22 @@
     }];
 }
 
+- (void)enablePetOnlyMode:(id)sender {
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    self.petOnlyMode = YES;
+    [defaults setBool:YES forKey:@"PetOnlyMode"];
+    [defaults removeObjectForKey:StaticWallpaperPathKey];
+    [self summonPet:nil];
+    BOOL restored = [self syncNativeDesktopBackground:YES explicitChange:NO];
+    [self refreshDisplays:nil];
+    if (!restored) {
+        [self showWallpaperError:@"部分屏幕的原壁纸无法恢复，可在 macOS 系统设置中重新选择。"];
+    }
+}
+
 - (void)resumeDynamicWallpaper:(id)sender {
+    self.petOnlyMode = NO;
+    [NSUserDefaults.standardUserDefaults removeObjectForKey:@"PetOnlyMode"];
     [NSUserDefaults.standardUserDefaults removeObjectForKey:StaticWallpaperPathKey];
     [self refreshDisplays:nil];
 }
