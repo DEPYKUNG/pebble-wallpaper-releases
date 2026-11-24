@@ -125,7 +125,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [self actionButton:@"收回右下角" action:@selector(summonPet:)]]];actions.spacing=8;
     NSView *card=[self cardWithRows:@[
         [self rowWithSymbol:@"smile" title:@"开启桌宠" subtitle:@"把当前石头带到窗口旁，点一下打招呼" control:self.petSwitch],
-        [self rowWithSymbol:@"rotate-cw" title:@"自由活动" subtitle:@"轻轻跳动；关闭后安静陪伴，仍可拖动" control:self.petRoamSwitch],
+        [self rowWithSymbol:@"rotate-cw" title:@"自由活动" subtitle:@"随机轻跳、录播客或睡觉；关闭后仍可手动互动" control:self.petRoamSwitch],
         [self rowWithSymbol:@"grid" title:@"桌宠大小" subtitle:nil control:self.petSizePicker],
         [self rowWithSymbol:@"repeat" title:@"带回身边" subtitle:@"同步所在屏幕的石头，或收回右下角" control:actions],
     ]];[self syncPetControls];return [self settingsGroup:@"石头桌宠" containing:card];
@@ -259,6 +259,36 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             NSLog(@"Live timer skipping, visible ripples, settling and completion speech verified: %@",pet.effects.message);
             [pet setSuspended:YES];if(pet.effects.message || pet.effects.rippleCount)exit(20);
         }
+        [pet setSuspended:NO];
+        NSMenu *menu=[pet valueForKey:@"petMenu"];
+        NSMenu *activities=[menu itemWithTitle:@"做点什么"].submenu;
+        NSMenuItem *podcast=[activities itemWithTitle:@"录播客"];
+        NSMenuItem *sleep=[activities itemWithTitle:@"睡觉"];
+        if(!podcast || !sleep || ![NSApp sendAction:podcast.action to:podcast.target from:podcast] ||
+           ![pet.panel.contentView.accessibilityValue isEqual:@"录播客中"] || !pet.effects.message.length)exit(21);
+        if(![NSApp sendAction:sleep.action to:sleep.target from:sleep] ||
+           ![pet.panel.contentView.accessibilityValue isEqual:@"睡觉中"] || pet.effects.message)exit(21);
+        NSPoint wakePoint=pet.panel.frame.origin;
+        [pet beginDragAtPoint:wakePoint time:5];
+        [pet endDragAtTime:5.01];
+        if(pet.panel.contentView.accessibilityValue || pet.effects.message || pet.dragging)exit(21);
+        if(!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion && !NSProcessInfo.processInfo.lowPowerModeEnabled){
+            pet.roaming=YES;
+            BOOL recorded=NO,slept=NO;
+            for(NSUInteger attempt=0;attempt<80 && !(recorded && slept);attempt++){
+                [pet summon:nil];[pet setValue:@0 forKey:@"nextWander"];
+                [NSApp sendAction:NSSelectorFromString(@"tick:") to:pet from:nil];
+                id value=pet.panel.contentView.accessibilityValue;
+                recorded|=[value isEqual:@"录播客中"];slept|=[value isEqual:@"睡觉中"];
+                if(value && !pet.casualSpeech && pet.effects.message)exit(21);
+                pet.roaming=NO;
+                if(pet.panel.contentView.accessibilityValue)exit(21);
+                pet.roaming=YES;
+            }
+            if(!recorded || !slept)exit(21);
+        }
+        [pet setSuspended:YES];
+        NSLog(@"Manual and roaming podcast/sleep, quote settings and click-to-wake verified.");
         pet.skippingEnabled=NO;pet.skipLimit=7;pet.speechEnabled=NO;pet.casualSpeech=YES;
         PebblePetController *restored=[[PebblePetController alloc] initWithDefaults:defaults];
         if(restored.skippingEnabled || restored.speechEnabled || !restored.casualSpeech || restored.skipLimit!=7)exit(20);
