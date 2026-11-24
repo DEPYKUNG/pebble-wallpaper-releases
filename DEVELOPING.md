@@ -78,3 +78,5 @@ P2 渲染构建：`work/renderer_build.py` 负责离线组装；自有 JavaScrip
 气泡默认可用，偶尔闲聊默认关闭。点击和手动“说句话”会展示文本，打水漂落定后报告实际次数。气泡和涟漪面板都不激活应用且鼠标穿透；气泡自动换行、避开屏幕边缘、按时消失。`showMessage:priority:duration:` 是未来提醒生产者的展示接口，Reminder 优先级不会被 Ambient/Interaction 的新消息覆盖；本轮没有 Todo 数据、排程或任务管理入口。Todo 提醒属于后续 roadmap，后续需独立实现本地持久化、到期恢复和完成操作。
 
 回归新增：横甩判定、3/5/7次弧线、边缘结束、衰减和最终落定、气泡边界；原生应用验证指针触发水漂、偏好恢复、气泡优先级/关闭/到期、涟漪上限/清理及 Tab 路由。通过测试配置固定石头证编号，布局验证不签发真实编号或写入测试窗口位置。
+
+桌宠金句可用 `python3 work/import_pet_quotes.py --base BASE --table TABLE --view VIEW --field FIELD` 从飞书指定视图导入。命令需要已登录的 lark-cli 用户身份，按页读取指定列，清理空白并去重。生成的 `work/pet-quotes.local.json` 由 Git 忽略，仅供本机 `package.py --app-only` 预览构建。更新句库时重新导入并构建。确认可公开分发后，把本地导入结果复制为 work/pet-quotes.json 并提交，正式安装包会使用该文件。

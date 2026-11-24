@@ -12,3 +12,6 @@
 *.pfx
 *.pem
 *.key
+
+/work/pet-quotes.local.json
+/work/pet-quotes.local.tmp

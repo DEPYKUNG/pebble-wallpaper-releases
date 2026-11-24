@@ -28,6 +28,8 @@ static const CGFloat PetSizes[]={112,156,204};
 @property PebblePetSkip skipState;
 @property (nonatomic, readwrite) PebblePetEffects *effects;
 @property NSColor *stoneColor;
+@property (copy) NSArray<NSString *> *quotes;
+@property NSUInteger lastQuoteIndex;
 @property BOOL skipEnding;
 @property NSUInteger finishedSkips;
 @property NSTimeInterval nextSpeech,impactUntil;
@@ -99,6 +101,17 @@ static const CGFloat PetSizes[]={112,156,204};
     _casualSpeech=[defaults boolForKey:@"DesktopPetCasualSpeech"];
     NSInteger savedLimit=[defaults integerForKey:@"DesktopPetSkipLimit"];
     _skipLimit=(savedLimit==3 || savedLimit==7)?savedLimit:5;
+    _lastQuoteIndex=NSNotFound;
+    NSURL *quoteURL=[NSBundle.mainBundle URLForResource:@"pet-quotes" withExtension:@"json"];
+    NSData *quoteData=quoteURL ? [NSData dataWithContentsOfURL:quoteURL] : nil;
+    id records=quoteData ? [NSJSONSerialization JSONObjectWithData:quoteData options:0 error:NULL] : nil;
+    NSMutableArray<NSString *> *quotes=[NSMutableArray array];
+    if ([records isKindOfClass:NSArray.class]) {
+        for (id record in records) {
+            if ([record isKindOfClass:NSString.class] && [record length]) [quotes addObject:record];
+        }
+    }
+    _quotes=[quotes copy];
     _effects=[PebblePetEffects new];_effects.speechEnabled=_speechEnabled;
     _nextSpeech=CACurrentMediaTime()+45;
     _sizeIndex=[defaults objectForKey:@"DesktopPetSize"]?MAX(0,MIN(2,[defaults integerForKey:@"DesktopPetSize"])):1;
@@ -186,9 +199,19 @@ static const CGFloat PetSizes[]={112,156,204};
     [self.effects updateAtTime:CACurrentMediaTime() anchor:self.effectAnchor visible:(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame];
     return accepted;
 }
+- (void)speakQuoteWithPriority:(PebblePetMessagePriority)priority {
+    NSArray<NSString *> *words=self.quotes.count ? self.quotes :
+        @[@"在呢。", @"慢一点，也没关系。", @"今天也稳稳当当。", @"先抛一颗石头，再往前走。"];
+    BOOL excludePrevious=words.count>1 && self.lastQuoteIndex<words.count;
+    NSUInteger index=arc4random_uniform((uint32_t)(words.count-excludePrevious));
+    if (excludePrevious && index>=self.lastQuoteIndex) index++;
+    NSString *quote=words[index];
+    if ([self showMessage:quote priority:priority duration:MAX(5,MIN(15,quote.length/7.0))]) {
+        self.lastQuoteIndex=index;
+    }
+}
 - (void)say:(id)sender {
-    NSArray *words=@[@"在呢。",@"慢一点，也没关系。",@"今天也稳稳当当。",@"先抛一颗石头，再往前走。"];
-    [self showMessage:words[arc4random_uniform((uint32_t)words.count)] priority:PebblePetMessageInteraction duration:5];
+    [self speakQuoteWithPriority:PebblePetMessageInteraction];
 }
 - (void)startSkipping:(NSPoint)velocity {
     [self cancelPlay];
@@ -275,7 +298,7 @@ static const CGFloat PetSizes[]={112,156,204};
             if(self.interactionEnded)self.interactionEnded();
         }
         if(body.resting && self.casualSpeech && self.speechEnabled && now>self.nextSpeech && !NSProcessInfo.processInfo.lowPowerModeEnabled) {
-            [self showMessage:@"忙完这一小步，记得松松肩。" priority:PebblePetMessageAmbient duration:5];self.nextSpeech=now+75;
+            [self speakQuoteWithPriority:PebblePetMessageAmbient];self.nextSpeech=now+75;
         }
         CGFloat desiredAngle=self.skipState.active?MAX(-18,MIN(18,-body.velocity.x*.02)):
             (body.resting?(reduced?0:sin(now*1.3)*1.2):MAX(-12,MIN(12,-body.velocity.x*.05)));
