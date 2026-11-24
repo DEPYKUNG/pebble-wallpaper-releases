@@ -63,7 +63,13 @@ NSArray *PebbleNormalizeFavorites(id value, NSArray<NSString *> *textures) {
         if (!stone) continue;
         NSDictionary *identity = PebbleStoneIdentity(stone);
         if ([identities containsObject:identity]) continue;
-        [identities addObject:identity]; [result addObject:stone];
+        NSMutableDictionary *entry = [stone mutableCopy];
+        if (NumberInRange(candidate[@"collectedAt"], 0, 253402300799, NO))
+            entry[@"collectedAt"] = candidate[@"collectedAt"];
+        if ([@[@"wallpaper", @"rethrow", @"pet", @"skip"] containsObject:candidate[@"collectionSource"] ?: @""])
+            entry[@"collectionSource"] = candidate[@"collectionSource"];
+        [identities addObject:identity];
+        [result addObject:entry];
     }
     return result;
 }

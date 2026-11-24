@@ -307,22 +307,28 @@
     NSNumber *display = PebbleTargetDisplays(self.connectedDisplayIdentifiers, self.favoriteDisplay, NO).firstObject;
     WKWebView *web = display ? (WKWebView *)self.desktopWindows[display].contentView : nil;
     if (!web) { [self showWallpaperError:@"所选屏幕已断开，请重新选择屏幕。"]; return; }
-    [web evaluateJavaScript:@"window.pebbleSnapshot()" completionHandler:^(id value, NSError *error) {
+    [web evaluateJavaScript:@"({...window.pebbleSnapshot(),rethrow:window.pebbleSnapshot().seed===window.pebbleLastThrow})" completionHandler:^(id value, NSError *error) {
         NSDictionary *stone = error ? nil : PebbleNormalizeStone(value, self.stoneTextures);
         if (!stone) { [self showWallpaperError:@"石头尚未加载完成，请稍后再收藏。"]; return; }
-        [self storeFavoriteStone:stone];
+        [self storeFavoriteStone:stone source:[value[@"rethrow"] boolValue] ? @"rethrow" : @"wallpaper"];
     }];
 }
 
-- (void)storeFavoriteStone:(NSDictionary *)stone {
+- (void)storeFavoriteStone:(NSDictionary *)stone source:(NSString *)source {
+    NSMutableDictionary *entry = [stone mutableCopy];
+    entry[@"collectedAt"] = @(NSDate.date.timeIntervalSince1970);
+    entry[@"collectionSource"] = source;
     for (NSUInteger index = 0; index < self.favorites.count; index++) {
         if ([PebbleStoneIdentity(self.favorites[index]) isEqual:PebbleStoneIdentity(stone)]) {
-            self.favorites[index] = stone;
+            NSDictionary *previous = self.favorites[index];
+            entry[@"collectedAt"] = previous[@"collectedAt"];
+            entry[@"collectionSource"] = previous[@"collectionSource"];
+            self.favorites[index] = entry;
             [self persistFavorites];
             return;
         }
     }
-    [self.favorites addObject:stone];
+    [self.favorites addObject:entry];
     [self persistFavorites];
 }
 

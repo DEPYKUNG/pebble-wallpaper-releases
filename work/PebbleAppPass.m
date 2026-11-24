@@ -33,11 +33,27 @@ static const NSInteger PassAuthorSeed = 13612;
 }
 
 - (NSString *)passConfigScript {
+    if (self.journalPassStone) {
+        return [NSString stringWithFormat:@"window.pebbleConfig = {staticPass:true, number:%ld, faces:%@, passStone:%@};",
+            (long)self.passNumber, [self jsonForPebble:self.journalPassStone[@"faces"]],
+            [self jsonForPebble:self.journalPassStone]];
+    }
     // Both seeds are pinned and the user's choices deliberately left out, so the
     // card is the same stone in the same colour every time it is opened.
     return [NSString stringWithFormat:@"window.pebbleConfig = {seed: %ld, paletteSeed: %ld,"
             " texture: null, palette: null, faces: null, staticPass: true, number: %ld};",
             (long)self.passStoneSeed, (long)self.passPaletteSeed, (long)self.passNumber];
+}
+
+- (void)showJournalPass:(NSButton *)sender {
+    if ((NSUInteger)sender.tag >= self.favorites.count) return;
+    self.journalPassStone = self.favorites[sender.tag];
+    [self showPaneAtIndex:PassPaneIndex];
+}
+
+- (void)showOriginalPass:(id)sender {
+    self.journalPassStone = nil;
+    [self showPaneAtIndex:PassPaneIndex];
 }
 
 - (NSView *)passPane {
@@ -49,6 +65,13 @@ static const NSInteger PassAuthorSeed = 13612;
                    subtitle:@"把 No. 编号复制到剪贴板"
                     control:[self actionButton:@"复制" action:@selector(copyPassNumber:)]],
     ]];
+    if (self.journalPassStone) {
+        NSView *back = [self cardWithRows:@[
+            [self rowWithSymbol:nil title:@"来自石头日记" subtitle:nil
+                       control:[self actionButton:@"返回原石头证" action:@selector(showOriginalPass:)]]
+        ]];
+        return [self paneWithCards:@[back, card, actions]];
+    }
     return [self paneWithCards:@[card, actions]];
 }
 

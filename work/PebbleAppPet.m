@@ -31,7 +31,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         self.pet.collectStone=^{
             PebbleApp *app=weakSelf;
             if (!app.petStoneSnapshot) return;
-            [app storeFavoriteStone:app.petStoneSnapshot];
+            [app storeFavoriteStone:app.petStoneSnapshot source:app.pet.skippedWithCurrentStone ? @"skip" : @"pet"];
             [app.pet showMessage:@"已收藏这颗石头。" priority:PebblePetMessageInteraction duration:4];
         };
         self.pet.dismissPet=^{[weakSelf togglePet:nil];};
@@ -81,7 +81,12 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             if (![result isKindOfClass:NSDictionary.class]) return;
             id encoded=result[@"png"];
             NSData *data=[encoded isKindOfClass:NSString.class]?[[NSData alloc] initWithBase64EncodedString:encoded options:0]:nil;
-            if ([pet setStonePNG:data]) self.petStoneSnapshot = PebbleNormalizeStone(result[@"stone"], self.stoneTextures);
+            if ([pet setStonePNG:data]) {
+                NSDictionary *stone = PebbleNormalizeStone(result[@"stone"], self.stoneTextures);
+                if (![PebbleStoneIdentity(stone) isEqual:PebbleStoneIdentity(self.petStoneSnapshot)])
+                    pet.skippedWithCurrentStone = NO;
+                self.petStoneSnapshot = stone;
+            }
             else NSLog(@"Desktop pet sprite unavailable; keeping the last valid image.");
             [self syncPetControls];
             if (self.petPreview) {
