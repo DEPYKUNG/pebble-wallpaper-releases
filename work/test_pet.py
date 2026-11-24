@@ -40,6 +40,17 @@ int main(){@autoreleasepool{
  CHECK(!PebblePetShouldSkip(NSMakePoint(200,0)));CHECK(!PebblePetShouldSkip(NSMakePoint(600,500)));
  CHECK(!PebblePetShouldSkip(NSMakePoint(NAN,0)));
  NSRect water=NSMakeRect(-3200,30,6400,1600);
+ NSSize small=NSMakeSize(160,164), large=NSMakeSize(252,256);
+ NSPoint gesture=NSMakePoint(800,120);
+ NSPoint light=PebblePetThrowVelocity(gesture,small),heavy=PebblePetThrowVelocity(gesture,large);
+ CHECK(light.x>heavy.x && light.y>heavy.y && heavy.x<gesture.x);
+ PebblePetBody falling={NSMakePoint(-2000,32),NSMakePoint(200,-450),NO};
+ PebblePetBody lightImpact=PebblePetAdvance(falling,water,small,.016);
+ PebblePetBody heavyImpact=PebblePetAdvance(falling,water,large,.016);
+ CHECK(lightImpact.velocity.y>heavyImpact.velocity.y && fabs(heavyImpact.velocity.x)<fabs(lightImpact.velocity.x));
+ PebblePetSkip lightSkip=PebblePetBeginSkip(falling,water,small,5);
+ PebblePetSkip heavySkip=PebblePetBeginSkip(falling,water,large,5);
+ CHECK(fabs(lightSkip.body.velocity.x)>fabs(heavySkip.body.velocity.x));
  for(NSNumber *limit in @[@3,@5,@7]){
    PebblePetSkip skip=PebblePetBeginSkip((PebblePetBody){NSMakePoint(-2600,330),NSMakePoint(900,0),NO},water,size,limit.unsignedIntegerValue);
    NSUInteger last=0;double firstX=skip.body.position.x;
@@ -58,7 +69,7 @@ int main(){@autoreleasepool{
  PebblePetSkip high=PebblePetBeginSkip((PebblePetBody){NSMakePoint(-1700,330),NSMakePoint(500,-110),NO},water,size,3);
  CHECK(high.body.velocity.y==-110 && high.waterline==NSMinY(water));
  for(int i=0;i<500 && high.bounces==0;i++)high=PebblePetAdvanceSkip(high,water,size,.016);
- CHECK(high.bounces==1 && high.impactPosition.y==NSMinY(water) && high.impactPosition.x>-1550);
+ CHECK(high.bounces==1 && high.impactPosition.y==NSMinY(water) && high.impactPosition.x>-1530);
  PebblePetSkip edge=PebblePetBeginSkip((PebblePetBody){NSMakePoint(NSMaxX(visible)-size.width,100),NSMakePoint(900,0),NO},visible,size,5);
  edge=PebblePetAdvanceSkip(edge,visible,size,.05);CHECK(!edge.active&&edge.bounces==0);
  for(NSValue *point in @[[NSValue valueWithPoint:NSMakePoint(-1920,30)],[NSValue valueWithPoint:NSMakePoint(-220,870)]]){
