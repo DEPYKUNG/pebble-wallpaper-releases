@@ -6,7 +6,8 @@
 static NSString *const PetPlacementKey=@"DesktopPetPlacement";
 static const CGFloat PetSizes[]={112,156,204};
 typedef NS_ENUM(NSInteger, PebblePetActivity) {
-    PebblePetActivityNone, PebblePetActivityPodcast, PebblePetActivitySleep
+    PebblePetActivityNone, PebblePetActivityPodcast, PebblePetActivitySleep,
+    PebblePetActivityCamp, PebblePetActivityCook, PebblePetActivityHeadphones
 };
 @class PebblePetView;
 @interface PebblePetPanel : NSPanel @end
@@ -112,6 +113,116 @@ static NSImage *PebblePodcastMicrophone(void) {
     return image;
 }
 
+static void FillPetProp(NSBezierPath *shape, NSColor *light, NSColor *dark) {
+    [[[NSGradient alloc] initWithStartingColor:dark endingColor:light] drawInBezierPath:shape angle:65];
+    [NSGraphicsContext saveGraphicsState];
+    [shape addClip];
+    NSRect bounds=shape.bounds;
+    NSBezierPath *bright=[NSBezierPath bezierPath], *darkGrain=[NSBezierPath bezierPath];
+    uint32_t seed=713;
+    NSUInteger count=(NSUInteger)(NSWidth(bounds)*NSHeight(bounds)*.58);
+    for (NSUInteger i=0;i<count;i++) {
+        seed=1664525u*seed+1013904223u;
+        CGFloat x=NSMinX(bounds)+NSWidth(bounds)*(seed>>16)/65535.0;
+        seed=1664525u*seed+1013904223u;
+        CGFloat y=NSMinY(bounds)+NSHeight(bounds)*(seed>>16)/65535.0;
+        [(i%3==0?bright:darkGrain) appendBezierPathWithRect:NSMakeRect(x,y,.46,.59)];
+    }
+    [[NSColor colorWithWhite:.98 alpha:.31] setFill];[bright fill];
+    [[NSColor colorWithWhite:.15 alpha:.24] setFill];[darkGrain fill];
+    [NSGraphicsContext restoreGraphicsState];
+}
+
+static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds, CGFloat phase, NSBitmapImageRep *stone) {
+    [NSGraphicsContext saveGraphicsState];
+    NSAffineTransform *position=[NSAffineTransform transform];
+    CGFloat scale=MAX(.8,MIN(1.25,NSWidth(bounds)/204));
+    CGFloat x=MIN(NSMaxX(bounds)-56*scale-4,NSMaxX(art)-26*scale);
+    CGFloat y=NSMinY(art)-3;
+    if (activity==PebblePetActivityHeadphones) {
+        // Find the sides at the height where the cups meet this stone.
+        NSInteger row=(NSInteger)(stone.pixelsHigh*.34), first=-1,last=-1;
+        for (NSInteger column=0;column<stone.pixelsWide;column++) {
+            if ([stone colorAtX:column y:row].alphaComponent<.5) continue;
+            if (first<0) first=column;
+            last=column;
+        }
+        CGFloat center=NSMidX(art);
+        if (last>first) {
+            center=NSMinX(art)+(first+last)*.5/stone.pixelsWide*NSWidth(art);
+            CGFloat span=(last-first)*NSWidth(art)/stone.pixelsWide;
+            scale=MAX(.46,MIN(1.65,span/42));
+        }
+        x=center-28*scale;
+        y=MIN(NSMaxY(bounds)-51*scale-5,NSMinY(art)+NSHeight(art)*.66-17*scale);
+    }
+    [position translateXBy:x yBy:y];
+    [position scaleBy:scale];
+    [position concat];
+    if (activity!=PebblePetActivityHeadphones) {
+        [[NSColor colorWithWhite:.17 alpha:.19] setFill];
+        [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(3,0,50,7)] fill];
+    }
+    if (activity==PebblePetActivityCamp) {
+        NSBezierPath *tent=[NSBezierPath bezierPath];
+        [tent moveToPoint:NSMakePoint(2,3)];
+        [tent lineToPoint:NSMakePoint(23,39)];
+        [tent lineToPoint:NSMakePoint(38,36)];
+        [tent lineToPoint:NSMakePoint(54,4)];
+        [tent closePath];
+        FillPetProp(tent,[NSColor colorWithSRGBRed:.62 green:.69 blue:.49 alpha:1],
+                    [NSColor colorWithSRGBRed:.31 green:.42 blue:.32 alpha:1]);
+        NSBezierPath *door=[NSBezierPath bezierPath];
+        [door moveToPoint:NSMakePoint(8,4)];[door lineToPoint:NSMakePoint(23,34)];
+        [door lineToPoint:NSMakePoint(36,4)];[door closePath];
+        FillPetProp(door,[NSColor colorWithSRGBRed:.89 green:.73 blue:.42 alpha:1],
+                    [NSColor colorWithSRGBRed:.30 green:.34 blue:.24 alpha:1]);
+        CGFloat lamp=4+sin(phase*2)*.55;
+        [[NSColor colorWithSRGBRed:1 green:.80 blue:.36 alpha:.85] setFill];
+        [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(23-lamp/2,13,lamp,lamp+2)] fill];
+    } else if (activity==PebblePetActivityCook) {
+        NSColor *steel=[NSColor colorWithSRGBRed:.28 green:.34 blue:.37 alpha:1];
+        NSColor *highlight=[NSColor colorWithSRGBRed:.62 green:.72 blue:.72 alpha:1];
+        FillPetProp([NSBezierPath bezierPathWithRoundedRect:NSMakeRect(12,5,32,18) xRadius:7 yRadius:7],highlight,steel);
+        [steel setFill];
+        [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(7,16,8,4) xRadius:2 yRadius:2] fill];
+        [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(42,16,8,4) xRadius:2 yRadius:2] fill];
+        CGFloat lid=MAX(0,sin(phase*4))*2.5;
+        FillPetProp([NSBezierPath bezierPathWithOvalInRect:NSMakeRect(10,19+lid,36,7)],highlight,steel);
+        [steel setFill];
+        [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(25,24+lid,6,4) xRadius:2 yRadius:2] fill];
+        for (NSInteger i=0;i<2;i++) {
+            CGFloat steamX=22+10*i+sin(phase*2+i)*2;
+            NSBezierPath *steam=[NSBezierPath bezierPath];
+            [steam moveToPoint:NSMakePoint(steamX,31)];
+            [steam curveToPoint:NSMakePoint(steamX+1,45) controlPoint1:NSMakePoint(steamX+9,37) controlPoint2:NSMakePoint(steamX-6,39)];
+            steam.lineWidth=1.8;
+            steam.lineCapStyle=NSLineCapStyleRound;
+            [[NSColor colorWithSRGBRed:.58 green:.69 blue:.72 alpha:.72] setStroke];
+            [steam stroke];
+        }
+    } else {
+        NSBezierPath *band=[NSBezierPath bezierPath];
+        [band moveToPoint:NSMakePoint(7,17)];
+        [band curveToPoint:NSMakePoint(49,17) controlPoint1:NSMakePoint(2,57) controlPoint2:NSMakePoint(54,57)];
+        band.lineWidth=5;
+        [[NSColor colorWithSRGBRed:.34 green:.40 blue:.44 alpha:1] setStroke];
+        [band stroke];
+        band.lineWidth=2.5;
+        [[NSColor colorWithSRGBRed:.79 green:.83 blue:.86 alpha:1] setStroke];
+        [band stroke];
+        for (NSInteger i=0;i<2;i++) {
+            NSRect ear=NSMakeRect(1+43*i,8,12,18);
+            FillPetProp([NSBezierPath bezierPathWithRoundedRect:ear xRadius:4 yRadius:4],
+                        [NSColor colorWithSRGBRed:.86 green:.89 blue:.91 alpha:1],
+                        [NSColor colorWithSRGBRed:.46 green:.54 blue:.59 alpha:1]);
+            [[NSColor colorWithSRGBRed:.24 green:.30 blue:.33 alpha:1] setFill];
+            [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(NSMinX(ear)+(i==0?9:0),9,3,16) xRadius:1 yRadius:1] fill];
+        }
+    }
+    [NSGraphicsContext restoreGraphicsState];
+}
+
 @implementation PebblePetView
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 - (BOOL)isOpaque { return NO; }
@@ -128,6 +239,8 @@ static NSImage *PebblePodcastMicrophone(void) {
     [transform scaleXBy:1/owner.stretch yBy:owner.stretch];
     [transform translateXBy:-NSMidX(art) yBy:-NSMidY(art)];[transform concat];
     [owner.stoneImage drawInRect:art fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1];
+    if (owner.activity==PebblePetActivityHeadphones)
+        DrawPetOuting(owner.activity,art,self.bounds,0,owner.bitmap);
     [NSGraphicsContext restoreGraphicsState];
     if (owner.activity==PebblePetActivityPodcast) {
         CGFloat scale=MAX(.92,MIN(1.30,NSWidth(self.bounds)/204.0));
@@ -159,6 +272,10 @@ static NSImage *PebblePodcastMicrophone(void) {
         NSDictionary *style=@{NSFontAttributeName:[NSFont fontWithName:@"Apple Color Emoji" size:size*.67] ?: [NSFont systemFontOfSize:size*.67]};
         NSSize markSize=[mark sizeWithAttributes:style];
         [mark drawAtPoint:NSMakePoint(NSMidX(badge)-markSize.width/2,NSMidY(badge)-markSize.height/2) withAttributes:style];
+    }
+    if (owner.activity>=PebblePetActivityCamp && owner.activity<=PebblePetActivityCook) {
+        BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+        DrawPetOuting(owner.activity,art,self.bounds,reduced?0:CACurrentMediaTime()-owner.activityStart,owner.bitmap);
     }
     if (owner.celebrateUntil>CACurrentMediaTime()) {
         CGFloat progress=1-(owner.celebrateUntil-CACurrentMediaTime())/.7;
@@ -304,15 +421,27 @@ static NSImage *PebblePodcastMicrophone(void) {
     self.activityStart=now;
     self.activityEnd=now+(activity==PebblePetActivitySleep?18:15);
     self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,YES};
-    self.petView.accessibilityValue=activity==PebblePetActivitySleep?@"睡觉中":@"录播客中";
+    NSArray *activityNames=@[@"", @"录播客中", @"睡觉中", @"露营中", @"野炊中", @"戴着耳机"];
+    self.petView.accessibilityValue=activityNames[activity];
     self.petView.needsDisplay=YES;
-    if (activity==PebblePetActivityPodcast && (!automatic || self.casualSpeech)) [self say:nil];
+    if (automatic && !self.casualSpeech) return;
+    if (activity==PebblePetActivityPodcast) [self say:nil];
+    if (activity==PebblePetActivityCook) [self showMessage:@"开饭啦。" priority:PebblePetMessageInteraction duration:5];
 }
 - (void)recordPodcast:(id)sender {
     [self startActivity:PebblePetActivityPodcast automatic:NO at:CACurrentMediaTime()];
 }
 - (void)takeNap:(id)sender {
     [self startActivity:PebblePetActivitySleep automatic:NO at:CACurrentMediaTime()];
+}
+- (void)camp:(id)sender {
+    [self startActivity:PebblePetActivityCamp automatic:NO at:CACurrentMediaTime()];
+}
+- (void)cook:(id)sender {
+    [self startActivity:PebblePetActivityCook automatic:NO at:CACurrentMediaTime()];
+}
+- (void)wearHeadphones:(id)sender {
+    [self startActivity:PebblePetActivityHeadphones automatic:NO at:CACurrentMediaTime()];
 }
 - (void)cancelPlay {
     if (self.activity!=PebblePetActivityNone) [self endActivityAt:CACurrentMediaTime()];
@@ -406,7 +535,14 @@ static NSImage *PebblePodcastMicrophone(void) {
         PebblePetBody body=self.body;
         if (self.activity!=PebblePetActivityNone) {
             CGFloat elapsed=now-self.activityStart;
-            CGFloat pose=self.activity==PebblePetActivitySleep?-20:sin(elapsed*5)*4;
+            CGFloat pose=0;
+            switch(self.activity) {
+                case PebblePetActivitySleep: pose=-20;break;
+                case PebblePetActivityPodcast: pose=sin(elapsed*5)*4;break;
+                case PebblePetActivityHeadphones: pose=sin(elapsed*4)*7;break;
+                case PebblePetActivityCook: pose=MAX(0,sin(elapsed*4))*4;break;
+                default: break;
+            }
             self.angle=reduced?0:self.angle+(pose-self.angle)*MIN(1,dt*6);
             self.stretch=reduced?1:1+sin(elapsed*2)*.014;
             self.petView.needsDisplay=YES;
@@ -421,9 +557,9 @@ static NSImage *PebblePodcastMicrophone(void) {
             if(!self.skipState.active){self.skipEnding=YES;self.finishedSkips=self.skipState.bounces;}
         } else {
             if(body.resting && self.roaming && !self.skipEnding && !reduced && now>self.nextWander) {
-                NSUInteger choice=arc4random_uniform(3);
+                NSUInteger choice=arc4random_uniform(PebblePetActivityHeadphones+1);
                 if (choice!=0) {
-                    [self startActivity:choice==1?PebblePetActivityPodcast:PebblePetActivitySleep automatic:YES at:now];
+                    [self startActivity:(PebblePetActivity)choice automatic:YES at:now];
                     body=self.body;
                 } else {
                     double direction=NSMidX(self.panel.frame)>NSMidX(visible)?-1:1;
@@ -539,6 +675,12 @@ static NSImage *PebblePodcastMicrophone(void) {
     NSMenuItem *sleep=[activities.submenu addItemWithTitle:@"睡觉" action:@selector(takeNap:) keyEquivalent:@""];
     podcast.target=self;
     sleep.target=self;
+    NSArray *outings=@[@"露营",@"野炊",@"戴耳机"];
+    SEL outingActions[]={@selector(camp:),@selector(cook:),@selector(wearHeadphones:)};
+    for (NSUInteger index=0;index<outings.count;index++) {
+        NSMenuItem *item=[activities.submenu addItemWithTitle:outings[index] action:outingActions[index] keyEquivalent:@""];
+        item.target=self;
+    }
     menu.autoenablesItems=NO;
     NSMenuItem *size=[menu addItemWithTitle:@"桌宠大小" action:nil keyEquivalent:@""];size.submenu=[NSMenu new];
     NSArray *sizes=@[@"小",@"中",@"大"];
