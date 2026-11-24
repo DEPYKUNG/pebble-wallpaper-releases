@@ -5,6 +5,12 @@
 
 static NSString *const PetPlacementKey=@"DesktopPetPlacement";
 static const CGFloat PetSizes[]={112,156,204};
+static NSRect PebbleStoneDrawRect(NSRect art) {
+    const CGFloat scale=.85;
+    return NSMakeRect(NSMidX(art)-NSWidth(art)*scale/2,NSMinY(art),
+                      NSWidth(art)*scale,NSHeight(art)*scale);
+}
+
 typedef NS_ENUM(NSInteger, PebblePetActivity) {
     PebblePetActivityNone, PebblePetActivityPodcast, PebblePetActivitySleep,
     PebblePetActivityCamp, PebblePetActivityCook, PebblePetActivityHeadphones
@@ -238,7 +244,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [transform rotateByDegrees:owner.angle];
     [transform scaleXBy:1/owner.stretch yBy:owner.stretch];
     [transform translateXBy:-NSMidX(art) yBy:-NSMidY(art)];[transform concat];
-    [owner.stoneImage drawInRect:art fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1];
+    [owner.stoneImage drawInRect:PebbleStoneDrawRect(art) fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1];
     if (owner.activity==PebblePetActivityHeadphones)
         DrawPetOuting(owner.activity,art,self.bounds,0,owner.bitmap);
     [NSGraphicsContext restoreGraphicsState];
@@ -516,6 +522,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     double angle=-self.angle*M_PI/180,x=p.x-NSMidX(art),y=p.y-NSMidY(art);
     p=NSMakePoint((x*cos(angle)-y*sin(angle))*self.stretch+NSMidX(art),
                   (x*sin(angle)+y*cos(angle))/self.stretch+NSMidY(art));
+    art=PebbleStoneDrawRect(art);
     if (!NSPointInRect(p,art)) return NO;
     NSInteger px=MAX(0,MIN(self.bitmap.pixelsWide-1,(p.x-NSMinX(art))/NSWidth(art)*self.bitmap.pixelsWide));
     NSInteger py=MAX(0,MIN(self.bitmap.pixelsHigh-1,(1-(p.y-NSMinY(art))/NSHeight(art))*self.bitmap.pixelsHigh));
