@@ -43,6 +43,7 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property BOOL skipEnding;
 @property NSUInteger finishedSkips;
 @property NSTimeInterval nextSpeech,impactUntil;
+@property (copy) NSDate *focusDeadline;
 - (void)startSkipping:(NSPoint)velocity;
 - (void)cancelPlay;
 - (NSRect)effectAnchor;
@@ -560,6 +561,13 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion||NSProcessInfo.processInfo.lowPowerModeEnabled;
     NSRect visible=(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame;
     if(!self.dragging && !self.menuOpen) {
+        if (self.focusDeadline && self.focusDeadline.timeIntervalSinceNow <= 0 &&
+            [self showMessage:@"专注结束，休息一下吧。" priority:PebblePetMessageInteraction duration:8]) {
+            self.focusDeadline = nil;
+            self.nextWander = now + 15;
+            self.nextSpeech = now + 45;
+            if (!reduced) self.celebrateUntil = now + .7;
+        }
         if (self.activity!=PebblePetActivityNone && now>=self.activityEnd) {
             [self endActivityAt:now];
             [self.effects clear];
@@ -590,7 +598,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             }
             if(!self.skipState.active){self.skipEnding=YES;self.finishedSkips=self.skipState.bounces;}
         } else {
-            if(body.resting && self.roaming && !self.skipEnding && !reduced && now>self.nextWander) {
+            if(!self.focusDeadline && body.resting && self.roaming && !self.skipEnding && !reduced && now>self.nextWander) {
                 NSUInteger choice=arc4random_uniform(PebblePetActivityHeadphones+1);
                 if (choice!=0) {
                     [self startActivity:(PebblePetActivity)choice automatic:YES at:now];
@@ -611,7 +619,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             [self showMessage:count?[NSString stringWithFormat:@"漂了 %lu 下，落稳啦。",(unsigned long)count]:@"换个方向，再漂一次。" priority:PebblePetMessageInteraction duration:5];
             if(self.interactionEnded)self.interactionEnded();
         }
-        if(self.activity==PebblePetActivityNone && body.resting && self.casualSpeech && self.speechEnabled && now>self.nextSpeech && !NSProcessInfo.processInfo.lowPowerModeEnabled) {
+        if(!self.focusDeadline && self.activity==PebblePetActivityNone && body.resting && self.casualSpeech && self.speechEnabled && now>self.nextSpeech && !NSProcessInfo.processInfo.lowPowerModeEnabled) {
             [self speakQuoteWithPriority:PebblePetMessageAmbient];self.nextSpeech=now+75;
         }
         CGFloat desiredAngle=self.skipState.active?MAX(-18,MIN(18,-body.velocity.x*.02)):
@@ -696,8 +704,33 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 - (void)syncFromMenu:(id)sender {if(self.syncStone) self.syncStone();}
 - (void)showSettings:(id)sender {if(self.openSettings)self.openSettings();}
 - (void)dismiss:(id)sender {if(self.dismissPet) self.dismissPet();}
+- (void)toggleFocus:(id)sender {
+    if (self.focusDeadline) {
+        self.focusDeadline = nil;
+        NSTimeInterval now = CACurrentMediaTime();
+        self.nextWander = now + 15;
+        self.nextSpeech = now + 45;
+        [self showMessage:@"已结束专注。" priority:PebblePetMessageInteraction duration:4];
+        return;
+    }
+    [self summon:nil];
+    self.focusDeadline = [NSDate dateWithTimeIntervalSinceNow:25 * 60];
+    self.celebrateUntil = 0;
+    self.angle = 0;
+    self.stretch = 1;
+    [self.petView setNeedsDisplay:YES];
+    [self showMessage:@"开始专注 · 25 分钟" priority:PebblePetMessageInteraction duration:4];
+}
+
 - (NSMenu *)petMenu {
     NSMenu *menu=[NSMenu new];
+    NSInteger remaining = (NSInteger)ceil(MAX(0, self.focusDeadline.timeIntervalSinceNow));
+    NSString *focusTitle = self.focusDeadline
+        ? [NSString stringWithFormat:@"结束专注（%02ld:%02ld）", (long)(remaining / 60), (long)(remaining % 60)]
+        : @"陪我专注 · 25 分钟";
+    NSMenuItem *focus = [menu addItemWithTitle:focusTitle action:@selector(toggleFocus:) keyEquivalent:@""];
+    focus.target = self;
+    [menu addItem:NSMenuItem.separatorItem];
     NSArray *titles=@[@"打个招呼",@"同步当前石头",@"收回右下角",@"自由活动"];
     SEL actions[]={@selector(greet:),@selector(syncFromMenu:),@selector(summon:),@selector(toggleQuiet:)};
     for (NSUInteger i=0;i<titles.count;i++) {NSMenuItem *item=[menu addItemWithTitle:titles[i] action:actions[i] keyEquivalent:@""];item.target=self;if(i==3)item.state=self.roaming;}
