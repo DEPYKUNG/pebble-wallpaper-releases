@@ -305,6 +305,20 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if (!collect.enabled || ![NSApp sendAction:collect.action to:collect.target from:collect] || !collected) exit(21);
         pet.collectStone = nil;
         NSLog(@"Focus start, cancel, expiry and pet collection menu verified.");
+        NSMenuItem *beforeReplay = [[pet valueForKey:@"petMenu"] itemWithTitle:@"重读上句"];
+        if (!beforeReplay || beforeReplay.enabled) exit(21);
+        NSArray *originalQuotes = [pet valueForKey:@"quotes"];
+        NSString *episodeLink = @"https://www.xiaoyuzhoufm.com/episode/695e6552c1e012a7abe361d0";
+        [pet setValue:@[@{@"text":@"重读测试", @"episode":episodeLink}] forKey:@"quotes"];
+        [pet say:nil];
+        [pet.effects clear];
+        NSMenuItem *replay = [[pet valueForKey:@"petMenu"] itemWithTitle:@"重读上句"];
+        if (!replay.enabled || ![NSApp sendAction:replay.action to:replay.target from:replay] ||
+            ![pet.effects.message isEqualToString:@"重读测试"] ||
+            ![[[pet.effects.bubblePanel.contentView valueForKey:@"episodeURL"] absoluteString] isEqualToString:episodeLink]) exit(21);
+        [pet setValue:originalQuotes forKey:@"quotes"];
+        [pet setValue:@(NSNotFound) forKey:@"lastQuoteIndex"];
+        [pet.effects clear];
         NSMenu *activities=[menu itemWithTitle:@"做点什么"].submenu;
         NSMenuItem *podcast=[activities itemWithTitle:@"录播客"];
         NSMenuItem *sleep=[activities itemWithTitle:@"睡觉"];

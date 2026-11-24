@@ -510,13 +510,15 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [self.effects updateAtTime:CACurrentMediaTime() anchor:self.effectAnchor visible:(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame];
     return accepted;
 }
-- (void)speakQuoteWithPriority:(PebblePetMessagePriority)priority {
-    NSArray *words=self.quotes.count ? self.quotes :
+- (NSArray *)availableQuotes {
+    return self.quotes.count ? self.quotes :
         @[@"在呢。", @"慢一点，也没关系。", @"今天也稳稳当当。", @"先抛一颗石头，再往前走。"];
-    BOOL excludePrevious=words.count>1 && self.lastQuoteIndex<words.count;
-    NSUInteger index=arc4random_uniform((uint32_t)(words.count-excludePrevious));
-    if (excludePrevious && index>=self.lastQuoteIndex) index++;
+}
+
+- (void)showQuoteAtIndex:(NSUInteger)index priority:(PebblePetMessagePriority)priority {
     if (self.suspended || self.invalidated || !self.stoneImage) return;
+    NSArray *words = [self availableQuotes];
+    if (index >= words.count) return;
     id entry = words[index];
     NSString *quote = [entry isKindOfClass:NSDictionary.class] ? entry[@"text"] : entry;
     id link = [entry isKindOfClass:NSDictionary.class] ? entry[@"episode"] : nil;
@@ -524,9 +526,22 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     if ([self.effects showMessage:quote episodeURL:url priority:priority duration:MAX(5,MIN(15,quote.length/7.0))]) {
         [self.effects updateAtTime:CACurrentMediaTime() anchor:self.effectAnchor
                           visible:(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame];
-        self.lastQuoteIndex=index;
+        self.lastQuoteIndex = index;
     }
 }
+
+- (void)speakQuoteWithPriority:(PebblePetMessagePriority)priority {
+    NSUInteger count = [self availableQuotes].count;
+    BOOL excludePrevious = count > 1 && self.lastQuoteIndex < count;
+    NSUInteger index = arc4random_uniform((uint32_t)(count-excludePrevious));
+    if (excludePrevious && index >= self.lastQuoteIndex) index++;
+    [self showQuoteAtIndex:index priority:priority];
+}
+
+- (void)replayLastQuote:(id)sender {
+    [self showQuoteAtIndex:self.lastQuoteIndex priority:PebblePetMessageInteraction];
+}
+
 - (void)say:(id)sender {
     [self speakQuoteWithPriority:PebblePetMessageInteraction];
 }
@@ -819,6 +834,9 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         record.enabled = NO;
     }
     NSMenuItem *say=[menu addItemWithTitle:@"说句话" action:@selector(say:) keyEquivalent:@""];say.target=self;say.enabled=self.speechEnabled;
+    NSMenuItem *replay = [menu addItemWithTitle:@"重读上句" action:@selector(replayLastQuote:) keyEquivalent:@""];
+    replay.target = self;
+    replay.enabled = self.speechEnabled && self.lastQuoteIndex != NSNotFound;
     NSMenuItem *activities=[menu addItemWithTitle:@"做点什么" action:nil keyEquivalent:@""];
     activities.submenu=[NSMenu new];
     NSMenuItem *podcast=[activities.submenu addItemWithTitle:@"录播客" action:@selector(recordPodcast:) keyEquivalent:@""];
