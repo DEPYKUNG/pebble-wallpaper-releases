@@ -3,6 +3,39 @@
 @implementation PebbleApp (Updates)
 
 #if __has_include(<Sparkle/Sparkle.h>)
+- (BOOL)updater:(SPUUpdater *)updater shouldProceedWithUpdate:(SUAppcastItem *)item
+    updateCheck:(SPUUpdateCheck)check error:(NSError **)error {
+    if (check != SPUUpdateCheckUpdatesInBackground || self.userApprovedUpdate) return YES;
+#ifdef PEBBLE_UPDATE_TEST
+    if ([NSProcessInfo.processInfo.arguments containsObject:@"--check-for-updates"]) return YES;
+#endif
+    self.backgroundUpdateFound = YES;
+    if (error) *error = [NSError errorWithDomain:@"app.painted-pebble.update" code:1
+        userInfo:@{NSLocalizedDescriptionKey:@"等待用户确认更新。"}];
+    return NO;
+}
+
+- (void)showBackgroundUpdateInvitation {
+    SPUUpdater *updater = self.updaterController.updater;
+    if (!updater.automaticallyChecksForUpdates) return;
+    __weak PebbleApp *weakSelf = self;
+    void (^install)(void) = ^{
+        PebbleApp *app = weakSelf;
+        if (!app || updater.sessionInProgress) return;
+        app.userApprovedUpdate = YES;
+        app.restoreAutomaticDownloadSetting = !updater.automaticallyDownloadsUpdates;
+        if (app.restoreAutomaticDownloadSetting) updater.automaticallyDownloadsUpdates = YES;
+        [updater checkForUpdatesInBackground];
+    };
+    if ([self.pet showUpdateWithAction:install]) return;
+    NSAlert *alert = [NSAlert new];
+    alert.messageText = @"Pebble Wallpaper 有新版本";
+    [alert addButtonWithTitle:@"更新到最新版"];
+    [alert addButtonWithTitle:@"稍后"];
+    [NSApp activateIgnoringOtherApps:YES];
+    if ([alert runModal] == NSAlertFirstButtonReturn) install();
+}
+
 - (BOOL)updater:(SPUUpdater *)updater willInstallUpdateOnQuit:(SUAppcastItem *)item
     immediateInstallationBlock:(void (^)(void))install {
 #ifdef PEBBLE_UPDATE_TEST
@@ -55,11 +88,20 @@
 
 - (void)updater:(SPUUpdater *)updater didAbortWithError:(NSError *)error {
     [self resetPendingUpdate];
-    NSLog(@"Update aborted: %@", error);
+    if (!self.backgroundUpdateFound) NSLog(@"Update aborted: %@", error);
 }
 - (void)updater:(SPUUpdater *)updater didFinishUpdateCycleForUpdateCheck:(SPUUpdateCheck)check
     error:(NSError *)error {
     [self resetPendingUpdate];
+    self.userApprovedUpdate = NO;
+    if (self.restoreAutomaticDownloadSetting) {
+        self.restoreAutomaticDownloadSetting = NO;
+        updater.automaticallyDownloadsUpdates = NO;
+    }
+    if (self.backgroundUpdateFound) {
+        self.backgroundUpdateFound = NO;
+        dispatch_async(dispatch_get_main_queue(), ^{ [self showBackgroundUpdateInvitation]; });
+    }
 }
 
 - (void)settingsDidClose:(NSNotification *)notification {
@@ -74,10 +116,6 @@
         sender.state == NSControlStateValueOn;
 }
 
-- (void)toggleAutomaticInstall:(NSSwitch *)sender {
-    self.updaterController.updater.automaticallyDownloadsUpdates =
-        sender.state == NSControlStateValueOn;
-}
 #endif
 
 @end

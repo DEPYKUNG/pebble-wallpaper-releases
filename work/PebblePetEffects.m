@@ -20,6 +20,8 @@ static const CGFloat EpisodeColumnGap = 8;
 @property NSTextView *linkedText;
 @property NSButton *episodeButton;
 @property NSURL *episodeURL;
+@property NSAttributedString *episodeTitle;
+@property (copy) void (^updateAction)(void);
 - (void)openEpisode:(id)sender;
 @property BOOL tailAbove;
 @property NSView *glassBacking;
@@ -27,7 +29,14 @@ static const CGFloat EpisodeColumnGap = 8;
 @end
 @implementation PebblePetBubbleView
 - (void)openEpisode:(id)sender {
-    if (self.episodeURL) [NSWorkspace.sharedWorkspace openURL:self.episodeURL];
+    if (self.updateAction) {
+        void (^action)(void) = self.updateAction;
+        self.updateAction = nil;
+        self.episodeButton.enabled = NO;
+        action();
+    } else if (self.episodeURL) {
+        [NSWorkspace.sharedWorkspace openURL:self.episodeURL];
+    }
 }
 - (BOOL)isOpaque{return NO;}
 - (void)updateGlassFrame {
@@ -107,8 +116,8 @@ static const CGFloat EpisodeColumnGap = 8;
 #if __has_include(<AppKit/NSGlassEffectView.h>)
         if (@available(macOS 26.0, *)) {
             NSGlassEffectView *glass = [[NSGlassEffectView alloc] initWithFrame:NSZeroRect];
-            glass.style = NSGlassEffectViewStyleRegular;
-            glass.cornerRadius = 13;
+            glass.style = NSGlassEffectViewStyleClear;
+            glass.cornerRadius = 18;
             view.glassBacking = glass;
             [view addSubview:glass];
         }
@@ -142,7 +151,7 @@ static const CGFloat EpisodeColumnGap = 8;
         }
         [title appendAttributedString:[[NSAttributedString alloc] initWithString:@"小宇宙听"
                                                                       attributes:[style attributesAtIndex:0 effectiveRange:nil]]];
-        view.episodeButton.attributedTitle = title;
+        view.episodeTitle = title;
         [view addSubview:view.episodeButton];
         self.bubblePanel.contentView=view;
     }
@@ -151,6 +160,11 @@ static const CGFloat EpisodeColumnGap = 8;
     BOOL validLink = [url.scheme.lowercaseString isEqualToString:@"https"] &&
         [url.host.lowercaseString isEqualToString:@"www.xiaoyuzhoufm.com"] &&
         [url.path rangeOfString:@"^/episode/[0-9a-fA-F]{24}$" options:NSRegularExpressionSearch].location != NSNotFound;
+    view.updateAction = nil;
+    view.episodeButton.enabled = YES;
+    view.episodeButton.attributedTitle = view.episodeTitle;
+    view.episodeButton.accessibilityLabel = @"去小宇宙听";
+    view.episodeButton.toolTip = @"打开小宇宙单集";
     view.episodeURL = validLink ? url : nil;
     view.label.hidden = validLink;
     view.linkedText.hidden = view.episodeButton.hidden = !validLink;
@@ -186,6 +200,20 @@ static const CGFloat EpisodeColumnGap = 8;
     // Position and show only in updateAtTime, after the caller provides an anchor.
     return YES;
 }
+- (BOOL)showUpdateWithAction:(void (^)(void))action {
+    if (![self showMessage:@"更新到最新版" priority:PebblePetMessageReminder duration:30]) return NO;
+    PebblePetBubbleView *view = (PebblePetBubbleView *)self.bubblePanel.contentView;
+    view.updateAction = action;
+    view.label.hidden = YES;
+    view.episodeButton.title = self.message;
+    view.episodeButton.font = view.label.font;
+    view.episodeButton.accessibilityLabel = self.message;
+    view.episodeButton.toolTip = self.message;
+    view.episodeButton.hidden = NO;
+    [self.bubblePanel setContentSize:NSMakeSize(160,self.bubblePanel.frame.size.height)];
+    return YES;
+}
+
 - (void)addRippleAt:(NSPoint)point color:(NSColor *)color {
     if(NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion)return;
     while(self.ripples.count>=6){[self.ripples.firstObject[@"panel"] close];[self.ripples removeObjectAtIndex:0];}
@@ -216,6 +244,13 @@ static const CGFloat EpisodeColumnGap = 8;
             BOOL overLink = NSPointInRect(mouse, view.episodeButton.frame);
             self.bubblePanel.ignoresMouseEvents = !overLink;
             if (NSPointInRect(mouse, view.bounds)) self.expiry = MAX(self.expiry, time + .5);
+        }
+        if (view.updateAction) {
+            view.episodeButton.frame = NSInsetRect(view.bounds,6,9);
+            NSPoint mouse = [self.bubblePanel convertPointFromScreen:NSEvent.mouseLocation];
+            BOOL overButton = NSPointInRect(mouse,view.episodeButton.frame);
+            self.bubblePanel.ignoresMouseEvents = !overButton;
+            if (overButton) self.expiry = MAX(self.expiry,time+.5);
         }
         self.bubblePanel.alphaValue=MAX(0,MIN(1,(self.expiry-time)/.18));
         if(!self.bubblePanel.isVisible){

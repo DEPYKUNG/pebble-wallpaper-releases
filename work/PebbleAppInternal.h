@@ -166,6 +166,8 @@ NSImage *PebbleMenuBarIcon(void);
 @property (strong) SPUStandardUpdaterController *updaterController;
 @property (copy) void (^pendingInstall)(void);
 @property BOOL installationRequested;
+@property BOOL userApprovedUpdate, restoreAutomaticDownloadSetting;
+@property BOOL backgroundUpdateFound;
 #endif
 @end
 
@@ -181,7 +183,7 @@ NSImage *PebbleMenuBarIcon(void);
     error:(NSError *)error;
 - (void)settingsDidClose:(NSNotification *)notification;
 - (void)toggleAutomaticChecks:(NSSwitch *)sender;
-- (void)toggleAutomaticInstall:(NSSwitch *)sender;
+
 @end
 #endif
 

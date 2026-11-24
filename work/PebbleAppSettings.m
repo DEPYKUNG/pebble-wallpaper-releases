@@ -297,13 +297,9 @@
             [self rowWithSymbol:@"sync" title:@"检查更新"
                        subtitle:nil control:check],
             [self rowWithSymbol:@"search" title:@"自动检查新版本"
-                       subtitle:@"每天在后台查一次发布页"
+                       subtitle:@"每天在后台检查，发现新版时提醒"
                         control:[self switchOn:updater.automaticallyChecksForUpdates
                                         action:@selector(toggleAutomaticChecks:)]],
-            [self rowWithSymbol:@"download" title:@"自动安装新版本"
-                       subtitle:@"关闭后只提示，需要你确认才安装"
-                        control:[self switchOn:updater.automaticallyDownloadsUpdates
-                                        action:@selector(toggleAutomaticInstall:)]],
         ]]];
     }
 #endif
