@@ -233,11 +233,13 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 }
 
 @interface PebbleGlassView : NSView
-@property CGFloat impactProgress;
+@property CGFloat impactProgress, impulse, rebound;
+@property NSPoint contact;
+@property NSRect pane;
 @end
 @implementation PebbleGlassView
 - (void)drawRect:(NSRect)dirtyRect {
-    NSRect pane=NSInsetRect(self.bounds,17,9);
+    NSRect pane=self.pane;
     CGFloat progress=self.impactProgress;
     NSColor *edge=[NSColor colorWithSRGBRed:.23 green:.34 blue:.37 alpha:.65];
     NSColor *light=[NSColor colorWithWhite:1 alpha:.80];
@@ -261,7 +263,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         [NSGraphicsContext restoreGraphicsState];
         if (progress<0) return;
     }
-    NSPoint hit=NSMakePoint(NSMidX(pane)-2,NSMidY(pane)+3);
+    NSPoint hit=self.contact;
     NSPoint rim[]={NSMakePoint(NSMinX(pane),NSMinY(pane)),NSMakePoint(NSMidX(pane)+5,NSMinY(pane)),
         NSMakePoint(NSMaxX(pane),NSMinY(pane)),NSMakePoint(NSMaxX(pane),NSMidY(pane)-15),
         NSMakePoint(NSMaxX(pane),NSMidY(pane)+6),NSMakePoint(NSMaxX(pane),NSMaxY(pane)),
@@ -288,8 +290,8 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             [light setStroke];branch.lineWidth=.55;[branch stroke];
             continue;
         }
-        CGFloat dx=(a.x+b.x-2*hit.x)*scatter*(.26+.07*(i%4));
-        CGFloat dy=(a.y+b.y-2*hit.y)*scatter*.11-(8+i%3*4)*scatter*scatter;
+        CGFloat dx=(a.x+b.x-2*hit.x)*scatter*self.impulse*(.26+.07*(i%4));
+        CGFloat dy=(a.y+b.y-2*hit.y)*scatter*self.impulse*.11-(8+i%3*4)*scatter*scatter;
         NSBezierPath *shard=[NSBezierPath bezierPath];
         NSPoint vertices[]={hit,knees[i],a,b,knees[next]};
         [shard moveToPoint:NSMakePoint(hit.x+dx,hit.y+dy)];
@@ -491,14 +493,31 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSRect visible=screen.visibleFrame, frame=self.panel.frame;
     NSRect stone=PebbleStoneDrawRect(self.artRect);
     BOOL toRight=NSMidX(frame)<=NSMidX(visible);
-    const CGFloat width=64,height=102;
+    NSInteger w=self.bitmap.pixelsWide,h=self.bitmap.pixelsHigh;
+    NSPoint tip=NSMakePoint(toRight?NSMaxX(stone):NSMinX(stone),NSMidY(stone));
+    // Find the leading opaque pixel, including its height on an asymmetric stone.
+    BOOL found=NO;
+    for (NSInteger column=0;column<w && !found;column++) {
+        NSInteger px=toRight?w-1-column:column;
+        for (NSInteger py=0;py<h;py++) {
+            if ([self.bitmap colorAtX:px y:py].alphaComponent<.5) continue;
+            tip=NSMakePoint(NSMinX(stone)+NSWidth(stone)*(px+(toRight?1:0))/w,
+                            NSMaxY(stone)-NSHeight(stone)*(py+.5)/h);
+            found=YES;
+            break;
+        }
+    }
+    self.angle=0;
+    self.stretch=1;
+    CGFloat margin=toRight?NSWidth(frame)-tip.x:tip.x;
+    CGFloat width=MAX(64,margin+52),height=102;
     CGFloat x=toRight?NSMaxX(visible)-width:NSMinX(visible);
-    CGFloat y=NSMidY(stone)+NSMinY(frame)-height/2;
+    CGFloat y=tip.y+NSMinY(frame)-height/2;
     NSRect prop=PebblePetConstrainFrame(NSMakeRect(x,y,width,height),visible);
     self.smashOrigin=frame.origin;
     CGFloat contactX=toRight?NSMinX(prop)+17:NSMaxX(prop)-17;
-    frame.origin.x=contactX-(toRight?NSMaxX(stone):NSMinX(stone));
-    frame.origin.y=NSMidY(prop)-NSMidY(stone);
+    frame.origin.x=contactX-tip.x;
+    frame.origin.y=NSMidY(prop)-tip.y;
     self.smashTarget=PebblePetConstrainFrame(frame,visible).origin;
     self.smashFlight=MAX(.65,MIN(1.45,fabs(self.smashTarget.x-self.smashOrigin.x)/850));
     NSPanel *panel=[[PebblePetPanel alloc] initWithContentRect:prop styleMask:NSWindowStyleMaskBorderless|NSWindowStyleMaskNonactivatingPanel backing:NSBackingStoreBuffered defer:NO];
@@ -506,6 +525,12 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     panel.ignoresMouseEvents=YES;panel.releasedWhenClosed=NO;panel.hidesOnDeactivate=NO;
     panel.level=self.panel.level+1;panel.collectionBehavior=self.panel.collectionBehavior;
     PebbleGlassView *view=[[PebbleGlassView alloc] initWithFrame:NSMakeRect(0,0,width,height)];
+    view.contact=NSMakePoint(contactX-NSMinX(prop),self.smashTarget.y+tip.y-NSMinY(prop));
+    view.pane=NSMakeRect(toRight?17:width-47,9,30,height-18);
+    double speed=fabs(self.smashTarget.x-self.smashOrigin.x)/self.smashFlight;
+    double mass=PebblePetMass(frame.size);
+    view.impulse=MAX(.45,MIN(1.8,mass*speed/850));
+    view.rebound=(toRight?-1:1)*MIN(32,speed*.025/mass);
     view.impactProgress=-1;
     panel.contentView=view;
     self.glassPanel=panel;
@@ -679,9 +704,12 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
                 glass.needsDisplay=YES;
                 if (elapsed>self.smashFlight+.9) [self.glassPanel orderOut:nil];
                 if (!reduced) {
-                    double travel=progress*progress*(3-2*progress);
+                    double travel=progress;
                     NSPoint point=NSMakePoint(self.smashOrigin.x+(self.smashTarget.x-self.smashOrigin.x)*travel,
                         self.smashOrigin.y+(self.smashTarget.y-self.smashOrigin.y)*travel+28*4*progress*(1-progress));
+                    double recoil=MIN(1,MAX(0,(elapsed-self.smashFlight-.035)/.22));
+                    point.x+=glass.rebound*(1-pow(1-recoil,2));
+                    point.y+=fabs(glass.rebound)*recoil*(1-recoil);
                     body.position=PebblePetConstrainFrame((NSRect){point,self.panel.frame.size},visible).origin;
                 }
             }
