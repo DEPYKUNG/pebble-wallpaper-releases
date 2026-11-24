@@ -239,32 +239,65 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 - (void)drawRect:(NSRect)dirtyRect {
     NSRect pane=NSInsetRect(self.bounds,17,9);
     CGFloat progress=self.impactProgress;
-    NSColor *glass=[NSColor colorWithSRGBRed:.70 green:.87 blue:.92 alpha:.42];
-    NSColor *rim=[NSColor colorWithSRGBRed:.39 green:.66 blue:.74 alpha:.92];
-    if (progress<0) {
-        NSBezierPath *sheet=[NSBezierPath bezierPathWithRoundedRect:pane xRadius:4 yRadius:4];
-        [glass setFill];[sheet fill];[rim setStroke];sheet.lineWidth=1.6;[sheet stroke];
+    NSColor *edge=[NSColor colorWithSRGBRed:.23 green:.34 blue:.37 alpha:.65];
+    NSColor *light=[NSColor colorWithWhite:1 alpha:.80];
+    NSBezierPath *sheet=[NSBezierPath bezierPathWithRect:pane];
+    if (progress<=.18) {
+        NSColor *clear=[NSColor colorWithSRGBRed:.77 green:.91 blue:.90 alpha:.05];
+        NSColor *reflection=[NSColor colorWithWhite:1 alpha:.22];
+        [[[NSGradient alloc] initWithStartingColor:reflection endingColor:clear] drawInBezierPath:sheet angle:36];
+        [edge setStroke];sheet.lineWidth=.75;[sheet stroke];
+        NSBezierPath *bevel=[NSBezierPath bezierPath];
+        [bevel moveToPoint:NSMakePoint(NSMinX(pane)+1,NSMinY(pane)+1)];
+        [bevel lineToPoint:NSMakePoint(NSMinX(pane)+1,NSMaxY(pane)-1)];
+        [bevel lineToPoint:NSMakePoint(NSMaxX(pane)-1,NSMaxY(pane)-1)];
+        [light setStroke];bevel.lineWidth=.8;[bevel stroke];
+        [NSGraphicsContext saveGraphicsState];
+        [sheet addClip];
         NSBezierPath *glint=[NSBezierPath bezierPath];
-        [glint moveToPoint:NSMakePoint(NSMinX(pane)+5,NSMaxY(pane)-7)];
-        [glint lineToPoint:NSMakePoint(NSMaxX(pane)-4,NSMaxY(pane)-22)];
-        [[NSColor whiteColor] setStroke];glint.lineWidth=1.5;[glint stroke];
-        return;
+        [glint moveToPoint:NSMakePoint(NSMinX(pane)-4,NSMidY(pane)+5)];
+        [glint lineToPoint:NSMakePoint(NSMaxX(pane)+4,NSMidY(pane)+43)];
+        [[NSColor colorWithWhite:1 alpha:.25] setStroke];glint.lineWidth=2.2;[glint stroke];
+        [NSGraphicsContext restoreGraphicsState];
+        if (progress<0) return;
     }
-    NSPoint hit=NSMakePoint(NSMidX(pane),NSMidY(pane));
-    NSPoint rimPoints[]={NSMakePoint(NSMinX(pane),NSMinY(pane)),NSMakePoint(NSMaxX(pane),NSMinY(pane)),
-        NSMakePoint(NSMaxX(pane),NSMidY(pane)-15),NSMakePoint(NSMaxX(pane),NSMaxY(pane)),
-        NSMakePoint(NSMinX(pane),NSMaxY(pane)),NSMakePoint(NSMinX(pane),NSMidY(pane)+15)};
-    for (NSUInteger index=0;index<6;index++) {
-        NSPoint a=rimPoints[index],b=rimPoints[(index+1)%6];
-        CGFloat dx=(a.x+b.x-2*hit.x)*progress*.55;
-        CGFloat dy=(a.y+b.y-2*hit.y)*progress*.16-9*progress*progress;
+    NSPoint hit=NSMakePoint(NSMidX(pane)-2,NSMidY(pane)+3);
+    NSPoint rim[]={NSMakePoint(NSMinX(pane),NSMinY(pane)),NSMakePoint(NSMidX(pane)+5,NSMinY(pane)),
+        NSMakePoint(NSMaxX(pane),NSMinY(pane)),NSMakePoint(NSMaxX(pane),NSMidY(pane)-15),
+        NSMakePoint(NSMaxX(pane),NSMidY(pane)+6),NSMakePoint(NSMaxX(pane),NSMaxY(pane)),
+        NSMakePoint(NSMidX(pane)-4,NSMaxY(pane)),NSMakePoint(NSMinX(pane),NSMaxY(pane)),
+        NSMakePoint(NSMinX(pane),NSMidY(pane)+15)};
+    NSPoint knees[9];
+    for (NSUInteger i=0;i<9;i++) {
+        CGFloat fraction=.39+.08*(i%4);
+        knees[i]=NSMakePoint(hit.x+(rim[i].x-hit.x)*fraction+(i%2?1.7:-1.4),
+                            hit.y+(rim[i].y-hit.y)*fraction+(i%3?2:-1.8));
+    }
+    CGFloat scatter=MAX(0,(progress-.18)/.82);
+    for (NSUInteger i=0;i<9;i++) {
+        NSUInteger next=(i+1)%9;
+        NSPoint a=rim[i],b=rim[next];
+        if (scatter==0) {
+            NSBezierPath *crack=[NSBezierPath bezierPath];
+            [crack moveToPoint:hit];[crack lineToPoint:knees[i]];[crack lineToPoint:a];
+            [edge setStroke];crack.lineWidth=.65;[crack stroke];
+            NSBezierPath *branch=[NSBezierPath bezierPath];
+            [branch moveToPoint:knees[i]];
+            [branch lineToPoint:NSMakePoint((knees[i].x+knees[next].x)*.5+1,(knees[i].y+knees[next].y)*.5-2)];
+            [branch lineToPoint:knees[next]];
+            [light setStroke];branch.lineWidth=.55;[branch stroke];
+            continue;
+        }
+        CGFloat dx=(a.x+b.x-2*hit.x)*scatter*(.26+.07*(i%4));
+        CGFloat dy=(a.y+b.y-2*hit.y)*scatter*.11-(8+i%3*4)*scatter*scatter;
         NSBezierPath *shard=[NSBezierPath bezierPath];
+        NSPoint vertices[]={hit,knees[i],a,b,knees[next]};
         [shard moveToPoint:NSMakePoint(hit.x+dx,hit.y+dy)];
-        [shard lineToPoint:NSMakePoint(a.x+dx,a.y+dy)];
-        [shard lineToPoint:NSMakePoint(b.x+dx,b.y+dy)];
+        for (NSUInteger j=1;j<5;j++) [shard lineToPoint:NSMakePoint(vertices[j].x+dx,vertices[j].y+dy)];
         [shard closePath];
-        [[glass colorWithAlphaComponent:.62*(1-progress*.55)] setFill];[shard fill];
-        [[rim colorWithAlphaComponent:.95*(1-progress*.55)] setStroke];shard.lineWidth=1;[shard stroke];
+        CGFloat fade=1-scatter*.83;
+        [[NSColor colorWithWhite:1 alpha:(.13+.07*(i%3))*fade] setFill];[shard fill];
+        [[edge colorWithAlphaComponent:.65*fade] setStroke];shard.lineWidth=.7;[shard stroke];
     }
 }
 @end

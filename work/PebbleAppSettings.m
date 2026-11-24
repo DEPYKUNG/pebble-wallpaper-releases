@@ -309,9 +309,6 @@
         [self rowWithSymbol:@"heart" title:@"鸣谢镇长"
                    subtitle:@"这款壁纸基于镇长的原版鹅卵石网页制作"
                     control:[self actionButton:@"打开原版" action:@selector(openOriginal:)]],
-        [self rowWithSymbol:@"package" title:@"发布页"
-                   subtitle:@"历史版本与安装包"
-                    control:[self actionButton:@"打开" action:@selector(openReleases:)]],
     ]]];
     return [self paneWithCards:cards];
 }
