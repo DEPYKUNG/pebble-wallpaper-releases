@@ -281,9 +281,9 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [pet beginDragAtPoint:wakePoint time:5];
         [pet endDragAtTime:5.01];
         if(pet.panel.contentView.accessibilityValue || pet.effects.message || pet.dragging)exit(21);
-        NSArray *outingTitles=@[@"露营",@"野炊",@"戴耳机"];
-        NSArray *outingValues=@[@"露营中",@"野炊中",@"戴着耳机"];
-        NSArray *outingFiles=@[@"pet-camp-preview.png",@"pet-cook-preview.png",@"pet-headphones-preview.png"];
+        NSArray *outingTitles=@[@"露营",@"野炊",@"戴耳机",@"砸纸箱"];
+        NSArray *outingValues=@[@"露营中",@"野炊中",@"戴着耳机",@"砸纸箱中"];
+        NSArray *outingFiles=@[@"pet-camp-preview.png",@"pet-cook-preview.png",@"pet-headphones-preview.png",@"pet-smash-preview.png"];
         for(NSUInteger i=0;i<outingTitles.count;i++){
             NSMenuItem *item=[activities itemWithTitle:outingTitles[i]];
             if(!item || ![NSApp sendAction:item.action to:item.target from:item] ||
@@ -297,7 +297,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if(!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion && !NSProcessInfo.processInfo.lowPowerModeEnabled){
             pet.roaming=YES;
             NSMutableSet *seen=[NSMutableSet set];
-            for(NSUInteger attempt=0;attempt<128 && seen.count<5;attempt++){
+            for(NSUInteger attempt=0;attempt<128 && seen.count<6;attempt++){
                 [pet summon:nil];[pet setValue:@0 forKey:@"nextWander"];
                 [NSApp sendAction:NSSelectorFromString(@"tick:") to:pet from:nil];
                 id value=pet.panel.contentView.accessibilityValue;
@@ -307,7 +307,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
                 if(pet.panel.contentView.accessibilityValue)exit(21);
                 pet.roaming=YES;
             }
-            if(seen.count!=5)exit(21);
+            if(seen.count!=6)exit(21);
         }
         [pet setSuspended:YES];
         NSLog(@"Manual and roaming pet activities, quote settings and click-to-wake verified.");
