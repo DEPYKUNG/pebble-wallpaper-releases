@@ -594,7 +594,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
                     body=self.body;
                 } else {
                     double direction=NSMidX(self.panel.frame)>NSMidX(visible)?-1:1;
-                    body.velocity=NSMakePoint(direction*(45+arc4random_uniform(45)),150);
+                    body.velocity=NSMakePoint(direction*(35+arc4random_uniform(30)),100);
                     body.resting=NO;
                     self.nextWander=now+10+arc4random_uniform(10);
                 }
@@ -612,10 +612,10 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             [self speakQuoteWithPriority:PebblePetMessageAmbient];self.nextSpeech=now+75;
         }
         CGFloat desiredAngle=self.skipState.active?MAX(-18,MIN(18,-body.velocity.x*.02)):
-            (body.resting?(reduced?0:sin(now*1.3)*1.2):MAX(-12,MIN(12,-body.velocity.x*.05)));
+            (body.resting?0:MAX(-10,MIN(10,-body.velocity.x*.04)));
         if (self.activity==PebblePetActivityNone) {
             self.angle+=(desiredAngle-self.angle)*MIN(1,dt*10);
-            self.stretch=reduced?1:(now<self.impactUntil?.91:1+sin(now*2.1)*.009);
+            self.stretch=reduced?1:(now<self.impactUntil?.975:1);
         }
     }
     self.panel.ignoresMouseEvents=!self.dragging && ![self containsStoneAtScreenPoint:NSEvent.mouseLocation];
@@ -646,7 +646,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 - (void)endDragAtTime:(NSTimeInterval)now {
     self.dragging=NO;
     NSPoint velocity=now-self.lastSample>.12?NSZeroPoint:self.throwVelocity;
-    self.body=(PebblePetBody){self.panel.frame.origin,velocity,NO};self.stretch=1;
+    self.body=(PebblePetBody){self.panel.frame.origin,PebblePetThrowVelocity(velocity,self.panel.frame.size),NO};self.stretch=1;
     if (!self.moved && self.justWoke) {
         self.nextWander=now+25;
     } else if(!self.moved)[self greet:nil];
@@ -665,7 +665,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     }
     [self cancelPlay];[self say:nil];
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-    self.body=(PebblePetBody){self.panel.frame.origin,reduced?NSZeroPoint:NSMakePoint(0,360),reduced};
+    self.body=(PebblePetBody){self.panel.frame.origin,reduced?NSZeroPoint:NSMakePoint(0,205),reduced};
     self.celebrateUntil=CACurrentMediaTime()+.7;self.nextWander=CACurrentMediaTime()+12;self.petView.needsDisplay=YES;
 }
 - (void)summon:(id)sender {
