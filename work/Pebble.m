@@ -55,7 +55,7 @@
     self.exportMenu = [[NSMenu alloc] initWithTitle:export.title]; export.submenu = self.exportMenu;
     [self addItem:@"设为静态壁纸（主屏幕 → 所有屏幕）" action:@selector(setStaticWallpaper:) toMenu:wallpaper.submenu];
     [self addItem:@"恢复动态壁纸" action:@selector(resumeDynamicWallpaper:) toMenu:wallpaper.submenu];
-    [self addItem:@"恢复壁纸显示" action:@selector(reloadRenderers:) toMenu:menu];
+    [self addItem:ReloadWallpaperTitle action:@selector(reloadRenderers:) toMenu:menu];
     NSMenuItem *settingsItem = [self addItem:@"设置…" action:@selector(showSettings:) toMenu:menu];
     settingsItem.keyEquivalent = @",";
     [menu addItem:NSMenuItem.separatorItem];
