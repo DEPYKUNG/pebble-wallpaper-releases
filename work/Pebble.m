@@ -1,5 +1,11 @@
 #import "PebbleAppInternal.h"
 
+static void AddMenuSection(NSMenu *menu, NSString *title) {
+    if (menu.numberOfItems) [menu addItem:NSMenuItem.separatorItem];
+    NSMenuItem *heading = [menu addItemWithTitle:title action:nil keyEquivalent:@""];
+    heading.enabled = NO;
+}
+
 @implementation PebbleApp
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
@@ -35,6 +41,12 @@
     self.statusItem.button.toolTip = WallpaperTitle;
 
     NSMenu *menu = [[NSMenu alloc] initWithTitle:WallpaperTitle];
+    self.petOnlyMode = [NSUserDefaults.standardUserDefaults boolForKey:@"PetOnlyMode"];
+    AddMenuSection(menu, @"显示模式");
+    self.dynamicModeItem = [self addItem:@"动态壁纸" action:@selector(resumeDynamicWallpaper:) toMenu:menu];
+    self.staticModeItem = [self addItem:@"静态壁纸（主屏幕 → 所有屏幕）" action:@selector(setStaticWallpaper:) toMenu:menu];
+    self.petOnlyModeItem = [self addItem:@"仅桌宠" action:@selector(enablePetOnlyMode:) toMenu:menu];
+    AddMenuSection(menu, @"壁纸");
     NSMenuItem *rethrow = [menu addItemWithTitle:@"重新抛" action:nil keyEquivalent:@""];
     self.rethrowMenu = [[NSMenu alloc] initWithTitle:rethrow.title];
     rethrow.submenu = self.rethrowMenu;
@@ -48,17 +60,16 @@
     NSMenuItem *smart = [self addItem:@"智能暂停" action:@selector(toggleSmartPause:) toMenu:menu];
     smart.state = [NSUserDefaults.standardUserDefaults boolForKey:SmartPauseDisabledKey] ? NSControlStateValueOff : NSControlStateValueOn;
     [self addMotionMenusTo:menu];
-    [self configurePetMenu:menu];
-    NSMenuItem *wallpaper = [menu addItemWithTitle:@"静态壁纸" action:nil keyEquivalent:@""];
+    NSMenuItem *wallpaper = [menu addItemWithTitle:@"导出静态壁纸" action:nil keyEquivalent:@""];
     wallpaper.submenu = [[NSMenu alloc] initWithTitle:wallpaper.title];
     NSMenuItem *export = [wallpaper.submenu addItemWithTitle:@"导出 PNG" action:nil keyEquivalent:@""];
     self.exportMenu = [[NSMenu alloc] initWithTitle:export.title]; export.submenu = self.exportMenu;
-    [self addItem:@"设为静态壁纸（主屏幕 → 所有屏幕）" action:@selector(setStaticWallpaper:) toMenu:wallpaper.submenu];
-    [self addItem:@"恢复动态壁纸" action:@selector(resumeDynamicWallpaper:) toMenu:wallpaper.submenu];
     [self addItem:ReloadWallpaperTitle action:@selector(reloadRenderers:) toMenu:menu];
+    AddMenuSection(menu, @"桌宠");
+    [self configurePetMenu:menu];
+    AddMenuSection(menu, @"应用");
     NSMenuItem *settingsItem = [self addItem:@"设置…" action:@selector(showSettings:) toMenu:menu];
     settingsItem.keyEquivalent = @",";
-    [menu addItem:NSMenuItem.separatorItem];
 #if __has_include(<Sparkle/Sparkle.h>)
     if (!self.testPreviewPath && !self.shotPath && !self.settingsPreview && !self.petPreview) {
         self.updaterController = [[SPUStandardUpdaterController alloc]
