@@ -11,7 +11,7 @@ NSRect PebblePetConstrainFrame(NSRect frame, NSRect visible) {
 
 // Window width includes a fixed 48-point margin. Use the nominal stone width
 // to tune gameplay inertia rather than making larger objects fall faster.
-double PebblePetMass(NSSize size) {
+static double PebblePetMass(NSSize size) {
     if (!isfinite(size.width)) return 1;
     return MAX(.75,MIN(1.35,(size.width-48)/156.0));
 }
