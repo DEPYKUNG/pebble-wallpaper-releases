@@ -100,6 +100,7 @@ NSImage *PebbleMenuBarIcon(void);
 @end
 
 @interface PebbleApp : NSObject <NSApplicationDelegate>
+@property (strong) NSMenuItem *rethrowItem, *previousItem;
 @property (strong) NSStatusItem *statusItem;
 @property (strong) NSMenuItem *pauseItem;
 @property (strong) NSMenu *textureMenu;
@@ -193,6 +194,7 @@ NSImage *PebbleMenuBarIcon(void);
 - (void)mark:(NSString *)selected inMenu:(NSMenu *)menu;
 - (NSString *)tiltTitle:(NSInteger)degrees;
 - (NSString *)rateTitle:(double)rate;
+- (void)configureScreenActionItems;
 - (void)addMotionMenusTo:(NSMenu *)menu;
 - (void)showTiltSettings:(id)sender;
 - (void)syncMotionControls;
