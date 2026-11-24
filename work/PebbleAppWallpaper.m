@@ -310,13 +310,20 @@
     [web evaluateJavaScript:@"window.pebbleSnapshot()" completionHandler:^(id value, NSError *error) {
         NSDictionary *stone = error ? nil : PebbleNormalizeStone(value, self.stoneTextures);
         if (!stone) { [self showWallpaperError:@"石头尚未加载完成，请稍后再收藏。"]; return; }
-        for (NSUInteger index = 0; index < self.favorites.count; index++) {
-            if ([PebbleStoneIdentity(self.favorites[index]) isEqual:PebbleStoneIdentity(stone)]) {
-                self.favorites[index] = stone; [self persistFavorites]; return;
-            }
-        }
-        [self.favorites addObject:stone]; [self persistFavorites];
+        [self storeFavoriteStone:stone];
     }];
+}
+
+- (void)storeFavoriteStone:(NSDictionary *)stone {
+    for (NSUInteger index = 0; index < self.favorites.count; index++) {
+        if ([PebbleStoneIdentity(self.favorites[index]) isEqual:PebbleStoneIdentity(stone)]) {
+            self.favorites[index] = stone;
+            [self persistFavorites];
+            return;
+        }
+    }
+    [self.favorites addObject:stone];
+    [self persistFavorites];
 }
 
 - (void)restoreFavorite:(NSButton *)sender {

@@ -37,7 +37,7 @@
   {
     "name": "native-api",
     "before": "j=Mg(R,ql),rl(),k()",
-    "after": "j=Mg(R,ql),rl(),updateDesktopTone(R),window.pebbleRedraw=()=>{rl();updateDesktopTone(R)},window.pebbleExport=(width,height)=>renderPebbleWallpaper(F,ql,width,height),window.pebblePetFrame=()=>renderPebblePet(F,ql),window.pebbleSnapshot=()=>snapshotPebble(F),k()"
+    "after": "j=Mg(R,ql),rl(),updateDesktopTone(R),window.pebbleRedraw=()=>{rl();updateDesktopTone(R)},window.pebbleExport=(width,height)=>renderPebbleWallpaper(F,ql,width,height),window.pebblePetFrame=()=>renderPebblePet(F,ql),window.pebbleFavoritePet=stone=>renderFavoritePet(stone,ql),window.pebbleSnapshot=()=>snapshotPebble(F),k()"
   },
   {
     "name": "apply-config-history",

@@ -549,7 +549,9 @@
         NSButton *restore = [self actionButton:@"设为当前" action:@selector(restoreFavorite:)];
         NSButton *remove = [self actionButton:@"移除" action:@selector(removeFavorite:)];
         restore.tag = remove.tag = index; restore.enabled = available;
-        NSStackView *controls = [NSStackView stackViewWithViews:@[restore, remove]];
+        NSButton *pet = [self actionButton:@"用作桌宠" action:@selector(restoreFavoritePet:)];
+        pet.tag = index;
+        NSStackView *controls = [NSStackView stackViewWithViews:@[restore, pet, remove]];
         NSString *title = [NSString stringWithFormat:@"石头 %lu", (unsigned long)index + 1];
         [rows addObject:[self rowWithSymbol:nil title:title subtitle:[stone[@"colors"] firstObject] control:controls]];
     }];
