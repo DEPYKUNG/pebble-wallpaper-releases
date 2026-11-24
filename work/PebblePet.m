@@ -137,11 +137,28 @@ static NSImage *PebblePodcastMicrophone(void) {
         [PebblePodcastMicrophone() drawInRect:mic fromRect:NSZeroRect
                                    operation:NSCompositingOperationSourceOver fraction:1];
     } else if (owner.activity==PebblePetActivitySleep) {
-        CGFloat y=MIN(NSHeight(self.bounds)-24,NSMaxY(art)-4);
-        [@"z Z" drawAtPoint:NSMakePoint(NSMaxX(art)-22,y) withAttributes:@{
-            NSFontAttributeName:[NSFont systemFontOfSize:17 weight:NSFontWeightSemibold],
-            NSForegroundColorAttributeName:NSColor.systemIndigoColor
-        }];
+        CGFloat size=round(MAX(44,MIN(58,NSWidth(self.bounds)*.25)));
+        CGFloat x=MIN(NSMaxX(self.bounds)-size-5,NSMaxX(art)-size*.45);
+        CGFloat y=MIN(NSMaxY(self.bounds)-size-5,NSMaxY(art)-size*.18);
+        NSRect badge=NSMakeRect(x,y,size,size);
+        NSBezierPath *bubble=[NSBezierPath bezierPathWithRoundedRect:badge xRadius:size*.34 yRadius:size*.34];
+        [bubble moveToPoint:NSMakePoint(x+8,y+6)];
+        [bubble lineToPoint:NSMakePoint(x+2,y-4)];
+        [bubble lineToPoint:NSMakePoint(x+19,y+2)];
+        [bubble closePath];
+        [NSGraphicsContext saveGraphicsState];
+        NSShadow *badgeShadow=[NSShadow new];
+        badgeShadow.shadowBlurRadius=5;
+        badgeShadow.shadowOffset=NSMakeSize(0,-2);
+        badgeShadow.shadowColor=[NSColor colorWithWhite:0 alpha:.25];
+        [badgeShadow set];
+        [[NSColor colorWithSRGBRed:.96 green:.97 blue:1 alpha:1] setFill];
+        [bubble fill];
+        [NSGraphicsContext restoreGraphicsState];
+        NSString *mark=@"💤";
+        NSDictionary *style=@{NSFontAttributeName:[NSFont fontWithName:@"Apple Color Emoji" size:size*.67] ?: [NSFont systemFontOfSize:size*.67]};
+        NSSize markSize=[mark sizeWithAttributes:style];
+        [mark drawAtPoint:NSMakePoint(NSMidX(badge)-markSize.width/2,NSMidY(badge)-markSize.height/2) withAttributes:style];
     }
     if (owner.celebrateUntil>CACurrentMediaTime()) {
         CGFloat progress=1-(owner.celebrateUntil-CACurrentMediaTime())/.7;
