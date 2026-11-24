@@ -286,6 +286,25 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         }
         [pet setSuspended:NO];
         NSMenu *menu=[pet valueForKey:@"petMenu"];
+        NSMenuItem *focus = [menu itemWithTitle:@"陪我专注 · 25 分钟"];
+        if (!focus || ![NSApp sendAction:focus.action to:focus.target from:focus]) exit(21);
+        NSDate *deadline = [pet valueForKey:@"focusDeadline"];
+        if (deadline.timeIntervalSinceNow < 1495) exit(21);
+        NSMenu *focusMenu = [pet valueForKey:@"petMenu"];
+        NSMenuItem *stopFocus = focusMenu.itemArray.firstObject;
+        if (![stopFocus.title hasPrefix:@"结束专注"] ||
+            ![NSApp sendAction:stopFocus.action to:stopFocus.target from:stopFocus] ||
+            [pet valueForKey:@"focusDeadline"]) exit(21);
+        [NSApp sendAction:focus.action to:focus.target from:focus];
+        [pet setValue:[NSDate dateWithTimeIntervalSinceNow:-1] forKey:@"focusDeadline"];
+        [NSApp sendAction:NSSelectorFromString(@"tick:") to:pet from:nil];
+        if ([pet valueForKey:@"focusDeadline"] || ![pet.effects.message hasPrefix:@"专注结束"]) exit(21);
+        __block BOOL collected = NO;
+        pet.collectStone = ^{ collected = YES; };
+        NSMenuItem *collect = [[pet valueForKey:@"petMenu"] itemWithTitle:@"收藏这颗"];
+        if (!collect.enabled || ![NSApp sendAction:collect.action to:collect.target from:collect] || !collected) exit(21);
+        pet.collectStone = nil;
+        NSLog(@"Focus start, cancel, expiry and pet collection menu verified.");
         NSMenu *activities=[menu itemWithTitle:@"做点什么"].submenu;
         NSMenuItem *podcast=[activities itemWithTitle:@"录播客"];
         NSMenuItem *sleep=[activities itemWithTitle:@"睡觉"];
