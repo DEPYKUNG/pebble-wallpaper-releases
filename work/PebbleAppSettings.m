@@ -217,6 +217,8 @@
         [self rowWithSymbol:@"smile" title:@"脸孔"
                    subtitle:nil
                     control:self.facePopUp],
+        [self rowWithSymbol:@"repeat" title:ReloadWallpaperTitle subtitle:nil
+                    control:[self actionButton:@"重新加载" action:@selector(reloadRenderers:)]],
     ]];
     self.tiltSlider = [NSSlider sliderWithValue:self.tiltDegrees minValue:-TiltLimit maxValue:TiltLimit
                                          target:self action:@selector(selectTilt:)];

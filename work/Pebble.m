@@ -1,9 +1,9 @@
 #import "PebbleAppInternal.h"
 
-static void AddMenuSection(NSMenu *menu, NSString *title) {
-    if (menu.numberOfItems) [menu addItem:NSMenuItem.separatorItem];
-    NSMenuItem *heading = [menu addItemWithTitle:title action:nil keyEquivalent:@""];
-    heading.enabled = NO;
+static NSMenu *AddSubmenu(NSMenu *menu, NSString *title) {
+    NSMenuItem *item = [menu addItemWithTitle:title action:nil keyEquivalent:@""];
+    item.submenu = [[NSMenu alloc] initWithTitle:title];
+    return item.submenu;
 }
 
 @implementation PebbleApp
@@ -42,32 +42,27 @@ static void AddMenuSection(NSMenu *menu, NSString *title) {
 
     NSMenu *menu = [[NSMenu alloc] initWithTitle:WallpaperTitle];
     self.petOnlyMode = [NSUserDefaults.standardUserDefaults boolForKey:@"PetOnlyMode"];
-    AddMenuSection(menu, @"显示模式");
-    self.dynamicModeItem = [self addItem:@"动态壁纸" action:@selector(resumeDynamicWallpaper:) toMenu:menu];
-    self.staticModeItem = [self addItem:@"静态壁纸（主屏幕 → 所有屏幕）" action:@selector(setStaticWallpaper:) toMenu:menu];
-    self.petOnlyModeItem = [self addItem:@"仅桌宠" action:@selector(enablePetOnlyMode:) toMenu:menu];
-    AddMenuSection(menu, @"壁纸");
-    NSMenuItem *rethrow = [menu addItemWithTitle:@"重新抛" action:nil keyEquivalent:@""];
-    self.rethrowMenu = [[NSMenu alloc] initWithTitle:rethrow.title];
-    rethrow.submenu = self.rethrowMenu;
-    NSMenuItem *previous = [menu addItemWithTitle:@"上一颗" action:nil keyEquivalent:@""];
-    self.previousMenu = [[NSMenu alloc] initWithTitle:previous.title]; previous.submenu = self.previousMenu;
-    [self addChoiceMenusTo:menu];
-    self.pauseItem = [self addItem:@"旋转开关" action:@selector(togglePause:) toMenu:menu];
-    // Reads as a switch now, so the tick means spinning rather than stopped. The
-    // stored preference stays WallpaperPaused so existing choices survive.
-    self.pauseItem.state = self.paused ? NSControlStateValueOff : NSControlStateValueOn;
-    NSMenuItem *smart = [self addItem:@"智能暂停" action:@selector(toggleSmartPause:) toMenu:menu];
-    smart.state = [NSUserDefaults.standardUserDefaults boolForKey:SmartPauseDisabledKey] ? NSControlStateValueOff : NSControlStateValueOn;
-    [self addMotionMenusTo:menu];
-    NSMenuItem *wallpaper = [menu addItemWithTitle:@"导出静态壁纸" action:nil keyEquivalent:@""];
-    wallpaper.submenu = [[NSMenu alloc] initWithTitle:wallpaper.title];
-    NSMenuItem *export = [wallpaper.submenu addItemWithTitle:@"导出 PNG" action:nil keyEquivalent:@""];
-    self.exportMenu = [[NSMenu alloc] initWithTitle:export.title]; export.submenu = self.exportMenu;
-    [self addItem:ReloadWallpaperTitle action:@selector(reloadRenderers:) toMenu:menu];
-    AddMenuSection(menu, @"桌宠");
+    self.rethrowItem = [self addItem:@"重新抛" action:@selector(changePebble:) toMenu:menu];
+    self.previousItem = [self addItem:@"上一颗" action:@selector(previousPebble:) toMenu:menu];
+    self.rethrowMenu = [[NSMenu alloc] initWithTitle:self.rethrowItem.title];
+    self.previousMenu = [[NSMenu alloc] initWithTitle:self.previousItem.title];
+    [menu addItem:NSMenuItem.separatorItem];
+
+    NSMenu *mode = AddSubmenu(menu, @"显示模式");
+    self.dynamicModeItem = [self addItem:@"动态壁纸" action:@selector(resumeDynamicWallpaper:) toMenu:mode];
+    self.staticModeItem = [self addItem:@"静态壁纸（主屏幕 → 所有屏幕）" action:@selector(setStaticWallpaper:) toMenu:mode];
+    self.petOnlyModeItem = [self addItem:@"仅桌宠" action:@selector(enablePetOnlyMode:) toMenu:mode];
+
+    NSMenu *wallpaper = AddSubmenu(menu, @"壁纸选项");
+    [self addChoiceMenusTo:wallpaper];
+    [self addMotionMenusTo:wallpaper];
+    self.pauseItem = [self addItem:@"旋转开关" action:@selector(togglePause:) toMenu:wallpaper];
+    self.pauseItem.state = !self.paused;
+    NSMenuItem *smart = [self addItem:@"智能暂停" action:@selector(toggleSmartPause:) toMenu:wallpaper];
+    smart.state = ![NSUserDefaults.standardUserDefaults boolForKey:SmartPauseDisabledKey];
+    self.exportMenu = AddSubmenu(wallpaper, @"导出静态壁纸");
     [self configurePetMenu:menu];
-    AddMenuSection(menu, @"应用");
+    [menu addItem:NSMenuItem.separatorItem];
     NSMenuItem *settingsItem = [self addItem:@"设置…" action:@selector(showSettings:) toMenu:menu];
     settingsItem.keyEquivalent = @",";
 #if __has_include(<Sparkle/Sparkle.h>)

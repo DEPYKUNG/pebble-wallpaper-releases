@@ -4,14 +4,10 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
 
 @implementation PebbleApp (Pet)
 - (void)configurePetMenu:(NSMenu *)menu {
-    NSMenuItem *entry=[menu addItemWithTitle:@"桌宠控制" action:nil keyEquivalent:@""];
+    NSMenuItem *entry=[menu addItemWithTitle:@"桌宠" action:nil keyEquivalent:@""];
     NSMenu *petMenu=[NSMenu new];entry.submenu=petMenu;
     self.petEnabledItem=[self addItem:@"开启桌宠" action:@selector(togglePet:) toMenu:petMenu];
     self.petRoamingItem=[self addItem:@"自由活动" action:@selector(togglePetRoaming:) toMenu:petMenu];
-    NSMenuItem *size=[petMenu addItemWithTitle:@"桌宠大小" action:nil keyEquivalent:@""];size.submenu=[NSMenu new];
-    NSArray *titles=@[@"小",@"中",@"大"];
-    for (NSInteger i=0;i<3;i++){NSMenuItem *item=[self addItem:titles[i] action:@selector(selectPetSize:) toMenu:size.submenu];item.tag=i;}
-    [self addItem:@"同步当前石头" action:@selector(syncPetStone) toMenu:petMenu];
     [self addItem:@"收回右下角" action:@selector(summonPet:) toMenu:petMenu];
     [self addItem:@"打个水漂" action:@selector(skipPet:) toMenu:petMenu];
     [self addItem:@"说句话" action:@selector(sayPet:) toMenu:petMenu];
@@ -113,8 +109,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     self.petSkipLimitPicker.enabled=enabled&&skipping;
     self.petSkipButton.enabled=enabled&&skipping&&self.pet.stoneImage!=nil;
     self.petSayButton.enabled=enabled&&speech&&self.pet.stoneImage!=nil;
-    NSMenu *menu=self.petEnabledItem.menu;
-    for(NSMenuItem *item in menu.itemArray) if(item.submenu) for(NSMenuItem *choice in item.submenu.itemArray) choice.state=choice.tag==size;
+
 }
 - (NSView *)petSettingsGroup {
     self.petSwitch=[self switchOn:NO action:@selector(togglePet:)];

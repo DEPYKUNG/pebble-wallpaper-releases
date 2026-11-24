@@ -128,6 +128,12 @@
     self.dynamicModeItem.state = !staticMode && !self.petOnlyMode;
     self.staticModeItem.state = staticMode;
     self.petOnlyModeItem.state = self.petOnlyMode;
+    for (NSMenuItem *item in self.statusItem.menu.itemArray) {
+        if (item.submenu == self.petOnlyModeItem.menu) {
+            item.title = self.petOnlyMode ? @"显示模式 · 仅桌宠" : @"显示模式";
+            break;
+        }
+    }
     BOOL hideWallpaper = staticMode || self.petOnlyMode;
     NSMutableSet<NSNumber *> *connected = [NSMutableSet set];
     for (NSScreen *screen in NSScreen.screens) {
@@ -259,6 +265,7 @@
 }
 
 - (void)rebuildRethrowMenu {
+    [self configureScreenActionItems];
     [self.rethrowMenu removeAllItems]; [self.previousMenu removeAllItems]; [self.exportMenu removeAllItems];
     [self addItem:@"所有屏幕" action:@selector(changePebble:) toMenu:self.rethrowMenu];
     [self addItem:@"所有屏幕" action:@selector(previousPebble:) toMenu:self.previousMenu];

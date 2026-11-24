@@ -1,6 +1,60 @@
 #import "PebbleAppInternal.h"
 
+// AppKit tracks the submenu; this view supplies the primary mouse action.
+@interface PebbleRethrowMenuRow : NSView
+@property (weak) NSMenuItem *item;
+@end
+
+@implementation PebbleRethrowMenuRow
+- (void)drawRect:(NSRect)dirtyRect {
+    BOOL selected = self.item.isHighlighted;
+    if (selected) {
+        [NSColor.selectedContentBackgroundColor setFill];
+        [[NSBezierPath bezierPathWithRoundedRect:NSInsetRect(self.bounds, 4, 0)
+                                         xRadius:5 yRadius:5] fill];
+    }
+    NSDictionary *attributes = @{
+        NSFontAttributeName: [NSFont menuFontOfSize:0],
+        NSForegroundColorAttributeName: selected ? NSColor.alternateSelectedControlTextColor : NSColor.labelColor
+    };
+    NSString *title = self.item.title;
+    NSSize size = [title sizeWithAttributes:attributes];
+    [title drawAtPoint:NSMakePoint(14, (NSHeight(self.bounds)-size.height)/2) withAttributes:attributes];
+    [@"›" drawAtPoint:NSMakePoint(NSWidth(self.bounds)-20, (NSHeight(self.bounds)-size.height)/2)
+         withAttributes:attributes];
+}
+- (void)mouseDown:(NSEvent *)event {}
+- (void)mouseUp:(NSEvent *)event {
+    if (!NSPointInRect([self convertPoint:event.locationInWindow fromView:nil], self.bounds)) return;
+    NSMenuItem *item = self.item;
+    [item.menu cancelTracking];
+    [NSApp sendAction:item.action to:item.target from:item];
+}
+- (BOOL)accessibilityPerformPress {
+    [self.item.menu cancelTracking];
+    return [NSApp sendAction:self.item.action to:self.item.target from:self.item];
+}
+@end
+
 @implementation PebbleApp (Menu)
+
+- (void)configureScreenActionItems {
+    BOOL multiple = self.connectedDisplayIdentifiers.count > 1;
+    self.rethrowItem.submenu = multiple ? self.rethrowMenu : nil;
+    self.previousItem.submenu = multiple ? self.previousMenu : nil;
+    self.previousItem.action = multiple ? nil : @selector(previousPebble:);
+    if (multiple) {
+        PebbleRethrowMenuRow *row = [[PebbleRethrowMenuRow alloc] initWithFrame:NSMakeRect(0, 0, 145, 24)];
+        row.autoresizingMask = NSViewWidthSizable;
+        row.item = self.rethrowItem;
+        row.accessibilityElement = YES;
+        row.accessibilityRole = NSAccessibilityMenuItemRole;
+        row.accessibilityLabel = @"重新抛 · 所有屏幕";
+        self.rethrowItem.view = row;
+    } else {
+        self.rethrowItem.view = nil;
+    }
+}
 
 - (NSMenuItem *)addItem:(NSString *)title action:(SEL)action toMenu:(NSMenu *)menu {
     NSMenuItem *item = [menu addItemWithTitle:title action:action keyEquivalent:@""];
