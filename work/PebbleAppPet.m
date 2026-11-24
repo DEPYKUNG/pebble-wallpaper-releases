@@ -125,7 +125,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [self actionButton:@"收回右下角" action:@selector(summonPet:)]]];actions.spacing=8;
     NSView *card=[self cardWithRows:@[
         [self rowWithSymbol:@"smile" title:@"开启桌宠" subtitle:@"把当前石头带到窗口旁，点一下打招呼" control:self.petSwitch],
-        [self rowWithSymbol:@"rotate-cw" title:@"自由活动" subtitle:@"随机轻跳、录播客或睡觉；关闭后仍可手动互动" control:self.petRoamSwitch],
+        [self rowWithSymbol:@"rotate-cw" title:@"自由活动" subtitle:@"随机轻跳或表演小剧场；关闭后仍可手动互动" control:self.petRoamSwitch],
         [self rowWithSymbol:@"grid" title:@"桌宠大小" subtitle:nil control:self.petSizePicker],
         [self rowWithSymbol:@"repeat" title:@"带回身边" subtitle:@"同步所在屏幕的石头，或收回右下角" control:actions],
     ]];[self syncPetControls];return [self settingsGroup:@"石头桌宠" containing:card];
@@ -281,23 +281,36 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [pet beginDragAtPoint:wakePoint time:5];
         [pet endDragAtTime:5.01];
         if(pet.panel.contentView.accessibilityValue || pet.effects.message || pet.dragging)exit(21);
+        NSArray *outingTitles=@[@"露营",@"野炊",@"戴耳机"];
+        NSArray *outingValues=@[@"露营中",@"野炊中",@"戴着耳机"];
+        NSArray *outingFiles=@[@"pet-camp-preview.png",@"pet-cook-preview.png",@"pet-headphones-preview.png"];
+        for(NSUInteger i=0;i<outingTitles.count;i++){
+            NSMenuItem *item=[activities itemWithTitle:outingTitles[i]];
+            if(!item || ![NSApp sendAction:item.action to:item.target from:item] ||
+               ![pet.panel.contentView.accessibilityValue isEqual:outingValues[i]])exit(21);
+            NSBitmapImageRep *preview=[podcastView bitmapImageRepForCachingDisplayInRect:podcastView.bounds];
+            [podcastView cacheDisplayInRect:podcastView.bounds toBitmapImageRep:preview];
+            NSString *path=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:outingFiles[i]];
+            if(![[preview representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:path atomically:YES])exit(21);
+        }
+        [pet summon:nil];
         if(!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion && !NSProcessInfo.processInfo.lowPowerModeEnabled){
             pet.roaming=YES;
-            BOOL recorded=NO,slept=NO;
-            for(NSUInteger attempt=0;attempt<80 && !(recorded && slept);attempt++){
+            NSMutableSet *seen=[NSMutableSet set];
+            for(NSUInteger attempt=0;attempt<128 && seen.count<5;attempt++){
                 [pet summon:nil];[pet setValue:@0 forKey:@"nextWander"];
                 [NSApp sendAction:NSSelectorFromString(@"tick:") to:pet from:nil];
                 id value=pet.panel.contentView.accessibilityValue;
-                recorded|=[value isEqual:@"录播客中"];slept|=[value isEqual:@"睡觉中"];
+                if(value)[seen addObject:value];
                 if(value && !pet.casualSpeech && pet.effects.message)exit(21);
                 pet.roaming=NO;
                 if(pet.panel.contentView.accessibilityValue)exit(21);
                 pet.roaming=YES;
             }
-            if(!recorded || !slept)exit(21);
+            if(seen.count!=5)exit(21);
         }
         [pet setSuspended:YES];
-        NSLog(@"Manual and roaming podcast/sleep, quote settings and click-to-wake verified.");
+        NSLog(@"Manual and roaming pet activities, quote settings and click-to-wake verified.");
         pet.skippingEnabled=NO;pet.skipLimit=7;pet.speechEnabled=NO;pet.casualSpeech=YES;
         PebblePetController *restored=[[PebblePetController alloc] initWithDefaults:defaults];
         if(restored.skippingEnabled || restored.speechEnabled || !restored.casualSpeech || restored.skipLimit!=7)exit(20);
