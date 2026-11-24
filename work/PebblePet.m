@@ -50,6 +50,9 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property PebblePetActivity activity;
 @property NSTimeInterval activityStart,activityEnd;
 @property BOOL automaticActivity,justWoke;
+@property (strong) NSPanel *glassPanel;
+@property NSPoint smashOrigin,smashTarget;
+@property NSTimeInterval smashFlight;
 - (void)startActivity:(PebblePetActivity)activity automatic:(BOOL)automatic at:(NSTimeInterval)now;
 - (void)endActivityAt:(NSTimeInterval)now;
 - (void)recordPodcast:(id)sender;
@@ -229,38 +232,42 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [NSGraphicsContext restoreGraphicsState];
 }
 
-static CGFloat PebbleBoxHeight(double elapsed) {
-    CGFloat crush=MAX(0,MIN(1,(elapsed-.55)/.14));
-    return 22-17*crush;
-}
-
-static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
-    CGFloat height=PebbleBoxHeight(elapsed);
-    CGFloat width=MIN(44,MAX(24,NSWidth(stone)*.43));
-    CGFloat x=NSMidX(stone)-width/2, y=NSMinY(stone)-2;
-    NSColor *paper=[NSColor colorWithSRGBRed:.78 green:.65 blue:.47 alpha:1];
-    NSColor *fold=[NSColor colorWithSRGBRed:.48 green:.34 blue:.23 alpha:1];
-    [[NSColor colorWithWhite:.17 alpha:.17] setFill];
-    [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(x-4,y-3,width+8,7)] fill];
-    FillPetProp([NSBezierPath bezierPathWithRoundedRect:NSMakeRect(x,y,width,height) xRadius:2 yRadius:2],paper,fold);
-    [[NSColor colorWithSRGBRed:.88 green:.76 blue:.57 alpha:.8] setFill];
-    NSRectFillUsingOperation(NSMakeRect(NSMidX(stone)-3,y+1,6,MAX(1,height-2)),NSCompositingOperationSourceOver);
-    [fold setStroke];
-    NSBezierPath *crease=[NSBezierPath bezierPath];
-    [crease moveToPoint:NSMakePoint(x+2,y+height*.58)];
-    [crease lineToPoint:NSMakePoint(x+width-2,y+height*.58)];
-    crease.lineWidth=.7;
-    [crease stroke];
-    double burst=(elapsed-.55)/.35;
-    if (!motion || burst<0 || burst>=1) return;
-    for (NSInteger index=-2;index<=2;index++) {
-        if (!index) continue;
-        [[paper colorWithAlphaComponent:1-burst] setFill];
-        CGFloat dx=index*(width*.22+burst*8);
-        CGFloat dy=sin(burst*M_PI)*(5+abs((int)index)*3);
-        NSRectFillUsingOperation(NSMakeRect(NSMidX(stone)+dx,y+height+dy,3,2),NSCompositingOperationSourceOver);
+@interface PebbleGlassView : NSView
+@property CGFloat impactProgress;
+@end
+@implementation PebbleGlassView
+- (void)drawRect:(NSRect)dirtyRect {
+    NSRect pane=NSInsetRect(self.bounds,17,9);
+    CGFloat progress=self.impactProgress;
+    NSColor *glass=[NSColor colorWithSRGBRed:.70 green:.87 blue:.92 alpha:.42];
+    NSColor *rim=[NSColor colorWithSRGBRed:.39 green:.66 blue:.74 alpha:.92];
+    if (progress<0) {
+        NSBezierPath *sheet=[NSBezierPath bezierPathWithRoundedRect:pane xRadius:4 yRadius:4];
+        [glass setFill];[sheet fill];[rim setStroke];sheet.lineWidth=1.6;[sheet stroke];
+        NSBezierPath *glint=[NSBezierPath bezierPath];
+        [glint moveToPoint:NSMakePoint(NSMinX(pane)+5,NSMaxY(pane)-7)];
+        [glint lineToPoint:NSMakePoint(NSMaxX(pane)-4,NSMaxY(pane)-22)];
+        [[NSColor whiteColor] setStroke];glint.lineWidth=1.5;[glint stroke];
+        return;
+    }
+    NSPoint hit=NSMakePoint(NSMidX(pane),NSMidY(pane));
+    NSPoint rimPoints[]={NSMakePoint(NSMinX(pane),NSMinY(pane)),NSMakePoint(NSMaxX(pane),NSMinY(pane)),
+        NSMakePoint(NSMaxX(pane),NSMidY(pane)-15),NSMakePoint(NSMaxX(pane),NSMaxY(pane)),
+        NSMakePoint(NSMinX(pane),NSMaxY(pane)),NSMakePoint(NSMinX(pane),NSMidY(pane)+15)};
+    for (NSUInteger index=0;index<6;index++) {
+        NSPoint a=rimPoints[index],b=rimPoints[(index+1)%6];
+        CGFloat dx=(a.x+b.x-2*hit.x)*progress*.55;
+        CGFloat dy=(a.y+b.y-2*hit.y)*progress*.16-9*progress*progress;
+        NSBezierPath *shard=[NSBezierPath bezierPath];
+        [shard moveToPoint:NSMakePoint(hit.x+dx,hit.y+dy)];
+        [shard lineToPoint:NSMakePoint(a.x+dx,a.y+dy)];
+        [shard lineToPoint:NSMakePoint(b.x+dx,b.y+dy)];
+        [shard closePath];
+        [[glass colorWithAlphaComponent:.62*(1-progress*.55)] setFill];[shard fill];
+        [[rim colorWithAlphaComponent:.95*(1-progress*.55)] setStroke];shard.lineWidth=1;[shard stroke];
     }
 }
+@end
 
 @implementation PebblePetView
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
@@ -270,14 +277,6 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
     if (!owner.stoneImage) return;
     NSRect art=[owner artRect];
     NSRect stone=PebbleStoneDrawRect(art);
-    if (owner.activity==PebblePetActivitySmash) {
-        BOOL motion=!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-        double elapsed=motion?MAX(0,CACurrentMediaTime()-owner.activityStart):1;
-        DrawPebbleBox(stone,elapsed,motion);
-        double flight=MIN(1,elapsed/.55);
-        CGFloat lift=motion?26*4*flight*(1-flight):0;
-        stone.origin.y+=PebbleBoxHeight(elapsed)+lift;
-    }
     [NSGraphicsContext saveGraphicsState];
     NSShadow *shadow=[NSShadow new];shadow.shadowColor=[NSColor colorWithWhite:0 alpha:.22];
     shadow.shadowBlurRadius=8;shadow.shadowOffset=NSMakeSize(0,-3);[shadow set];
@@ -453,7 +452,35 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
     if(self.interactionEnded)self.interactionEnded();
 }
 - (NSRect)effectAnchor {return NSOffsetRect(self.artRect,NSMinX(self.panel.frame),NSMinY(self.panel.frame));}
+- (void)placeGlassOnOppositeEdge {
+    NSScreen *screen=self.panel.screen ?: NSScreen.screens.firstObject;
+    if (!screen) return;
+    NSRect visible=screen.visibleFrame, frame=self.panel.frame;
+    NSRect stone=PebbleStoneDrawRect(self.artRect);
+    BOOL toRight=NSMidX(frame)<=NSMidX(visible);
+    const CGFloat width=64,height=102;
+    CGFloat x=toRight?NSMaxX(visible)-width:NSMinX(visible);
+    CGFloat y=NSMidY(stone)+NSMinY(frame)-height/2;
+    NSRect prop=PebblePetConstrainFrame(NSMakeRect(x,y,width,height),visible);
+    self.smashOrigin=frame.origin;
+    CGFloat contactX=toRight?NSMinX(prop)+17:NSMaxX(prop)-17;
+    frame.origin.x=contactX-(toRight?NSMaxX(stone):NSMinX(stone));
+    frame.origin.y=NSMidY(prop)-NSMidY(stone);
+    self.smashTarget=PebblePetConstrainFrame(frame,visible).origin;
+    self.smashFlight=MAX(.65,MIN(1.45,fabs(self.smashTarget.x-self.smashOrigin.x)/850));
+    NSPanel *panel=[[PebblePetPanel alloc] initWithContentRect:prop styleMask:NSWindowStyleMaskBorderless|NSWindowStyleMaskNonactivatingPanel backing:NSBackingStoreBuffered defer:NO];
+    panel.opaque=NO;panel.backgroundColor=NSColor.clearColor;panel.hasShadow=NO;
+    panel.ignoresMouseEvents=YES;panel.releasedWhenClosed=NO;panel.hidesOnDeactivate=NO;
+    panel.level=self.panel.level+1;panel.collectionBehavior=self.panel.collectionBehavior;
+    PebbleGlassView *view=[[PebbleGlassView alloc] initWithFrame:NSMakeRect(0,0,width,height)];
+    view.impactProgress=-1;
+    panel.contentView=view;
+    self.glassPanel=panel;
+    [panel orderFrontRegardless];
+}
 - (void)endActivityAt:(NSTimeInterval)now {
+    [self.glassPanel close];
+    self.glassPanel=nil;
     self.activity=PebblePetActivityNone;
     self.automaticActivity=NO;
     self.petView.accessibilityValue=nil;
@@ -469,9 +496,10 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
     self.activityStart=now;
     self.activityEnd=now+(activity==PebblePetActivitySleep?18:(activity==PebblePetActivitySmash?4:15));
     self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,YES};
-    NSArray *activityNames=@[@"", @"录播客中", @"睡觉中", @"露营中", @"野炊中", @"戴着耳机", @"砸纸箱中"];
+    NSArray *activityNames=@[@"", @"录播客中", @"睡觉中", @"露营中", @"野炊中", @"戴着耳机", @"砸玻璃中"];
     self.petView.accessibilityValue=activityNames[activity];
     self.petView.needsDisplay=YES;
+    if (activity==PebblePetActivitySmash) [self placeGlassOnOppositeEdge];
     if (automatic && !self.casualSpeech) return;
     if (activity==PebblePetActivityPodcast) [self say:nil];
     if (activity==PebblePetActivityCook) [self showMessage:@"开饭啦。" priority:PebblePetMessageInteraction duration:5];
@@ -491,7 +519,7 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
 - (void)wearHeadphones:(id)sender {
     [self startActivity:PebblePetActivityHeadphones automatic:NO at:CACurrentMediaTime()];
 }
-- (void)smashBox:(id)sender {
+- (void)smashGlass:(id)sender {
     [self startActivity:PebblePetActivitySmash automatic:NO at:CACurrentMediaTime()];
 }
 - (void)cancelPlay {
@@ -568,12 +596,6 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
     p=NSMakePoint((x*cos(angle)-y*sin(angle))*self.stretch+NSMidX(art),
                   (x*sin(angle)+y*cos(angle))/self.stretch+NSMidY(art));
     art=PebbleStoneDrawRect(art);
-    if (self.activity==PebblePetActivitySmash) {
-        BOOL motion=!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-        double elapsed=motion?MAX(0,CACurrentMediaTime()-self.activityStart):1;
-        double flight=MIN(1,elapsed/.55);
-        art.origin.y+=PebbleBoxHeight(elapsed)+(motion?104*flight*(1-flight):0);
-    }
     if (!NSPointInRect(p,art)) return NO;
     NSInteger px=MAX(0,MIN(self.bitmap.pixelsWide-1,(p.x-NSMinX(art))/NSWidth(art)*self.bitmap.pixelsWide));
     NSInteger py=MAX(0,MIN(self.bitmap.pixelsHigh-1,(1-(p.y-NSMinY(art))/NSHeight(art))*self.bitmap.pixelsHigh));
@@ -617,6 +639,19 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
         PebblePetBody body=self.body;
         if (self.activity!=PebblePetActivityNone) {
             CGFloat elapsed=now-self.activityStart;
+            if (self.activity==PebblePetActivitySmash && self.glassPanel) {
+                double progress=MIN(1,MAX(0,elapsed/self.smashFlight));
+                PebbleGlassView *glass=(PebbleGlassView *)self.glassPanel.contentView;
+                glass.impactProgress=progress<1?-1:MIN(1,(elapsed-self.smashFlight)/.65);
+                glass.needsDisplay=YES;
+                if (elapsed>self.smashFlight+.9) [self.glassPanel orderOut:nil];
+                if (!reduced) {
+                    double travel=progress*progress*(3-2*progress);
+                    NSPoint point=NSMakePoint(self.smashOrigin.x+(self.smashTarget.x-self.smashOrigin.x)*travel,
+                        self.smashOrigin.y+(self.smashTarget.y-self.smashOrigin.y)*travel+28*4*progress*(1-progress));
+                    body.position=PebblePetConstrainFrame((NSRect){point,self.panel.frame.size},visible).origin;
+                }
+            }
             CGFloat pose=0;
             switch(self.activity) {
                 case PebblePetActivitySleep: pose=-20;break;
@@ -757,8 +792,8 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
     NSMenuItem *sleep=[activities.submenu addItemWithTitle:@"睡觉" action:@selector(takeNap:) keyEquivalent:@""];
     podcast.target=self;
     sleep.target=self;
-    NSArray *outings=@[@"露营",@"野炊",@"戴耳机",@"砸纸箱"];
-    SEL outingActions[]={@selector(camp:),@selector(cook:),@selector(wearHeadphones:),@selector(smashBox:)};
+    NSArray *outings=@[@"露营",@"野炊",@"戴耳机",@"砸玻璃"];
+    SEL outingActions[]={@selector(camp:),@selector(cook:),@selector(wearHeadphones:),@selector(smashGlass:)};
     for (NSUInteger index=0;index<outings.count;index++) {
         NSMenuItem *item=[activities.submenu addItemWithTitle:outings[index] action:outingActions[index] keyEquivalent:@""];
         item.target=self;
@@ -776,5 +811,5 @@ static void DrawPebbleBox(NSRect stone, double elapsed, BOOL motion) {
     [self savePlacement];[self cancelPlay];self.invalidated=YES;[self.timer invalidate];self.timer=nil;[self.panel close];
     self.syncStone=nil;self.dismissPet=nil;self.openSettings=nil;self.interactionEnded=nil;
 }
-- (void)dealloc {[self.effects clear];[self.timer invalidate];[self.panel orderOut:nil];}
+- (void)dealloc {[self.glassPanel close];[self.effects clear];[self.timer invalidate];[self.panel orderOut:nil];}
 @end

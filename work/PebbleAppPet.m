@@ -281,13 +281,30 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [pet beginDragAtPoint:wakePoint time:5];
         [pet endDragAtTime:5.01];
         if(pet.panel.contentView.accessibilityValue || pet.effects.message || pet.dragging)exit(21);
-        NSArray *outingTitles=@[@"露营",@"野炊",@"戴耳机",@"砸纸箱"];
-        NSArray *outingValues=@[@"露营中",@"野炊中",@"戴着耳机",@"砸纸箱中"];
+        NSArray *outingTitles=@[@"露营",@"野炊",@"戴耳机",@"砸玻璃"];
+        NSArray *outingValues=@[@"露营中",@"野炊中",@"戴着耳机",@"砸玻璃中"];
         NSArray *outingFiles=@[@"pet-camp-preview.png",@"pet-cook-preview.png",@"pet-headphones-preview.png",@"pet-smash-preview.png"];
         for(NSUInteger i=0;i<outingTitles.count;i++){
             NSMenuItem *item=[activities itemWithTitle:outingTitles[i]];
             if(!item || ![NSApp sendAction:item.action to:item.target from:item] ||
                ![pet.panel.contentView.accessibilityValue isEqual:outingValues[i]])exit(21);
+            if ([outingTitles[i] isEqual:@"砸玻璃"]) {
+                NSPanel *glass=[pet valueForKey:@"glassPanel"];
+                NSScreen *screen=pet.panel.screen ?: NSScreen.screens.firstObject;
+                if (!glass || !glass.isVisible || !glass.ignoresMouseEvents || !screen) exit(21);
+                NSRect visible=screen.visibleFrame;
+                BOOL expectedRight=NSMidX(pet.panel.frame)<=NSMidX(visible);
+                CGFloat edge=expectedRight?NSMaxX(glass.frame):NSMinX(glass.frame);
+                if (fabs(edge-(expectedRight?NSMaxX(visible):NSMinX(visible)))>1) exit(21);
+                double started=[[pet valueForKey:@"activityStart"] doubleValue];
+                double flight=[[pet valueForKey:@"smashFlight"] doubleValue];
+                [pet setValue:@(started-flight-.1) forKey:@"activityStart"];
+                [NSApp sendAction:NSSelectorFromString(@"tick:") to:pet from:nil];
+                if ([[glass.contentView valueForKey:@"impactProgress"] doubleValue]<0) exit(21);
+                [pet summon:nil];
+                if ([pet valueForKey:@"glassPanel"] || glass.isVisible) exit(21);
+                NSLog(@"Glass opposite-edge placement, impact and cancellation verified.");
+            }
             NSBitmapImageRep *preview=[podcastView bitmapImageRepForCachingDisplayInRect:podcastView.bounds];
             [podcastView cacheDisplayInRect:podcastView.bounds toBitmapImageRep:preview];
             NSString *path=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:outingFiles[i]];
