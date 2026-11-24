@@ -11,7 +11,8 @@ typedef struct {
     double waterline;
     double hop;
     NSUInteger bounces,limit;
-    BOOL active;
+    BOOL active,sliding;
+    NSPoint impactPosition;
 } PebblePetSkip;
 FOUNDATION_EXPORT BOOL PebblePetShouldSkip(NSPoint velocity);
 FOUNDATION_EXPORT PebblePetSkip PebblePetBeginSkip(PebblePetBody body, NSRect visible, NSSize size, NSUInteger limit);

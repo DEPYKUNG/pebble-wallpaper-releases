@@ -47,12 +47,18 @@ int main(){@autoreleasepool{
      skip=PebblePetAdvanceSkip(skip,water,size,1.0/60);
      CHECK(NSContainsRect(water,(NSRect){skip.body.position,size}));
      CHECK(skip.bounces>=last&&skip.bounces<=limit.unsignedIntegerValue);last=skip.bounces;
-     CHECK(skip.body.position.y>=skip.waterline-.01);CHECK(skip.body.position.y<skip.waterline+60);
+     CHECK(skip.body.position.y>=skip.waterline-.01);
+     if(skip.sliding)CHECK(skip.body.position.y==skip.waterline && skip.body.velocity.y==0);
    }
    CHECK(!skip.active && skip.bounces==limit.unsignedIntegerValue);CHECK(skip.body.position.x-firstX>200);
+   CHECK(skip.sliding && skip.body.resting && skip.body.position.y==NSMinY(water));
    body=skip.body;for(int i=0;i<1000;i++)body=PebblePetAdvance(body,water,size,.033);
    CHECK(body.resting&&body.position.y==NSMinY(water));
  }
+ PebblePetSkip high=PebblePetBeginSkip((PebblePetBody){NSMakePoint(-1700,330),NSMakePoint(500,-110),NO},water,size,3);
+ CHECK(high.body.velocity.y==-110 && high.waterline==NSMinY(water));
+ for(int i=0;i<500 && high.bounces==0;i++)high=PebblePetAdvanceSkip(high,water,size,.016);
+ CHECK(high.bounces==1 && high.impactPosition.y==NSMinY(water) && high.impactPosition.x>-1550);
  PebblePetSkip edge=PebblePetBeginSkip((PebblePetBody){NSMakePoint(NSMaxX(visible)-size.width,100),NSMakePoint(900,0),NO},visible,size,5);
  edge=PebblePetAdvanceSkip(edge,visible,size,.05);CHECK(!edge.active&&edge.bounces==0);
  for(NSValue *point in @[[NSValue valueWithPoint:NSMakePoint(-1920,30)],[NSValue valueWithPoint:NSMakePoint(-220,870)]]){

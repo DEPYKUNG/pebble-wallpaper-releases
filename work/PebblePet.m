@@ -528,6 +528,30 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSInteger py=MAX(0,MIN(self.bitmap.pixelsHigh-1,(1-(p.y-NSMinY(art))/NSHeight(art))*self.bitmap.pixelsHigh));
     return [self.bitmap colorAtX:px y:py].alphaComponent>.08;
 }
+- (NSPoint)stoneContactAtPanelOrigin:(NSPoint)origin {
+    NSRect art=self.artRect, stone=PebbleStoneDrawRect(art);
+    NSBitmapImageRep *bitmap=self.bitmap;
+    CGFloat radians=self.angle*M_PI/180;
+    CGFloat sine=sin(radians),cosine=cos(radians);
+    NSPoint center=NSMakePoint(NSMidX(art),NSMidY(art));
+    NSPoint contact=NSMakePoint(NSMidX(stone),NSMinY(stone));
+    CGFloat lowest=CGFLOAT_MAX;
+    for (NSInteger x=0;x<bitmap.pixelsWide;x+=2) {
+        for (NSInteger y=bitmap.pixelsHigh-1;y>=0;y--) {
+            if ([bitmap colorAtX:x y:y].alphaComponent<.5) continue;
+            CGFloat dx=(NSMinX(stone)+NSWidth(stone)*(x+.5)/bitmap.pixelsWide-center.x)/self.stretch;
+            CGFloat dy=(NSMinY(stone)+NSHeight(stone)*(1-(y+.5)/bitmap.pixelsHigh)-center.y)*self.stretch;
+            CGFloat pointY=center.y+dx*sine+dy*cosine;
+            if (pointY<lowest) {
+                lowest=pointY;
+                contact=NSMakePoint(center.x+dx*cosine-dy*sine,pointY);
+            }
+            break;
+        }
+    }
+    return NSMakePoint(origin.x+contact.x,origin.y+contact.y);
+}
+
 - (void)tick:(NSTimer *)timer {
     double now=CACurrentMediaTime(),dt=MIN(.05,MAX(0,now-self.lastTick));self.lastTick=now;
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion||NSProcessInfo.processInfo.lowPowerModeEnabled;
@@ -559,7 +583,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             body=self.skipState.body;
             if(self.skipState.bounces>previous) {
                 self.impactUntil=now+.11;
-                [self.effects addRippleAt:NSMakePoint(body.position.x+NSWidth(self.panel.frame)/2,self.skipState.waterline+26) color:self.stoneColor];
+                [self.effects addRippleAt:[self stoneContactAtPanelOrigin:self.skipState.impactPosition] color:self.stoneColor];
             }
             if(!self.skipState.active){self.skipEnding=YES;self.finishedSkips=self.skipState.bounces;}
         } else {
