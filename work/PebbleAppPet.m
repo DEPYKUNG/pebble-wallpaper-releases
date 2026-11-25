@@ -34,6 +34,10 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             [app storeFavoriteStone:app.petStoneSnapshot source:app.pet.skippedWithCurrentStone ? @"skip" : @"pet"];
             [app.pet showMessage:@"已收藏这颗石头。" priority:PebblePetMessageInteraction duration:4];
         };
+        self.pet.earnBadge = ^(NSString *badge) {
+            PebbleApp *app = weakSelf;
+            if (!app.petPreview) [app earnStoneBadge:badge forStone:app.petStoneSnapshot];
+        };
         self.pet.dismissPet=^{[weakSelf togglePet:nil];};
         self.pet.openSettings=^{[weakSelf showPetSettings:nil];};
         self.pet.interactionEnded=^{
@@ -81,13 +85,15 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             if (![result isKindOfClass:NSDictionary.class]) return;
             id encoded=result[@"png"];
             NSData *data=[encoded isKindOfClass:NSString.class]?[[NSData alloc] initWithBase64EncodedString:encoded options:0]:nil;
-            if ([pet setStonePNG:data]) {
-                NSDictionary *stone = PebbleNormalizeStone(result[@"stone"], self.stoneTextures);
-                if (![PebbleStoneIdentity(stone) isEqual:PebbleStoneIdentity(self.petStoneSnapshot)])
-                    pet.skippedWithCurrentStone = NO;
-                self.petStoneSnapshot = stone;
+            NSDictionary *previous = self.petStoneSnapshot;
+            NSDictionary *stone = PebbleNormalizeStone(result[@"stone"], self.stoneTextures);
+            self.petStoneSnapshot = stone;
+            if (![pet setStonePNG:data]) {
+                self.petStoneSnapshot = previous;
+                NSLog(@"Desktop pet sprite unavailable; keeping the last valid image.");
+            } else if (![PebbleStoneIdentity(stone) isEqual:PebbleStoneIdentity(previous)]) {
+                pet.skippedWithCurrentStone = NO;
             }
-            else NSLog(@"Desktop pet sprite unavailable; keeping the last valid image.");
             [self syncPetControls];
             if (self.petPreview) {
                 for(NSWindow *window in self.desktopWindows.allValues)[window orderOut:nil];
@@ -245,6 +251,8 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         NSString *suite=[@"app.painted-pebble.petverification." stringByAppendingString:NSUUID.UUID.UUIDString];
         NSUserDefaults *defaults=[[NSUserDefaults alloc] initWithSuiteName:suite];
         PebblePetController *pet=[[PebblePetController alloc] initWithDefaults:defaults];
+        NSMutableSet *earnedBadges = [NSMutableSet set];
+        pet.earnBadge = ^(NSString *badge) { [earnedBadges addObject:badge]; };
         [pet setSuspended:YES];
         if(![pet setStonePNG:png] || pet.panel.opaque || pet.panel.canBecomeKeyWindow || pet.panel.isVisible)exit(18);
         BOOL hit=NO,miss=NO;
@@ -283,7 +291,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             [liveBubble cacheDisplayInRect:liveBubble.bounds toBitmapImageRep:livePNG];
             NSString *livePath=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"pet-skipping-bubble.png"];
             if(![[livePNG representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:livePath atomically:YES])exit(20);
-            if ([defaults integerForKey:@"PetBestSkipCount"] <= 0 ||
+            if (![earnedBadges containsObject:@"skip"] || [defaults integerForKey:@"PetBestSkipCount"] <= 0 ||
                 [defaults integerForKey:@"PetBestSkipDistance"] <= 0 ||
                 ![pet.effects.message containsString:@"新纪录"]) exit(20);
             NSLog(@"Live timer skipping, visible ripples, settling and completion speech verified: %@",pet.effects.message);
@@ -305,7 +313,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         [NSApp sendAction:NSSelectorFromString(@"tick:") to:pet from:nil];
         if ([pet valueForKey:@"focusDeadline"] || ![pet.effects.message hasPrefix:@"专注结束"]) exit(21);
         NSButton *rest = [pet.effects.bubblePanel.contentView valueForKey:@"restButton"];
-        if (rest.hidden) exit(21);
+        if (rest.hidden || ![earnedBadges containsObject:@"focus"]) exit(21);
         [rest performClick:nil];
         NSDate *breakDeadline = [pet valueForKey:@"focusDeadline"];
         if (breakDeadline.timeIntervalSinceNow < 295 ||
@@ -387,7 +395,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             if (i == 0) {
                 SEL toggle = NSSelectorFromString(@"toggleCampLamp");
                 [NSApp sendAction:toggle to:pet from:nil];
-                if (![[pet valueForKey:@"campLampOn"] boolValue]) exit(21);
+                if (![[pet valueForKey:@"campLampOn"] boolValue] || ![earnedBadges containsObject:@"camp"]) exit(21);
                 [NSApp sendAction:toggle to:pet from:nil];
                 if ([[pet valueForKey:@"campLampOn"] boolValue]) exit(21);
             }

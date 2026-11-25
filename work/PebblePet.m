@@ -448,6 +448,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
 
 - (void)toggleCampLamp {
     self.campLampOn = !self.campLampOn;
+    if (self.campLampOn && self.earnBadge) self.earnBadge(@"camp");
     self.activityEnd = CACurrentMediaTime() + 15;
     self.petView.needsDisplay = YES;
 }
@@ -698,6 +699,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     if(!self.dragging && !self.menuOpen) {
         if (self.focusDeadline && self.focusDeadline.timeIntervalSinceNow <= 0) {
             BOOL finishedBreak = self.takingFocusBreak;
+            if (!finishedBreak && self.earnBadge) self.earnBadge(@"focus");
             self.focusDeadline = nil;
             [self.defaults removeObjectForKey:@"PetFocusSession"];
             self.takingFocusBreak = NO;
@@ -771,6 +773,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
             NSInteger bestDistance = [self.defaults integerForKey:@"PetBestSkipDistance"];
             BOOL record = count && ((NSInteger)count > bestCount || distance > bestDistance);
             if (record) {
+                if (self.earnBadge) self.earnBadge(@"skip");
                 [self.defaults setInteger:MAX(bestCount, (NSInteger)count) forKey:@"PetBestSkipCount"];
                 [self.defaults setInteger:MAX(bestDistance, distance) forKey:@"PetBestSkipDistance"];
             }
