@@ -43,7 +43,7 @@
     NSStackView *list = [NSStackView stackViewWithViews:@[]];
     list.orientation = NSUserInterfaceLayoutOrientationVertical;
     list.alignment = NSLayoutAttributeLeading;
-    list.spacing = 5;
+    list.spacing = 9;
     list.edgeInsets = NSEdgeInsetsMake(12, 10, 12, 10);
     list.translatesAutoresizingMaskIntoConstraints = NO;
     [sections enumerateObjectsUsingBlock:^(NSArray *section, NSUInteger index, BOOL *stop) {
@@ -174,13 +174,14 @@
         NSButton *choice = [NSButton buttonWithTitle:BackgroundLabels[index] image:thumbnail
                                             target:self action:@selector(selectBackground:)];
         [choice setButtonType:NSButtonTypePushOnPushOff];
-        choice.bezelStyle = NSBezelStyleRegularSquare;
+        choice.bordered = NO;
+        choice.accessibilityLabel = BackgroundLabels[index];
         choice.imagePosition = NSImageAbove;
         choice.imageScaling = NSImageScaleNone;
         choice.tag = index;
         choice.state = [key isEqualToString:self.backgroundPreset] ? NSControlStateValueOn : NSControlStateValueOff;
         if (choice.state == NSControlStateValueOn) choice.title = [choice.title stringByAppendingString:@" ✓"];
-        [choice.heightAnchor constraintEqualToConstant:68].active = YES;
+        [choice.heightAnchor constraintEqualToConstant:64].active = YES;
         [choices addArrangedSubview:choice];
         [self.backgroundButtons addObject:choice];
     }
