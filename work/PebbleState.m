@@ -68,6 +68,8 @@ NSArray *PebbleNormalizeFavorites(id value, NSArray<NSString *> *textures) {
             entry[@"collectedAt"] = candidate[@"collectedAt"];
         if ([@[@"wallpaper", @"rethrow", @"pet", @"skip"] containsObject:candidate[@"collectionSource"] ?: @""])
             entry[@"collectionSource"] = candidate[@"collectionSource"];
+        if ([candidate[@"note"] isKindOfClass:NSString.class] && [candidate[@"note"] length] <= 240)
+            entry[@"note"] = candidate[@"note"];
         [identities addObject:identity];
         [result addObject:entry];
     }

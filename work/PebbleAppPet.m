@@ -318,6 +318,19 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         NSDate *restarted = [pet valueForKey:@"focusDeadline"];
         if (restarted.timeIntervalSinceNow < 1495) exit(21);
         [NSApp sendAction:focus.action to:focus.target from:focus];
+        NSMenu *durationMenu = [[[pet valueForKey:@"petMenu"] itemWithTitle:@"选择专注时长"] submenu];
+        NSMenuItem *duration = [durationMenu itemWithTitle:@"45 分钟"];
+        if (!duration || ![NSApp sendAction:duration.action to:duration.target from:duration]) exit(21);
+        NSDate *savedDeadline = [pet valueForKey:@"focusDeadline"];
+        PebblePetController *resumed = [[PebblePetController alloc] initWithDefaults:defaults];
+        if (savedDeadline.timeIntervalSinceNow < 2695 ||
+            ![[resumed valueForKey:@"focusDeadline"] isEqual:savedDeadline]) exit(21);
+        NSMenuItem *resumedFocus = [[resumed valueForKey:@"petMenu"] itemArray].firstObject;
+        if (![resumedFocus.title hasPrefix:@"结束专注"]) exit(21);
+        [resumed invalidate];
+        [NSApp sendAction:focus.action to:focus.target from:focus];
+        NSMenu *recentMenu = [[[pet valueForKey:@"petMenu"] itemWithTitle:@"选择专注时长"] submenu];
+        if (recentMenu.itemArray.firstObject.tag != 45 || [defaults objectForKey:@"PetFocusSession"]) exit(21);
         __block BOOL collected = NO;
         pet.collectStone = ^{ collected = YES; };
         NSMenuItem *collect = [[pet valueForKey:@"petMenu"] itemWithTitle:@"收藏这颗"];
@@ -335,6 +348,12 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if (!replay.enabled || ![NSApp sendAction:replay.action to:replay.target from:replay] ||
             ![pet.effects.message isEqualToString:@"重读测试"] ||
             ![[[pet.effects.bubblePanel.contentView valueForKey:@"episodeURL"] absoluteString] isEqualToString:episodeLink]) exit(21);
+        NSMenuItem *favorite = [[pet valueForKey:@"petMenu"] itemWithTitle:@"收藏上句"];
+        if (!favorite.enabled || ![NSApp sendAction:favorite.action to:favorite.target from:favorite]) exit(21);
+        [NSApp sendAction:favorite.action to:favorite.target from:favorite];
+        NSArray *savedQuotes = [defaults arrayForKey:@"PetFavoriteQuotes"];
+        if (savedQuotes.count != 1 || ![savedQuotes.firstObject[@"text"] isEqual:@"重读测试"] ||
+            ![savedQuotes.firstObject[@"episode"] isEqual:episodeLink]) exit(21);
         [pet setValue:originalQuotes forKey:@"quotes"];
         [pet setValue:@(NSNotFound) forKey:@"lastQuoteIndex"];
         [pet.effects clear];

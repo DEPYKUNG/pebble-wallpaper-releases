@@ -526,7 +526,89 @@
     return toggle;
 }
 
+- (void)editStoneNote:(NSButton *)sender {
+    if ((NSUInteger)sender.tag >= self.favorites.count) return;
+    NSDictionary *identity = PebbleStoneIdentity(self.favorites[sender.tag]);
+    NSAlert *alert = [NSAlert new];
+    alert.messageText = @"石头日记";
+    alert.informativeText = @"给这颗石头留一句话。留空即可清除备注。";
+    [alert addButtonWithTitle:@"保存"];
+    [alert addButtonWithTitle:@"取消"];
+    NSTextField *field = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,270,24)];
+    field.stringValue = self.favorites[sender.tag][@"note"] ?: @"";
+    field.placeholderString = @"例如：搬到新家那天捡到的";
+    alert.accessoryView = field;
+    alert.window.initialFirstResponder = field;
+    [alert beginSheetModalForWindow:self.settings completionHandler:^(NSModalResponse response) {
+        if (response != NSAlertFirstButtonReturn) return;
+        NSUInteger index = [self.favorites indexOfObjectPassingTest:^BOOL(NSDictionary *entry, NSUInteger idx, BOOL *stop) {
+            return [PebbleStoneIdentity(entry) isEqual:identity];
+        }];
+        if (index == NSNotFound) return;
+        NSString *note = [field.stringValue stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        if (note.length > 240) note = [note substringToIndex:[note rangeOfComposedCharacterSequenceAtIndex:240].location];
+        NSMutableDictionary *updated = [self.favorites[index] mutableCopy];
+        updated[@"note"] = note.length ? note : nil;
+        self.favorites[index] = updated;
+        if ([PebbleStoneIdentity(self.journalPassStone) isEqual:identity]) self.journalPassStone = updated;
+        [self persistFavorites];
+    }];
+}
+
+- (void)selectFavoriteKind:(NSSegmentedControl *)sender {
+    self.showingQuoteFavorites = sender.selectedSegment == 1;
+    [self showPaneAtIndex:FavoritesPaneIndex];
+}
+
+static NSURL *FavoriteQuoteEpisode(id entry) {
+    id link = [entry isKindOfClass:NSDictionary.class] ? entry[@"episode"] : nil;
+    NSURL *url = [link isKindOfClass:NSString.class] ? [NSURL URLWithString:link] : nil;
+    BOOL valid = [url.scheme isEqualToString:@"https"] && [url.host isEqualToString:@"www.xiaoyuzhoufm.com"] &&
+        [url.path rangeOfString:@"^/episode/[a-fA-F0-9]{24}$" options:NSRegularExpressionSearch].location != NSNotFound;
+    return valid ? url : nil;
+}
+
+- (void)openFavoriteQuote:(NSButton *)sender {
+    NSArray *quotes = [NSUserDefaults.standardUserDefaults arrayForKey:@"PetFavoriteQuotes"];
+    if ((NSUInteger)sender.tag >= quotes.count) return;
+    NSURL *url = FavoriteQuoteEpisode(quotes[sender.tag]);
+    if (url) [NSWorkspace.sharedWorkspace openURL:url];
+}
+
+- (void)removeFavoriteQuote:(NSButton *)sender {
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSMutableArray *quotes = [[defaults arrayForKey:@"PetFavoriteQuotes"] mutableCopy];
+    if ((NSUInteger)sender.tag >= quotes.count) return;
+    [quotes removeObjectAtIndex:sender.tag];
+    [defaults setObject:quotes forKey:@"PetFavoriteQuotes"];
+    [self showPaneAtIndex:FavoritesPaneIndex];
+}
+
+- (NSView *)favoriteQuoteCollection {
+    NSMutableArray *rows = [NSMutableArray array];
+    NSArray *quotes = [NSUserDefaults.standardUserDefaults arrayForKey:@"PetFavoriteQuotes"];
+    [quotes enumerateObjectsUsingBlock:^(id entry, NSUInteger index, BOOL *stop) {
+        if (![entry isKindOfClass:NSDictionary.class] || ![entry[@"text"] isKindOfClass:NSString.class]) return;
+        NSButton *remove = [self actionButton:@"移除" action:@selector(removeFavoriteQuote:)];
+        remove.tag = index;
+        NSMutableArray *buttons = [NSMutableArray array];
+        if (FavoriteQuoteEpisode(entry)) {
+            NSButton *play = [self actionButton:@"去小宇宙听" action:@selector(openFavoriteQuote:)];
+            play.tag = index;
+            [buttons addObject:play];
+        }
+        [buttons addObject:remove];
+        [rows addObject:[self rowWithSymbol:nil title:@"金句" subtitle:entry[@"text"]
+                                     control:[NSStackView stackViewWithViews:buttons]]];
+    }];
+    return rows.count ? [self cardWithRows:rows] : [self caption:@"还没有收藏的金句"];
+}
+
 - (NSView *)favoritesPane {
+    NSSegmentedControl *kind = [NSSegmentedControl segmentedControlWithLabels:@[@"石头", @"金句"]
+         trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(selectFavoriteKind:)];
+    kind.selectedSegment = self.showingQuoteFavorites ? 1 : 0;
+    if (self.showingQuoteFavorites) return [self paneWithCards:@[kind, [self favoriteQuoteCollection]]];
     NSPopUpButton *target = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
     [target addItemWithTitle:@"所有屏幕"];
     for (NSNumber *display in self.connectedDisplayIdentifiers) {
@@ -551,7 +633,9 @@
         pet.tag = index;
         NSButton *pass = [self actionButton:@"看石头证" action:@selector(showJournalPass:)];
         pass.tag = index;
-        NSStackView *controls = [NSStackView stackViewWithViews:@[pass, restore, pet, remove]];
+        NSButton *note = [self actionButton:@"备注" action:@selector(editStoneNote:)];
+        note.tag = index;
+        NSStackView *controls = [NSStackView stackViewWithViews:@[note, pass, restore, pet, remove]];
         NSString *title = [NSString stringWithFormat:@"石头 %lu", (unsigned long)index + 1];
         NSDictionary *sources = @{@"wallpaper":@"桌面壁纸", @"rethrow":@"重新抛", @"pet":@"桌宠", @"skip":@"打水漂"};
         NSString *source = sources[stone[@"collectionSource"] ?: @""];
@@ -563,10 +647,11 @@
                                                            timeStyle:NSDateFormatterNoStyle];
             subtitle = [NSString stringWithFormat:@"%@ · %@", day, source];
         }
+        if ([stone[@"note"] length]) subtitle = [NSString stringWithFormat:@"%@\n%@", subtitle, stone[@"note"]];
         [rows addObject:[self rowWithSymbol:nil title:title subtitle:subtitle control:controls]];
     }];
     NSView *collection = rows.count ? [self cardWithRows:rows] : [self caption:@"还没有收藏的石头"];
-    return [self paneWithCards:@[[self cardWithRows:@[scope, save]], collection]];
+    return [self paneWithCards:@[kind, [self cardWithRows:@[scope, save]], collection]];
 }
 
 @end

@@ -323,6 +323,7 @@
             NSDictionary *previous = self.favorites[index];
             entry[@"collectedAt"] = previous[@"collectedAt"];
             entry[@"collectionSource"] = previous[@"collectionSource"];
+            entry[@"note"] = previous[@"note"];
             self.favorites[index] = entry;
             [self persistFavorites];
             return;
