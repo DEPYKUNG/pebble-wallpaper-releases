@@ -4,6 +4,7 @@
 #import <math.h>
 
 static NSString *const PetPlacementKey=@"DesktopPetPlacement";
+static NSString *const PetCampKey=@"DesktopPetCamp";
 static NSString *const PetHomeKey=@"DesktopPetHome";
 static const CGFloat PetSizes[]={112,156,204};
 static NSRect PebbleStoneDrawRect(NSRect art) {
@@ -68,6 +69,11 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 - (NSMenu *)petMenu;
 
 @property BOOL campLampOn;
+@property NSPanel *campPanel;
+@property BOOL campEnabled, campLight;
+- (void)refreshCamp;
+- (void)saveCamp;
+- (void)togglePermanentLamp;
 @property CGFloat campApproach;
 - (NSRect)baseArtRect;
 - (NSRect)artRect;
@@ -282,6 +288,45 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     [NSGraphicsContext restoreGraphicsState];
 }
 
+@interface PebbleCampView : NSView
+@property (weak) PebblePetController *owner;
+@property NSPoint mouseOrigin, panelOrigin;
+@property BOOL moved;
+@end
+
+@implementation PebbleCampView
+- (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
+- (void)drawRect:(NSRect)dirty {
+    DrawPetOuting(PebblePetActivityCamp,NSMakeRect(0,9,26,0),self.bounds,0,nil,self.owner.campLight);
+}
+- (void)mouseDown:(NSEvent *)event {
+    self.mouseOrigin = NSEvent.mouseLocation;
+    self.panelOrigin = self.window.frame.origin;
+    self.moved = NO;
+}
+- (void)mouseDragged:(NSEvent *)event {
+    NSPoint mouse = NSEvent.mouseLocation;
+    CGFloat dx = mouse.x-self.mouseOrigin.x, dy = mouse.y-self.mouseOrigin.y;
+    if (!self.moved && hypot(dx,dy) < 3) return;
+    self.moved = YES;
+    NSScreen *screen = self.window.screen ?: NSScreen.mainScreen;
+    for (NSScreen *candidate in NSScreen.screens) {
+        if (NSPointInRect(mouse,candidate.frame)) { screen = candidate; break; }
+    }
+    NSRect frame = self.window.frame;
+    frame.origin = NSMakePoint(self.panelOrigin.x+dx,self.panelOrigin.y+dy);
+    [self.window setFrameOrigin:PebblePetConstrainFrame(frame,screen.visibleFrame).origin];
+}
+- (void)mouseUp:(NSEvent *)event {
+    if (self.moved) [self.owner saveCamp];
+    else [self.owner togglePermanentLamp];
+}
+- (BOOL)accessibilityPerformPress {
+    [self.owner togglePermanentLamp];
+    return YES;
+}
+@end
+
 @implementation PebblePetView
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 - (BOOL)isOpaque { return NO; }
@@ -388,6 +433,9 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     _casualSpeech=[defaults boolForKey:@"DesktopPetCasualSpeech"];
     NSInteger savedLimit=[defaults integerForKey:@"DesktopPetSkipLimit"];
     _skipLimit=(savedLimit==3 || savedLimit==7)?savedLimit:5;
+    NSDictionary *savedCamp = [defaults dictionaryForKey:PetCampKey];
+    _campEnabled = [savedCamp[@"enabled"] boolValue];
+    _campLight = [savedCamp[@"light"] boolValue];
     _lastQuoteIndex=NSNotFound;
     NSDictionary *savedFocus = [defaults dictionaryForKey:@"PetFocusSession"];
     id deadline = savedFocus[@"deadline"];
@@ -644,6 +692,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
 }
 - (void)setSuspended:(BOOL)suspended {
     _suspended=suspended;[self.timer invalidate];self.timer=nil;
+    [self refreshCamp];
     if (suspended) {[self cancelPlay];self.dragging=NO;self.menuOpen=NO;self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,self.focusDeadline != nil};}
     if (suspended || self.invalidated || !self.stoneImage) {[self.panel orderOut:nil];return;}
     self.lastTick=CACurrentMediaTime();self.nextWander=self.lastTick+8;
@@ -887,8 +936,90 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     [self summon:nil];
 }
 
+- (void)refreshCamp {
+    NSArray<NSScreen *> *screens = NSScreen.screens;
+    if (!self.campEnabled || self.suspended || self.invalidated || !self.stoneImage || !screens.count) {
+        [self.campPanel orderOut:nil];
+        return;
+    }
+    NSDictionary *placement = [self.defaults dictionaryForKey:PetCampKey][@"placement"];
+    NSRect frame = PebblePetRestoreFrame(placement ?: @{@"x":@.94,@"y":@0},screens,NSMakeSize(58,43));
+    if (!self.campPanel) {
+        NSPanel *panel = [[PebblePetPanel alloc] initWithContentRect:frame
+            styleMask:NSWindowStyleMaskBorderless|NSWindowStyleMaskNonactivatingPanel
+            backing:NSBackingStoreBuffered defer:NO];
+        panel.title = @"桌角营地";
+        panel.opaque = NO;
+        panel.backgroundColor = NSColor.clearColor;
+        panel.hasShadow = NO;
+        panel.releasedWhenClosed = NO;
+        panel.level = NSFloatingWindowLevel;
+        panel.hidesOnDeactivate = NO;
+        panel.collectionBehavior = self.panel.collectionBehavior;
+        PebbleCampView *view = [[PebbleCampView alloc] initWithFrame:(NSRect){NSZeroPoint,frame.size}];
+        view.owner = self;
+        view.toolTip = @"点击开关营灯，拖动摆放";
+        view.accessibilityElement = YES;
+        view.accessibilityRole = NSAccessibilityButtonRole;
+        view.accessibilityLabel = @"营灯";
+        panel.contentView = view;
+        self.campPanel = panel;
+    }
+    [self.campPanel setFrame:frame display:YES];
+    [self.campPanel orderFrontRegardless];
+}
+
+- (void)saveCamp {
+    NSDictionary *old = [self.defaults dictionaryForKey:PetCampKey];
+    NSDictionary *placement = old[@"placement"];
+    NSScreen *screen = self.campPanel.screen;
+    if (screen && self.campPanel.isVisible) {
+        NSRect frame = self.campPanel.frame, visible = screen.visibleFrame;
+        NSMutableDictionary *saved = [PebblePetPlacement(frame,screen) mutableCopy];
+        CGFloat fraction = (NSMinY(frame)-NSMinY(visible))/MAX(1,NSHeight(visible)-NSHeight(frame));
+        saved[@"y"] = @(MAX(0,MIN(1,fraction)));
+        placement = saved;
+    }
+    NSMutableDictionary *camp = [@{@"enabled":@(self.campEnabled),@"light":@(self.campLight)} mutableCopy];
+    if (placement) camp[@"placement"] = placement;
+    [self.defaults setObject:camp forKey:PetCampKey];
+}
+
+- (void)togglePermanentLamp {
+    if (!self.campEnabled || self.suspended || self.invalidated) return;
+    self.campLight = !self.campLight;
+    if (self.campLight && self.earnBadge) self.earnBadge(@"camp");
+    self.campPanel.contentView.needsDisplay = YES;
+    [self saveCamp];
+}
+
+- (void)toggleCampSite:(id)sender {
+    self.campEnabled = !self.campEnabled;
+    [self saveCamp];
+    [self refreshCamp];
+}
+
+- (void)returnToCamp:(id)sender {
+    if (!self.campEnabled || !self.campPanel.isVisible || self.focusDeadline) return;
+    [self cancelPlay];
+    NSScreen *screen = self.campPanel.screen ?: NSScreen.mainScreen;
+    NSRect visible = screen.visibleFrame, camp = self.campPanel.frame, frame = self.panel.frame;
+    NSRect art = PebbleStoneDrawRect(self.baseArtRect);
+    CGFloat left = NSMinX(camp)+5-NSMaxX(art);
+    CGFloat right = NSMaxX(camp)-6-NSMinX(art);
+    frame.origin = NSMakePoint(left >= NSMinX(visible) ? left : right,NSMinY(camp)+7-NSMinY(art));
+    frame = PebblePetConstrainFrame(frame,visible);
+    [self.panel setFrame:frame display:YES];
+    self.body = (PebblePetBody){frame.origin,NSZeroPoint,YES};
+    self.angle = 0;
+    self.stretch = 1;
+    self.nextWander = CACurrentMediaTime()+20;
+    self.petView.needsDisplay = YES;
+}
+
 - (void)refreshScreens {
     [self cancelPlay];
+    [self refreshCamp];
     if (!NSScreen.screens.count) {[self setSuspended:YES];return;}
     NSScreen *screen=self.panel.screen;
     if (!screen) {[self summon:nil];return;}
@@ -980,6 +1111,15 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     NSArray *titles=@[@"打个招呼",@"同步当前石头",@"回到落脚点",@"自由活动"];
     SEL actions[]={@selector(greet:),@selector(syncFromMenu:),@selector(summon:),@selector(toggleQuiet:)};
     for (NSUInteger i=0;i<titles.count;i++) {NSMenuItem *item=[menu addItemWithTitle:titles[i] action:actions[i] keyEquivalent:@""];item.target=self;if(i==3)item.state=self.roaming;}
+    NSMenuItem *camp = [menu addItemWithTitle:@"桌角营地" action:nil keyEquivalent:@""];
+    camp.submenu = [NSMenu new];
+    camp.submenu.autoenablesItems = NO;
+    NSMenuItem *toggle = [camp.submenu addItemWithTitle:self.campEnabled ? @"收起营地" : @"摆出营地"
+        action:@selector(toggleCampSite:) keyEquivalent:@""];
+    toggle.target = self;
+    NSMenuItem *visit = [camp.submenu addItemWithTitle:@"回营地" action:@selector(returnToCamp:) keyEquivalent:@""];
+    visit.target = self;
+    visit.enabled = self.campEnabled && self.campPanel.isVisible && !self.focusDeadline;
     NSMenuItem *home = [menu addItemWithTitle:@"落脚点" action:nil keyEquivalent:@""];
     home.submenu = [NSMenu new];
     NSMenuItem *remember = [home.submenu addItemWithTitle:@"记住这里" action:@selector(rememberHome:) keyEquivalent:@""];
@@ -1028,6 +1168,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     return menu;
 }
 - (void)invalidate {
+    [self.campPanel close];self.campPanel=nil;
     [self savePlacement];[self cancelPlay];self.invalidated=YES;[self.timer invalidate];self.timer=nil;[self.panel close];
     self.syncStone=nil;self.dismissPet=nil;self.openSettings=nil;self.interactionEnded=nil;
 }

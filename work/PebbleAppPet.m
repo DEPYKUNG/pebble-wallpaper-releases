@@ -511,6 +511,23 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
             [pet.panel setFrameOrigin:position.origin];
             [pet summon:nil];
             if (hypot(NSMinX(pet.panel.frame)-custom.x,NSMinY(pet.panel.frame)-custom.y) > 1) exit(21);
+            [pet setSuspended:NO];
+            NSMenu *campMenu = [[[pet valueForKey:@"petMenu"] itemWithTitle:@"桌角营地"] submenu];
+            NSMenuItem *pitchCamp = [campMenu itemWithTitle:@"摆出营地"];
+            if (!pitchCamp || ![NSApp sendAction:pitchCamp.action to:pitchCamp.target from:pitchCamp]) exit(21);
+            NSPanel *camp = [pet valueForKey:@"campPanel"];
+            if (!camp.isVisible || ![camp.contentView accessibilityPerformPress]) exit(21);
+            NSDictionary *savedCamp = [defaults dictionaryForKey:@"DesktopPetCamp"];
+            if (![savedCamp[@"enabled"] boolValue] || ![savedCamp[@"light"] boolValue] || !savedCamp[@"placement"]) exit(21);
+            campMenu = [[[pet valueForKey:@"petMenu"] itemWithTitle:@"桌角营地"] submenu];
+            NSMenuItem *visit = [campMenu itemWithTitle:@"回营地"];
+            if (!visit.enabled || ![NSApp sendAction:visit.action to:visit.target from:visit] ||
+                fabs(NSMidX(pet.panel.frame)-NSMidX(camp.frame)) > NSWidth(pet.panel.frame)) exit(21);
+            [pet setSuspended:YES];
+            if (camp.isVisible) exit(21);
+            [pet setSuspended:NO];
+            if (!camp.isVisible || ![[pet valueForKey:@"campLight"] boolValue]) exit(21);
+            NSLog(@"Persistent campsite, lamp toggle, return and suspension verified.");
             NSLog(@"Pet corner home and remembered two-axis placement verified.");
         }
         [pet invalidate];
