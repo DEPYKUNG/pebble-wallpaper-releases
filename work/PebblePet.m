@@ -46,6 +46,8 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property NSTimeInterval nextSpeech,impactUntil;
 @property (copy) NSDate *focusDeadline;
 @property BOOL takingFocusBreak;
+@property NSInteger focusMinutes;
+- (void)startFocusMinutes:(NSInteger)minutes rest:(BOOL)rest;
 - (void)beginFocusInterval:(BOOL)rest;
 - (void)startSkipping:(NSPoint)velocity;
 - (void)cancelPlay;
@@ -341,6 +343,12 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSInteger savedLimit=[defaults integerForKey:@"DesktopPetSkipLimit"];
     _skipLimit=(savedLimit==3 || savedLimit==7)?savedLimit:5;
     _lastQuoteIndex=NSNotFound;
+    NSDictionary *savedFocus = [defaults dictionaryForKey:@"PetFocusSession"];
+    id deadline = savedFocus[@"deadline"];
+    _focusDeadline = [deadline isKindOfClass:NSDate.class] ? deadline : nil;
+    _takingFocusBreak = [savedFocus[@"rest"] boolValue];
+    NSInteger savedMinutes = [savedFocus[@"minutes"] integerValue];
+    _focusMinutes = savedMinutes >= 1 && savedMinutes <= 120 ? savedMinutes : 25;
     NSURL *quoteURL=[NSBundle.mainBundle URLForResource:@"pet-quotes" withExtension:@"json"];
     NSData *quoteData=quoteURL ? [NSData dataWithContentsOfURL:quoteURL] : nil;
     id records=quoteData ? [NSJSONSerialization JSONObjectWithData:quoteData options:0 error:NULL] : nil;
@@ -540,6 +548,18 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [self showQuoteAtIndex:index priority:priority];
 }
 
+- (void)favoriteLastQuote:(id)sender {
+    NSArray *quotes = [self availableQuotes];
+    if (self.lastQuoteIndex >= quotes.count) return;
+    id entry = quotes[self.lastQuoteIndex];
+    NSDictionary *quote = [entry isKindOfClass:NSDictionary.class] ? entry : @{@"text":entry};
+    NSMutableArray *saved = [[self.defaults arrayForKey:@"PetFavoriteQuotes"] mutableCopy] ?: [NSMutableArray array];
+    if (![saved containsObject:quote]) {
+        [saved insertObject:quote atIndex:0];
+        [self.defaults setObject:saved forKey:@"PetFavoriteQuotes"];
+    }
+    [self showMessage:@"已收藏上句。" priority:PebblePetMessageInteraction duration:4];
+}
 - (void)replayLastQuote:(id)sender {
     [self showQuoteAtIndex:self.lastQuoteIndex priority:PebblePetMessageInteraction];
 }
@@ -634,6 +654,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         if (self.focusDeadline && self.focusDeadline.timeIntervalSinceNow <= 0) {
             BOOL finishedBreak = self.takingFocusBreak;
             self.focusDeadline = nil;
+            [self.defaults removeObjectForKey:@"PetFocusSession"];
             self.takingFocusBreak = NO;
             __weak PebblePetController *weakSelf = self;
             [self.effects showFocusChoice:finishedBreak ? @"休息结束，准备好了吗？" : @"专注结束。再来一轮，还是歇一会？"
@@ -803,6 +824,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
 - (void)toggleFocus:(id)sender {
     if (self.focusDeadline) {
         self.focusDeadline = nil;
+        [self.defaults removeObjectForKey:@"PetFocusSession"];
         BOOL wasBreak = self.takingFocusBreak;
         self.takingFocusBreak = NO;
         NSTimeInterval now = CACurrentMediaTime();
@@ -811,18 +833,36 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         [self showMessage:wasBreak ? @"已结束休息。" : @"已结束专注。" priority:PebblePetMessageInteraction duration:4];
         return;
     }
-    [self beginFocusInterval:NO];
+    [self startFocusMinutes:25 rest:NO];
 }
 
 - (void)beginFocusInterval:(BOOL)rest {
+    [self startFocusMinutes:self.focusMinutes rest:rest];
+}
+
+- (void)selectFocusMinutes:(NSMenuItem *)sender {
+    if (!self.focusDeadline) [self startFocusMinutes:sender.tag rest:NO];
+}
+
+- (void)startFocusMinutes:(NSInteger)minutes rest:(BOOL)rest {
     [self summon:nil];
+    self.focusMinutes = minutes;
     self.takingFocusBreak = rest;
-    self.focusDeadline = [NSDate dateWithTimeIntervalSinceNow:(rest ? 5 : 25) * 60];
+    self.focusDeadline = [NSDate dateWithTimeIntervalSinceNow:(rest ? 5 : minutes) * 60];
+    [self.defaults setObject:@{@"deadline":self.focusDeadline, @"minutes":@(minutes), @"rest":@(rest)}
+                       forKey:@"PetFocusSession"];
+    if (!rest) {
+        NSMutableArray *recent = [[self.defaults arrayForKey:@"PetRecentFocusMinutes"] mutableCopy] ?: [NSMutableArray array];
+        [recent removeObject:@(minutes)];
+        [recent insertObject:@(minutes) atIndex:0];
+        if (recent.count > 3) [recent removeObjectsInRange:NSMakeRange(3,recent.count-3)];
+        [self.defaults setObject:recent forKey:@"PetRecentFocusMinutes"];
+    }
     self.celebrateUntil = 0;
     self.angle = 0;
     self.stretch = 1;
     [self.petView setNeedsDisplay:YES];
-    [self showMessage:rest ? @"休息一下 · 5 分钟" : @"开始专注 · 25 分钟" priority:PebblePetMessageInteraction duration:4];
+    [self showMessage:rest ? @"休息一下 · 5 分钟" : [NSString stringWithFormat:@"开始专注 · %ld 分钟",(long)minutes] priority:PebblePetMessageInteraction duration:4];
 }
 
 - (NSMenu *)petMenu {
@@ -833,6 +873,22 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         : @"陪我专注 · 25 分钟";
     NSMenuItem *focus = [menu addItemWithTitle:focusTitle action:@selector(toggleFocus:) keyEquivalent:@""];
     focus.target = self;
+    if (!self.focusDeadline) {
+        NSMenuItem *duration = [menu addItemWithTitle:@"选择专注时长" action:nil keyEquivalent:@""];
+        duration.submenu = [NSMenu new];
+        NSMutableOrderedSet *options = [NSMutableOrderedSet orderedSet];
+        for (id value in [self.defaults arrayForKey:@"PetRecentFocusMinutes"]) {
+            if ([value isKindOfClass:NSNumber.class] && [value integerValue] >= 1 && [value integerValue] <= 120)
+                [options addObject:value];
+        }
+        [options addObjectsFromArray:@[@15,@25,@45,@60]];
+        for (NSNumber *value in options) {
+            NSMenuItem *item = [duration.submenu addItemWithTitle:[NSString stringWithFormat:@"%@ 分钟",value]
+                                         action:@selector(selectFocusMinutes:) keyEquivalent:@""];
+            item.target = self;
+            item.tag = value.integerValue;
+        }
+    }
     [menu addItem:NSMenuItem.separatorItem];
     NSMenuItem *collect = [menu addItemWithTitle:@"收藏这颗" action:@selector(collectFromMenu:) keyEquivalent:@""];
     collect.target = self;
@@ -852,6 +908,9 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     NSMenuItem *replay = [menu addItemWithTitle:@"重读上句" action:@selector(replayLastQuote:) keyEquivalent:@""];
     replay.target = self;
     replay.enabled = self.speechEnabled && self.lastQuoteIndex != NSNotFound;
+    NSMenuItem *favorite = [menu addItemWithTitle:@"收藏上句" action:@selector(favoriteLastQuote:) keyEquivalent:@""];
+    favorite.target = self;
+    favorite.enabled = self.lastQuoteIndex != NSNotFound;
     NSMenuItem *activities=[menu addItemWithTitle:@"做点什么" action:nil keyEquivalent:@""];
     activities.submenu=[NSMenu new];
     NSMenuItem *podcast=[activities.submenu addItemWithTitle:@"录播客" action:@selector(recordPodcast:) keyEquivalent:@""];

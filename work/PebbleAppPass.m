@@ -67,7 +67,7 @@ static const NSInteger PassAuthorSeed = 13612;
     ]];
     if (self.journalPassStone) {
         NSView *back = [self cardWithRows:@[
-            [self rowWithSymbol:nil title:@"来自石头日记" subtitle:nil
+            [self rowWithSymbol:nil title:@"来自石头日记" subtitle:self.journalPassStone[@"note"]
                        control:[self actionButton:@"返回原石头证" action:@selector(showOriginalPass:)]]
         ]];
         return [self paneWithCards:@[back, card, actions]];

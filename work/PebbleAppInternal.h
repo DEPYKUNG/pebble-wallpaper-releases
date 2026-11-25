@@ -148,6 +148,7 @@ NSImage *PebbleMenuBarIcon(void);
 @property NSInteger selectedSettingsPane;
 @property (strong) NSMutableDictionary *pebbleHistory;
 @property (strong) NSMutableArray *favorites;
+@property BOOL showingQuoteFavorites;
 @property (copy) NSString *testPreviewPath;
 @property (copy) NSString *shotPath;
 @property BOOL settingsPreview;

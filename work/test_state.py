@@ -24,9 +24,11 @@ int main(void) { @autoreleasepool {
  NSMutableDictionary *journal = [legacy mutableCopy];
  journal[@"collectedAt"] = @1795520000;
  journal[@"collectionSource"] = @"skip";
+ journal[@"note"] = @"搬到新家那天捡到的";
  NSDictionary *entry = PebbleNormalizeFavorites(@[journal],textures).firstObject;
  CHECK([entry[@"collectedAt"] isEqual:@1795520000] && [entry[@"collectionSource"] isEqual:@"skip"]);
  CHECK([PebbleStoneIdentity(entry) isEqual:PebbleStoneIdentity(migrated)]);
+ CHECK([entry[@"note"] isEqual:@"搬到新家那天捡到的"]);
  CHECK(PebbleNormalizeFavorites(@[legacy],textures).firstObject[@"collectedAt"] == nil);
 
  NSDictionary *histories=PebbleNormalizeHistories(@{@"7":@{@"current":legacy,@"previous":@"bad"},@"bad":legacy,@"8":@"bad"},textures);
