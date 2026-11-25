@@ -53,17 +53,20 @@ NSDictionary *PebblePetPlacement(NSRect frame, NSScreen *screen) {
 NSRect PebblePetRestoreFrame(id placement, NSArray<NSScreen *> *screens, NSSize size) {
     NSScreen *screen=screens.firstObject;
     if (!screen) return (NSRect){NSZeroPoint,size};
-    double x=.84;
+    double x=.84, y=0;
     if ([placement isKindOfClass:NSDictionary.class]) {
         for (NSScreen *candidate in screens) {
             if ([candidate.deviceDescription[@"NSScreenNumber"] isEqual:placement[@"display"]]) {screen=candidate;break;}
         }
+        id savedY=placement[@"y"];
+        if ([savedY isKindOfClass:NSNumber.class] && isfinite([savedY doubleValue]))
+            y=MAX(0,MIN(1,[savedY doubleValue]));
         id saved=placement[@"x"];
         if ([saved isKindOfClass:NSNumber.class] && isfinite([saved doubleValue])) x=MAX(0,MIN(1,[saved doubleValue]));
     }
     NSRect visible=screen.visibleFrame;
     return PebblePetConstrainFrame(NSMakeRect(NSMinX(visible)+MAX(0,NSWidth(visible)-size.width)*x,
-        NSMinY(visible),size.width,size.height),visible);
+        NSMinY(visible)+MAX(0,NSHeight(visible)-size.height)*y,size.width,size.height),visible);
 }
 
 BOOL PebblePetShouldSkip(NSPoint velocity) {

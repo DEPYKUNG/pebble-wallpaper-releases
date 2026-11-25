@@ -4,6 +4,7 @@
 #import <math.h>
 
 static NSString *const PetPlacementKey=@"DesktopPetPlacement";
+static NSString *const PetHomeKey=@"DesktopPetHome";
 static const CGFloat PetSizes[]={112,156,204};
 static NSRect PebbleStoneDrawRect(NSRect art) {
     const CGFloat scale=.85;
@@ -409,7 +410,9 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     _nextSpeech=CACurrentMediaTime()+45;
     _sizeIndex=[defaults objectForKey:@"DesktopPetSize"]?MAX(0,MIN(2,[defaults integerForKey:@"DesktopPetSize"])):1;
     CGFloat size=PetSizes[_sizeIndex];NSSize windowSize=NSMakeSize(size+48,size+52);
-    NSRect frame=PebblePetRestoreFrame([defaults objectForKey:PetPlacementKey],NSScreen.screens,windowSize);
+    id placement = _focusDeadline ? ([defaults dictionaryForKey:PetHomeKey] ?: @{@"x":@1,@"y":@0})
+                                  : [defaults objectForKey:PetPlacementKey];
+    NSRect frame=PebblePetRestoreFrame(placement,NSScreen.screens,windowSize);
     _panel=[[PebblePetPanel alloc] initWithContentRect:frame styleMask:NSWindowStyleMaskBorderless|NSWindowStyleMaskNonactivatingPanel backing:NSBackingStoreBuffered defer:NO];
     _panel.title=@"鹅卵石桌宠";_panel.releasedWhenClosed=NO;
     _panel.opaque=NO;_panel.backgroundColor=NSColor.clearColor;_panel.hasShadow=NO;
@@ -641,7 +644,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
 }
 - (void)setSuspended:(BOOL)suspended {
     _suspended=suspended;[self.timer invalidate];self.timer=nil;
-    if (suspended) {[self cancelPlay];self.dragging=NO;self.menuOpen=NO;self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,NO};}
+    if (suspended) {[self cancelPlay];self.dragging=NO;self.menuOpen=NO;self.body=(PebblePetBody){self.panel.frame.origin,NSZeroPoint,self.focusDeadline != nil};}
     if (suspended || self.invalidated || !self.stoneImage) {[self.panel orderOut:nil];return;}
     self.lastTick=CACurrentMediaTime();self.nextWander=self.lastTick+8;
     __weak typeof(self) weakSelf=self;
@@ -847,20 +850,50 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
 }
 - (void)summon:(id)sender {
     [self cancelPlay];
-    NSScreen *screen=NSScreen.mainScreen ?: NSScreen.screens.firstObject;
-    NSRect frame=self.panel.frame,visible=screen.visibleFrame;
-    frame.origin=NSMakePoint(NSMaxX(visible)-NSWidth(frame)-28,NSMinY(visible));
-    frame=PebblePetConstrainFrame(frame,visible);[self.panel setFrame:frame display:YES];
+    NSArray<NSScreen *> *screens = NSScreen.screens;
+    NSScreen *main = NSScreen.mainScreen ?: screens.firstObject;
+    if (!main) return;
+    NSMutableArray<NSScreen *> *ordered = [screens mutableCopy];
+    [ordered removeObject:main];
+    [ordered insertObject:main atIndex:0];
+    NSDictionary *home = [self.defaults dictionaryForKey:PetHomeKey];
+    NSRect frame = home ? PebblePetRestoreFrame(home,ordered,self.panel.frame.size) : self.panel.frame;
+    if (!home) {
+        NSRect visible = main.visibleFrame;
+        frame.origin = NSMakePoint(NSMaxX(visible)-NSWidth(frame)-28,NSMinY(visible));
+        frame = PebblePetConstrainFrame(frame,visible);
+    }
+    [self.panel setFrame:frame display:YES];
     self.body=(PebblePetBody){frame.origin,NSZeroPoint,YES};[self savePlacement];
     if (!self.suspended && self.stoneImage) [self.panel orderFrontRegardless];
 }
+- (void)rememberHome:(id)sender {
+    NSScreen *screen = self.panel.screen;
+    if (!screen) return;
+    NSRect frame = self.panel.frame, visible = screen.visibleFrame;
+    NSMutableDictionary *home = [PebblePetPlacement(frame,screen) mutableCopy];
+    CGFloat y = (NSMinY(frame)-NSMinY(visible))/MAX(1,NSHeight(visible)-NSHeight(frame));
+    home[@"y"] = @(MAX(0,MIN(1,y)));
+    [self.defaults setObject:home forKey:PetHomeKey];
+    [self showMessage:@"记住这里了。" priority:PebblePetMessageInteraction duration:4];
+}
+
+- (void)selectHomeCorner:(NSMenuItem *)sender {
+    NSScreen *screen = self.panel.screen ?: NSScreen.mainScreen;
+    if (!screen) return;
+    [self.defaults setObject:@{@"display":screen.deviceDescription[@"NSScreenNumber"] ?: @0,
+                              @"x":@((sender.tag & 1) != 0), @"y":@((sender.tag & 2) == 0)}
+                       forKey:PetHomeKey];
+    [self summon:nil];
+}
+
 - (void)refreshScreens {
     [self cancelPlay];
     if (!NSScreen.screens.count) {[self setSuspended:YES];return;}
     NSScreen *screen=self.panel.screen;
     if (!screen) {[self summon:nil];return;}
     NSRect frame=PebblePetConstrainFrame(self.panel.frame,screen.visibleFrame);
-    [self.panel setFrame:frame display:YES];self.body=(PebblePetBody){frame.origin,NSZeroPoint,NO};
+    [self.panel setFrame:frame display:YES];self.body=(PebblePetBody){frame.origin,NSZeroPoint,self.focusDeadline != nil};
 }
 - (void)savePlacement {
     if (self.panel.screen) [self.defaults setObject:PebblePetPlacement(self.panel.frame,self.panel.screen) forKey:PetPlacementKey];
@@ -944,9 +977,20 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     NSMenuItem *collect = [menu addItemWithTitle:@"收藏这颗" action:@selector(collectFromMenu:) keyEquivalent:@""];
     collect.target = self;
     collect.enabled = self.collectStone != nil && self.stoneImage != nil;
-    NSArray *titles=@[@"打个招呼",@"同步当前石头",@"收回右下角",@"自由活动"];
+    NSArray *titles=@[@"打个招呼",@"同步当前石头",@"回到落脚点",@"自由活动"];
     SEL actions[]={@selector(greet:),@selector(syncFromMenu:),@selector(summon:),@selector(toggleQuiet:)};
     for (NSUInteger i=0;i<titles.count;i++) {NSMenuItem *item=[menu addItemWithTitle:titles[i] action:actions[i] keyEquivalent:@""];item.target=self;if(i==3)item.state=self.roaming;}
+    NSMenuItem *home = [menu addItemWithTitle:@"落脚点" action:nil keyEquivalent:@""];
+    home.submenu = [NSMenu new];
+    NSMenuItem *remember = [home.submenu addItemWithTitle:@"记住这里" action:@selector(rememberHome:) keyEquivalent:@""];
+    remember.target = self;
+    [home.submenu addItem:NSMenuItem.separatorItem];
+    NSArray *corners = @[@"左上角",@"右上角",@"左下角",@"右下角"];
+    for (NSUInteger i = 0; i < corners.count; i++) {
+        NSMenuItem *corner = [home.submenu addItemWithTitle:corners[i] action:@selector(selectHomeCorner:) keyEquivalent:@""];
+        corner.target = self;
+        corner.tag = i;
+    }
     NSMenuItem *skip=[menu addItemWithTitle:@"打个水漂" action:@selector(skip:) keyEquivalent:@""];skip.target=self;skip.enabled=self.skippingEnabled;
     NSInteger bestCount = [self.defaults integerForKey:@"PetBestSkipCount"];
     if (bestCount > 0) {
