@@ -245,6 +245,42 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     [NSGraphicsContext restoreGraphicsState];
 }
 
+static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
+    [NSGraphicsContext saveGraphicsState];
+    NSAffineTransform *position = [NSAffineTransform transform];
+    [position translateXBy:NSMinX(frame) yBy:NSMinY(frame)];
+    [position scaleBy:NSWidth(frame)/28];
+    [position concat];
+
+    NSBezierPath *glass = [NSBezierPath bezierPath];
+    [glass moveToPoint:NSMakePoint(4,36)];
+    [glass curveToPoint:NSMakePoint(4,5) controlPoint1:NSMakePoint(4,20) controlPoint2:NSMakePoint(24,20)];
+    [glass lineToPoint:NSMakePoint(24,5)];
+    [glass curveToPoint:NSMakePoint(24,36) controlPoint1:NSMakePoint(24,20) controlPoint2:NSMakePoint(4,20)];
+    [glass closePath];
+    [[NSColor colorWithSRGBRed:.78 green:.91 blue:.91 alpha:.60] setFill];
+    [glass fill];
+
+    [NSGraphicsContext saveGraphicsState];
+    [glass addClip];
+    [[NSColor colorWithSRGBRed:.83 green:.61 blue:.30 alpha:.96] setFill];
+    NSRectFill(NSMakeRect(3,21,22,15*remaining));
+    NSRectFill(NSMakeRect(3,5,22,15*(1-remaining)));
+    if (remaining > .01) NSRectFill(NSMakeRect(13.5,12,1,9));
+    [NSGraphicsContext restoreGraphicsState];
+
+    [[NSColor colorWithSRGBRed:.32 green:.48 blue:.49 alpha:.8] setStroke];
+    glass.lineWidth = 1;
+    [glass stroke];
+    for (NSNumber *y in @[@2,@36]) {
+        NSBezierPath *cap = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(0,y.doubleValue,28,5)
+                                                          xRadius:2 yRadius:2];
+        [[NSColor colorWithSRGBRed:.46 green:.32 blue:.23 alpha:1] setFill];
+        [cap fill];
+    }
+    [NSGraphicsContext restoreGraphicsState];
+}
+
 @implementation PebblePetView
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 - (BOOL)isOpaque { return NO; }
@@ -265,7 +301,16 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     if (owner.activity==PebblePetActivityHeadphones)
         DrawPetOuting(owner.activity,art,self.bounds,0,owner.bitmap,NO);
     [NSGraphicsContext restoreGraphicsState];
-    if (owner.activity==PebblePetActivityPodcast) {
+    if (owner.focusDeadline && !owner.takingFocusBreak) {
+        NSTimeInterval remaining = owner.focusDeadline.timeIntervalSinceNow;
+        if (remaining > 0) {
+            CGFloat scale = MAX(.75, MIN(1.05, NSWidth(self.bounds)/156));
+            CGFloat width = 28*scale;
+            CGFloat x = MIN(NSMaxX(self.bounds)-width-4,NSMaxX(stone)+4);
+            CGFloat fraction = MIN(1,remaining/(60*MAX(1,owner.focusMinutes)));
+            DrawFocusHourglass(NSMakeRect(x,NSMinY(stone)-2,width,41*scale),fraction);
+        }
+    } else if (owner.activity==PebblePetActivityPodcast) {
         CGFloat scale=MAX(.92,MIN(1.30,NSWidth(self.bounds)/204.0));
         NSSize size=NSMakeSize(38*scale,53*scale);
         CGFloat right=MIN(NSMaxX(self.bounds)-4,NSMaxX(art)+22);
@@ -663,6 +708,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
             self.nextWander = now + 15;
             self.nextSpeech = now + 45;
             if (!reduced) self.celebrateUntil = now + .7;
+            self.petView.needsDisplay = YES;
         }
         if (self.activity!=PebblePetActivityNone && now>=self.activityEnd) {
             [self endActivityAt:now];
@@ -747,7 +793,8 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     self.panel.ignoresMouseEvents = !self.dragging && ![self containsStoneAtScreenPoint:pointer] &&
         ![self containsCampLampAtScreenPoint:pointer];
     [self.effects updateAtTime:now anchor:self.effectAnchor visible:visible];
-    if(!reduced || !self.body.resting || self.celebrateUntil>now)self.petView.needsDisplay=YES;
+    if(!reduced || !self.body.resting || self.celebrateUntil>now ||
+       (self.focusDeadline && !self.takingFocusBreak)) self.petView.needsDisplay=YES;
 }
 - (void)beginDrag {[self beginDragAtPoint:NSEvent.mouseLocation time:CACurrentMediaTime()];}
 - (void)beginDragAtPoint:(NSPoint)point time:(NSTimeInterval)now {
@@ -825,6 +872,7 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
     if (self.focusDeadline) {
         self.focusDeadline = nil;
         [self.defaults removeObjectForKey:@"PetFocusSession"];
+        self.petView.needsDisplay = YES;
         BOOL wasBreak = self.takingFocusBreak;
         self.takingFocusBreak = NO;
         NSTimeInterval now = CACurrentMediaTime();
