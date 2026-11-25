@@ -317,7 +317,7 @@ NSImage *PebbleMenuBarIcon(void);
 - (NSString *)passConfigScript;
 - (NSView *)passPane;
 - (void)showJournalPass:(NSButton *)sender;
-- (void)earnStoneBadge:(NSString *)badge forStone:(NSDictionary *)stone;
+- (BOOL)earnStoneBadge:(NSString *)badge forStone:(NSDictionary *)stone;
 - (void)capturePassForVerification;
 - (void)copyPassNumber:(id)sender;
 @end
