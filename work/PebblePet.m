@@ -79,6 +79,7 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 - (NSRect)artRect;
 - (BOOL)containsCampLampAtScreenPoint:(NSPoint)point;
 - (void)toggleCampLamp;
+- (void)showCampBadgeIfNew;
 @end
 @interface PebblePetView : NSView
 @property (weak) PebblePetController *owner;
@@ -499,7 +500,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
 
 - (void)toggleCampLamp {
     self.campLampOn = !self.campLampOn;
-    if (self.campLampOn && self.earnBadge) self.earnBadge(@"camp");
+    if (self.campLampOn) [self showCampBadgeIfNew];
     self.activityEnd = CACurrentMediaTime() + 15;
     self.petView.needsDisplay = YES;
 }
@@ -751,12 +752,14 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     if(!self.dragging && !self.menuOpen) {
         if (self.focusDeadline && self.focusDeadline.timeIntervalSinceNow <= 0) {
             BOOL finishedBreak = self.takingFocusBreak;
-            if (!finishedBreak && self.earnBadge) self.earnBadge(@"focus");
+            BOOL newBadge = !finishedBreak && self.earnBadge && self.earnBadge(@"focus");
             self.focusDeadline = nil;
             [self.defaults removeObjectForKey:@"PetFocusSession"];
             self.takingFocusBreak = NO;
             __weak PebblePetController *weakSelf = self;
-            [self.effects showFocusChoice:finishedBreak ? @"休息结束，准备好了吗？" : @"专注结束。再来一轮，还是歇一会？"
+            NSString *message = finishedBreak ? @"休息结束，准备好了吗？" : @"专注结束。再来一轮，还是歇一会？";
+            if (newBadge) message = @"专注结束 · 获得纪念章「专注时刻」";
+            [self.effects showFocusChoice:message
                                   restart:^{ [weakSelf beginFocusInterval:NO]; }
                                      rest:finishedBreak ? (void (^)(void))nil : ^{ [weakSelf beginFocusInterval:YES]; }];
             self.nextWander = now + 15;
@@ -824,14 +827,15 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
             NSInteger bestCount = [self.defaults integerForKey:@"PetBestSkipCount"];
             NSInteger bestDistance = [self.defaults integerForKey:@"PetBestSkipDistance"];
             BOOL record = count && ((NSInteger)count > bestCount || distance > bestDistance);
+            BOOL newBadge = record && self.earnBadge && self.earnBadge(@"skip");
             if (record) {
-                if (self.earnBadge) self.earnBadge(@"skip");
                 [self.defaults setInteger:MAX(bestCount, (NSInteger)count) forKey:@"PetBestSkipCount"];
                 [self.defaults setInteger:MAX(bestDistance, distance) forKey:@"PetBestSkipDistance"];
             }
             NSString *message = count ? [NSString stringWithFormat:@"漂了 %lu 下 · %ld 点%@",
                 (unsigned long)count, (long)distance, record ? @" · 新纪录！" : @""] : @"换个方向，再漂一次。";
-            [self showMessage:message priority:PebblePetMessageInteraction duration:5];
+            if (newBadge) message = [message stringByAppendingString:@"\n获得纪念章「水漂新纪录」"];
+            [self showMessage:message priority:PebblePetMessageInteraction duration:newBadge ? 7 : 5];
             if(self.interactionEnded)self.interactionEnded();
         }
         if(!self.focusDeadline && self.activity==PebblePetActivityNone && body.resting && self.casualSpeech && self.speechEnabled && now>self.nextSpeech && !NSProcessInfo.processInfo.lowPowerModeEnabled) {
@@ -985,10 +989,16 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     [self.defaults setObject:camp forKey:PetCampKey];
 }
 
+- (void)showCampBadgeIfNew {
+    if (self.earnBadge && self.earnBadge(@"camp")) {
+        [self showMessage:@"获得纪念章「营地亮灯」。" priority:PebblePetMessageInteraction duration:6];
+    }
+}
+
 - (void)togglePermanentLamp {
     if (!self.campEnabled || self.suspended || self.invalidated) return;
     self.campLight = !self.campLight;
-    if (self.campLight && self.earnBadge) self.earnBadge(@"camp");
+    if (self.campLight) [self showCampBadgeIfNew];
     self.campPanel.contentView.needsDisplay = YES;
     [self saveCamp];
 }

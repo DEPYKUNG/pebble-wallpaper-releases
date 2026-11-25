@@ -11,19 +11,20 @@ static NSString *StoneBadgeStorageKey(NSDictionary *stone) {
 
 @implementation PebbleApp (Pass)
 
-- (void)earnStoneBadge:(NSString *)badge forStone:(NSDictionary *)stone {
+- (BOOL)earnStoneBadge:(NSString *)badge forStone:(NSDictionary *)stone {
     NSString *key = StoneBadgeStorageKey(stone);
-    if (!key) return;
+    if (!key) return NO;
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     NSMutableDictionary *collection = [[defaults dictionaryForKey:StoneBadgesKey] mutableCopy] ?: [NSMutableDictionary dictionary];
     NSDictionary *existing = [collection[key] isKindOfClass:NSDictionary.class] ? collection[key] : nil;
-    if (existing[badge]) return;
+    if (existing[badge]) return NO;
     NSMutableDictionary *awards = [existing mutableCopy] ?: [NSMutableDictionary dictionary];
     awards[badge] = NSDate.date;
     collection[key] = awards;
     [defaults setObject:collection forKey:StoneBadgesKey];
     if (self.selectedSettingsPane == PassPaneIndex && self.settings.isVisible &&
         [key isEqualToString:StoneBadgeStorageKey(self.journalPassStone)]) [self showPaneAtIndex:PassPaneIndex];
+    return YES;
 }
 
 - (NSView *)badgesForStone:(NSDictionary *)stone {
@@ -40,7 +41,7 @@ static NSString *StoneBadgeStorageKey(NSDictionary *stone) {
         NSString *day = [NSDateFormatter localizedStringFromDate:date dateStyle:NSDateFormatterMediumStyle
                                                        timeStyle:NSDateFormatterNoStyle];
         NSString *title = [NSString stringWithFormat:@"%@  %@",marks[index],names[index]];
-        [rows addObject:[self rowWithSymbol:nil title:title subtitle:day control:nil]];
+        [rows addObject:[self rowWithSymbol:nil title:title subtitle:[@"获得于 " stringByAppendingString:day] control:nil]];
     }
     NSView *contents = rows.count ? [self cardWithRows:rows] : [self caption:@"这颗石头还没有纪念章"];
     return [self settingsGroup:@"石头纪念章" containing:contents];
