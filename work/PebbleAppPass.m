@@ -1,6 +1,50 @@
 #import "PebbleAppInternal.h"
 
+static NSString *const StoneBadgesKey = @"PetStoneBadges";
+
+static NSString *StoneBadgeStorageKey(NSDictionary *stone) {
+    if (!stone) return nil;
+    NSData *data = [NSJSONSerialization dataWithJSONObject:PebbleStoneIdentity(stone)
+                                                   options:NSJSONWritingSortedKeys error:nil];
+    return data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
+}
+
 @implementation PebbleApp (Pass)
+
+- (void)earnStoneBadge:(NSString *)badge forStone:(NSDictionary *)stone {
+    NSString *key = StoneBadgeStorageKey(stone);
+    if (!key) return;
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSMutableDictionary *collection = [[defaults dictionaryForKey:StoneBadgesKey] mutableCopy] ?: [NSMutableDictionary dictionary];
+    NSDictionary *existing = [collection[key] isKindOfClass:NSDictionary.class] ? collection[key] : nil;
+    if (existing[badge]) return;
+    NSMutableDictionary *awards = [existing mutableCopy] ?: [NSMutableDictionary dictionary];
+    awards[badge] = NSDate.date;
+    collection[key] = awards;
+    [defaults setObject:collection forKey:StoneBadgesKey];
+    if (self.selectedSettingsPane == PassPaneIndex && self.settings.isVisible &&
+        [key isEqualToString:StoneBadgeStorageKey(self.journalPassStone)]) [self showPaneAtIndex:PassPaneIndex];
+}
+
+- (NSView *)badgesForStone:(NSDictionary *)stone {
+    NSString *key = StoneBadgeStorageKey(stone);
+    NSDictionary *collection = [NSUserDefaults.standardUserDefaults dictionaryForKey:StoneBadgesKey];
+    NSDictionary *awards = key && [collection[key] isKindOfClass:NSDictionary.class] ? collection[key] : nil;
+    NSArray *ids = @[@"focus", @"skip", @"camp"];
+    NSArray *names = @[@"专注时刻", @"水漂新纪录", @"营地亮灯"];
+    NSArray *marks = @[@"⌛", @"🌊", @"🏕"];
+    NSMutableArray *rows = [NSMutableArray array];
+    for (NSUInteger index = 0; index < ids.count; index++) {
+        NSDate *date = awards[ids[index]];
+        if (![date isKindOfClass:NSDate.class]) continue;
+        NSString *day = [NSDateFormatter localizedStringFromDate:date dateStyle:NSDateFormatterMediumStyle
+                                                       timeStyle:NSDateFormatterNoStyle];
+        NSString *title = [NSString stringWithFormat:@"%@  %@",marks[index],names[index]];
+        [rows addObject:[self rowWithSymbol:nil title:title subtitle:day control:nil]];
+    }
+    NSView *contents = rows.count ? [self cardWithRows:rows] : [self caption:@"这颗石头还没有纪念章"];
+    return [self settingsGroup:@"石头纪念章" containing:contents];
+}
 
 - (NSInteger)passNumber {
     if ((self.shotPath || self.testPreviewPath) && self.shotPassNumber > 0) return self.shotPassNumber;
@@ -70,7 +114,7 @@ static const NSInteger PassAuthorSeed = 13612;
             [self rowWithSymbol:nil title:@"来自石头日记" subtitle:self.journalPassStone[@"note"]
                        control:[self actionButton:@"返回原石头证" action:@selector(showOriginalPass:)]]
         ]];
-        return [self paneWithCards:@[back, card, actions]];
+        return [self paneWithCards:@[back, card, [self badgesForStone:self.journalPassStone], actions]];
     }
     return [self paneWithCards:@[card, actions]];
 }
