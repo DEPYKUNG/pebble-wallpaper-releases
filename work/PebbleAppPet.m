@@ -8,7 +8,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     NSMenu *petMenu=[NSMenu new];entry.submenu=petMenu;
     self.petEnabledItem=[self addItem:@"开启桌宠" action:@selector(togglePet:) toMenu:petMenu];
     self.petRoamingItem=[self addItem:@"自由活动" action:@selector(togglePetRoaming:) toMenu:petMenu];
-    [self addItem:@"收回右下角" action:@selector(summonPet:) toMenu:petMenu];
+    [self addItem:@"回到落脚点" action:@selector(summonPet:) toMenu:petMenu];
     [self addItem:@"打个水漂" action:@selector(skipPet:) toMenu:petMenu];
     [self addItem:@"说句话" action:@selector(sayPet:) toMenu:petMenu];
     [self addItem:@"桌宠设置…" action:@selector(showPetSettings:) toMenu:petMenu];
@@ -154,12 +154,12 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     self.petSizePicker=[[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
     [self.petSizePicker addItemsWithTitles:@[@"小",@"中",@"大"]];self.petSizePicker.target=self;self.petSizePicker.action=@selector(selectPetSize:);
     NSStackView *actions=[NSStackView stackViewWithViews:@[[self actionButton:@"同步石头" action:@selector(syncPetFromWallpaper:)],
-        [self actionButton:@"收回右下角" action:@selector(summonPet:)]]];actions.spacing=8;
+        [self actionButton:@"回到落脚点" action:@selector(summonPet:)]]];actions.spacing=8;
     NSView *card=[self cardWithRows:@[
         [self rowWithSymbol:@"smile" title:@"开启桌宠" subtitle:@"把当前石头带到窗口旁，点一下打招呼" control:self.petSwitch],
         [self rowWithSymbol:@"rotate-cw" title:@"自由活动" subtitle:@"随机轻跳或表演小剧场；关闭后仍可手动互动" control:self.petRoamSwitch],
         [self rowWithSymbol:@"grid" title:@"桌宠大小" subtitle:nil control:self.petSizePicker],
-        [self rowWithSymbol:@"repeat" title:@"带回身边" subtitle:@"同步所在屏幕的石头，或收回右下角" control:actions],
+        [self rowWithSymbol:@"repeat" title:@"带回身边" subtitle:@"同步所在屏幕的石头，或回到落脚点" control:actions],
     ]];[self syncPetControls];return [self settingsGroup:@"石头桌宠" containing:card];
 }
 
@@ -497,6 +497,22 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         NSString *windowImage=[[self.testPreviewPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"pet-window-verification.png"];
         if(![[drawing representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:windowImage atomically:YES])exit(18);
         if(pet.sizeIndex!=2 || pet.roaming || !pet.stoneImage)exit(18);
+        if (NSScreen.screens.count) {
+            NSMenu *home = [[[pet valueForKey:@"petMenu"] itemWithTitle:@"落脚点"] submenu];
+            NSMenuItem *corner = [home itemWithTitle:@"左上角"];
+            if (!corner || ![NSApp sendAction:corner.action to:corner.target from:corner]) exit(21);
+            NSRect area = pet.panel.screen.visibleFrame;
+            NSRect position = pet.panel.frame;
+            if (fabs(NSMinX(position)-NSMinX(area)) > 1 || fabs(NSMaxY(position)-NSMaxY(area)) > 1) exit(21);
+            NSPoint custom = NSMakePoint(NSMidX(area)-NSWidth(position)/2,NSMidY(area)-NSHeight(position)/2);
+            [pet.panel setFrameOrigin:custom];
+            NSMenuItem *remember = [home itemWithTitle:@"记住这里"];
+            if (!remember || ![NSApp sendAction:remember.action to:remember.target from:remember]) exit(21);
+            [pet.panel setFrameOrigin:position.origin];
+            [pet summon:nil];
+            if (hypot(NSMinX(pet.panel.frame)-custom.x,NSMinY(pet.panel.frame)-custom.y) > 1) exit(21);
+            NSLog(@"Pet corner home and remembered two-axis placement verified.");
+        }
         [pet invalidate];
         if(pet.panel.isVisible || [pet valueForKey:@"timer"])exit(18);
         [defaults removePersistentDomainForName:suite];
