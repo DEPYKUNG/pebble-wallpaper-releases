@@ -39,6 +39,9 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property PebblePetBody body;
 @property PebblePetSkip skipState;
 @property (nonatomic, readwrite) PebblePetEffects *effects;
+@property PebblePetEffects *shortcutTip;
+- (BOOL)containsPodcastShortcut:(NSPoint)point;
+- (void)openPodcastShortcut;
 @property NSColor *stoneColor;
 @property (copy) NSArray *quotes;
 @property NSUInteger lastQuoteIndex;
@@ -83,6 +86,7 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @end
 @interface PebblePetView : NSView
 @property (weak) PebblePetController *owner;
+@property BOOL shortcutPressed;
 @end
 // Light direction and fine matte grain match the rendered stone.
 static NSImage *PebblePodcastMicrophone(void) {
@@ -158,9 +162,7 @@ static void FillPetProp(NSBezierPath *shape, NSColor *light, NSColor *dark) {
     [NSGraphicsContext restoreGraphicsState];
 }
 
-static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds, CGFloat phase, NSBitmapImageRep *stone, BOOL lampOn) {
-    [NSGraphicsContext saveGraphicsState];
-    NSAffineTransform *position=[NSAffineTransform transform];
+static NSRect PetOutingFrame(PebblePetActivity activity, NSRect art, NSRect bounds, NSBitmapImageRep *stone) {
     CGFloat scale=MAX(.8,MIN(1.25,NSWidth(bounds)/204));
     CGFloat x=MIN(NSMaxX(bounds)-56*scale-4,NSMaxX(art)-26*scale);
     CGFloat y=NSMinY(art)-3;
@@ -181,6 +183,20 @@ static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds,
         x=center-28*scale;
         y=MIN(NSMaxY(bounds)-51*scale-5,NSMinY(art)+NSHeight(art)*.66-17*scale);
     }
+    return NSMakeRect(x,y,56*scale,51*scale);
+}
+
+static NSRect PetMicrophoneFrame(NSRect art, NSRect bounds) {
+    CGFloat scale=MAX(.92,MIN(1.30,NSWidth(bounds)/204.0));
+    CGFloat right=MIN(NSMaxX(bounds)-4,NSMaxX(art)+22);
+    return NSMakeRect(right-38*scale,NSMinY(art)-4,38*scale,53*scale);
+}
+
+static void DrawPetOuting(PebblePetActivity activity, NSRect art, NSRect bounds, CGFloat phase, NSBitmapImageRep *stone, BOOL lampOn) {
+    [NSGraphicsContext saveGraphicsState];
+    NSAffineTransform *position=[NSAffineTransform transform];
+    NSRect frame = PetOutingFrame(activity,art,bounds,stone);
+    CGFloat x=NSMinX(frame), y=NSMinY(frame), scale=NSWidth(frame)/56;
     [position translateXBy:x yBy:y];
     [position scaleBy:scale];
     [position concat];
@@ -358,10 +374,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
             DrawFocusHourglass(NSMakeRect(x,NSMinY(stone)-2,width,41*scale),fraction);
         }
     } else if (owner.activity==PebblePetActivityPodcast) {
-        CGFloat scale=MAX(.92,MIN(1.30,NSWidth(self.bounds)/204.0));
-        NSSize size=NSMakeSize(38*scale,53*scale);
-        CGFloat right=MIN(NSMaxX(self.bounds)-4,NSMaxX(art)+22);
-        NSRect mic=NSMakeRect(right-size.width,NSMinY(art)-4,size.width,size.height);
+        NSRect mic=PetMicrophoneFrame(art,self.bounds);
         [PebblePodcastMicrophone() drawInRect:mic fromRect:NSZeroRect
                                    operation:NSCompositingOperationSourceOver fraction:1];
     } else if (owner.activity==PebblePetActivitySleep) {
@@ -408,11 +421,21 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
 }
 - (void)mouseDown:(NSEvent *)event {
     NSPoint point = [self.window convertPointToScreen:event.locationInWindow];
+    self.shortcutPressed = [self.owner containsPodcastShortcut:point];
+    if (self.shortcutPressed) return;
     if ([self.owner containsCampLampAtScreenPoint:point]) [self.owner toggleCampLamp];
     else [self.owner beginDrag];
 }
 - (void)mouseDragged:(NSEvent *)event { if (self.owner.dragging) [self.owner continueDrag]; }
-- (void)mouseUp:(NSEvent *)event { if (self.owner.dragging) [self.owner endDrag]; }
+- (void)mouseUp:(NSEvent *)event {
+    if (self.shortcutPressed) {
+        self.shortcutPressed = NO;
+        NSPoint point = [self.window convertPointToScreen:event.locationInWindow];
+        if ([self.owner containsPodcastShortcut:point]) [self.owner openPodcastShortcut];
+    } else if (self.owner.dragging) {
+        [self.owner endDrag];
+    }
+}
 - (void)rightMouseDown:(NSEvent *)event {
     self.owner.menuOpen=YES;
     [NSMenu popUpContextMenu:self.owner.petMenu withEvent:event forView:self];
@@ -559,7 +582,50 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     if(self.interactionEnded)self.interactionEnded();
 }
 - (NSRect)effectAnchor {return NSOffsetRect(self.artRect,NSMinX(self.panel.frame),NSMinY(self.panel.frame));}
+- (NSRect)podcastShortcutFrame {
+    if (self.activity == PebblePetActivityPodcast)
+        return PetMicrophoneFrame(self.artRect,self.petView.bounds);
+    if (self.activity == PebblePetActivityHeadphones)
+        return PetOutingFrame(self.activity,self.artRect,self.petView.bounds,self.bitmap);
+    return NSZeroRect;
+}
+
+- (BOOL)containsPodcastShortcut:(NSPoint)point {
+    NSRect frame = self.podcastShortcutFrame;
+    if (NSIsEmptyRect(frame)) return NO;
+    NSPoint local = [self.panel convertPointFromScreen:point];
+    if (self.activity == PebblePetActivityPodcast) return NSPointInRect(local,frame);
+    NSRect art = self.artRect;
+    CGFloat radians = -self.angle * M_PI/180;
+    CGFloat dx=local.x-NSMidX(art), dy=local.y-NSMidY(art);
+    CGFloat scale=NSWidth(frame)/56;
+    CGFloat x=((dx*cos(radians)-dy*sin(radians))*self.stretch+NSMidX(art)-NSMinX(frame))/scale;
+    CGFloat y=((dx*sin(radians)+dy*cos(radians))/self.stretch+NSMidY(art)-NSMinY(frame))/scale;
+    BOOL cup = y>=6 && y<=28 && ((x>=0 && x<=14) || (x>=42 && x<=57));
+    CGFloat band = hypot((x-28)/23,(y-17)/30);
+    return cup || (y>=19 && band>=.78 && band<=1.15);
+}
+
+- (void)openPodcastShortcut {
+    NSWorkspace *workspace = NSWorkspace.sharedWorkspace;
+    if (self.activity == PebblePetActivityPodcast) {
+        [workspace openURL:[NSURL URLWithString:@"https://podcaster.xiaoyuzhoufm.com/"]];
+    } else if (self.activity == PebblePetActivityHeadphones) {
+        NSURL *app = [workspace URLForApplicationWithBundleIdentifier:@"app.podcast.cosmos"];
+        NSURL *download = [NSURL URLWithString:@"https://www.xiaoyuzhoufm.com/download"];
+        if (!app) {
+            [workspace openURL:download];
+            return;
+        }
+        [workspace openApplicationAtURL:app configuration:[NSWorkspaceOpenConfiguration configuration]
+            completionHandler:^(NSRunningApplication *application,NSError *error) {
+                if (error) dispatch_async(dispatch_get_main_queue(), ^{ [workspace openURL:download]; });
+            }];
+    }
+}
+
 - (void)endActivityAt:(NSTimeInterval)now {
+    [self.shortcutTip clear];
     self.activity=PebblePetActivityNone;
     self.campLampOn = NO;
     self.campApproach = 0;
@@ -849,8 +915,19 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
         }
     }
     NSPoint pointer = NSEvent.mouseLocation;
-    self.panel.ignoresMouseEvents = !self.dragging && ![self containsStoneAtScreenPoint:pointer] &&
+    BOOL overShortcut = !self.dragging && !self.menuOpen && [self containsPodcastShortcut:pointer];
+    self.panel.ignoresMouseEvents = !self.dragging && !overShortcut && ![self containsStoneAtScreenPoint:pointer] &&
         ![self containsCampLampAtScreenPoint:pointer];
+    if (overShortcut) {
+        if (!self.shortcutTip) self.shortcutTip = [PebblePetEffects new];
+        NSString *title = self.activity == PebblePetActivityPodcast ? @"打开主播后台" : @"打开小宇宙 App";
+        if (![self.shortcutTip.message isEqualToString:title])
+            [self.shortcutTip showMessage:title priority:PebblePetMessageInteraction duration:30];
+        NSRect anchor = NSOffsetRect(self.podcastShortcutFrame,NSMinX(self.panel.frame),NSMinY(self.panel.frame));
+        [self.shortcutTip updateAtTime:now anchor:anchor visible:visible];
+    } else if (self.shortcutTip.message) {
+        [self.shortcutTip clear];
+    }
     [self.effects updateAtTime:now anchor:self.effectAnchor visible:visible];
     if(!reduced || !self.body.resting || self.celebrateUntil>now ||
        (self.focusDeadline && !self.takingFocusBreak)) self.petView.needsDisplay=YES;
