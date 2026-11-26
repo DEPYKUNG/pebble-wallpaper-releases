@@ -142,7 +142,7 @@ elif (contents / 'Frameworks/Sparkle.framework').exists():
     (resources / 'Sparkle-LICENSE.txt').unlink(missing_ok=True)
 
 run('clang', '-arch', 'arm64', '-arch', 'x86_64', '-mmacosx-version-min=13.0',
-    '-fobjc-arc', '-fblocks', '-O2', '-framework', 'AppKit', '-framework', 'WebKit',
+    '-fobjc-arc', '-fblocks', '-Os', '-Wl,-dead_strip', '-Wl,-x', '-framework', 'AppKit', '-framework', 'WebKit',
     '-framework', 'CoreGraphics', '-framework', 'QuartzCore', '-framework', 'UniformTypeIdentifiers', '-I', str(generated),
     *sparkle_flags, str(work / 'Pebble.m'),
     *(str(path) for path in sorted(work.glob('PebbleApp*.m'))),
@@ -165,7 +165,7 @@ disk = (args.installer_output.resolve() if args.installer_output
 disk.parent.mkdir(parents=True, exist_ok=True)
 settings = {
     'format': 'UDZO',
-    'filesystem': 'APFS',
+    'filesystem': 'HFS+',
     'files': [str(app)],
     'symlinks': {'Applications': '/Applications'},
     'icon': str(icon),
