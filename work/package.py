@@ -78,6 +78,9 @@ except ValueError as error:
     parser.error(str(error))
 (resources / 'changelog.json').write_text(json.dumps(notes, ensure_ascii=False, indent=2) + '\n')
 # Solid native wallpapers used for the system menu bar tint.
+for texture in (work / 'backgrounds').glob('*.jpg'):
+    shutil.copyfile(texture, resources / f'background-{texture.name}')
+Image.new('RGB', (64, 64), (56, 59, 62)).save(resources / 'desktop-base-charcoal.png')
 for preset, rgb in {'nord0': (46, 52, 64), 'nord3': (76, 86, 106)}.items():
     Image.new('RGB', (64, 64), rgb).save(resources / f'desktop-base-{preset}.png')
 shutil.copytree(work / 'kubai-settings', resources / 'kubai-settings', dirs_exist_ok=True)

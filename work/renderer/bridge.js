@@ -105,6 +105,14 @@ function renderPebbleWallpaper(stone, atlas, width, height) {
         const context = output.getContext('2d');
         context.fillStyle = getComputedStyle(document.body).backgroundColor;
         context.fillRect(0, 0, output.width, output.height);
+        const backdrop = window.pebbleBackdrop;
+        if (backdrop?.complete && backdrop.naturalWidth) {
+            const pattern = context.createPattern(backdrop, 'repeat');
+            const scale = Math.min(width, height) / 1080;
+            pattern.setTransform(new DOMMatrix().scale(scale));
+            context.fillStyle = pattern;
+            context.fillRect(0, 0, output.width, output.height);
+        }
         const centerY = height * (height > width ? 0.56 : 0.5);
         context.drawImage(layer, (width - layer.width) / 2, Math.round(centerY - layer.height / 2));
         return output.toDataURL('image/png').split(',')[1];

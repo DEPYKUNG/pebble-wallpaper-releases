@@ -195,10 +195,17 @@
 - (NSString *)backgroundConfigScript {
     NSUInteger index = 0;
     while (index + 1 < BackgroundCount && ![self.backgroundPreset isEqualToString:@(BackgroundKeys[index])]) index++;
+    NSURL *texture = [NSBundle.mainBundle URLForResource:[@"background-" stringByAppendingString:self.backgroundPreset]
+                                           withExtension:@"jpg"];
+    NSData *data = texture ? [NSData dataWithContentsOfURL:texture] : nil;
+    NSString *image = data ? [@"data:image/jpeg;base64," stringByAppendingString:[data base64EncodedStringWithOptions:0]] : @"";
     return [NSString stringWithFormat:
         @"document.documentElement.dataset.pebbleBackground = '%@';"
-         "document.documentElement.style.setProperty('--wallpaper-background', '#%06lX');",
-        self.backgroundPreset, (unsigned long)BackgroundColors[index]];
+         "document.documentElement.style.setProperty('--wallpaper-background', '#%06lX');"
+         "window.pebbleBackdrop=null;"
+         "if('%@'){window.pebbleBackdrop=new Image();window.pebbleBackdrop.src='%@';}"
+         "document.documentElement.style.setProperty('--wallpaper-texture',window.pebbleBackdrop?'url('+window.pebbleBackdrop.src+')':'none');",
+        self.backgroundPreset, (unsigned long)BackgroundColors[index], data ? @"1" : @"", image];
 }
 
 - (NSString *)rendererConfigScript {

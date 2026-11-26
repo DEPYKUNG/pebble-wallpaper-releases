@@ -158,17 +158,36 @@
 - (NSView *)backgroundPicker {
     self.backgroundButtons = [NSMutableArray array];
     NSStackView *choices = [NSStackView stackViewWithViews:@[]];
-    choices.distribution = NSStackViewDistributionFillEqually;
-    choices.spacing = 8;
+    choices.orientation = NSUserInterfaceLayoutOrientationVertical;
+    choices.alignment = NSLayoutAttributeLeading;
+    choices.spacing = 4;
+    NSStackView *row = nil;
     for (NSUInteger index = 0; index < BackgroundCount; index++) {
+        if (index % 4 == 0) {
+            row = [NSStackView stackViewWithViews:@[]];
+            row.distribution = NSStackViewDistributionFillEqually;
+            row.spacing = 8;
+            [choices addArrangedSubview:row];
+            [row.widthAnchor constraintEqualToAnchor:choices.widthAnchor].active = YES;
+        }
         NSString *key = @(BackgroundKeys[index]);
         NSUInteger rgb = BackgroundColors[index];
         NSColor *color = [NSColor colorWithSRGBRed:((rgb >> 16) & 255) / 255.0
                                             green:((rgb >> 8) & 255) / 255.0
                                              blue:(rgb & 255) / 255.0 alpha:1];
+        NSURL *textureURL = [NSBundle.mainBundle URLForResource:[@"background-" stringByAppendingString:key] withExtension:@"jpg"];
+        NSImage *texture = textureURL ? [[NSImage alloc] initWithContentsOfURL:textureURL] : nil;
         NSImage *thumbnail = [NSImage imageWithSize:NSMakeSize(96, 43) flipped:NO drawingHandler:^BOOL(NSRect rect) {
             [color setFill];
-            [[NSBezierPath bezierPathWithRoundedRect:rect xRadius:5 yRadius:5] fill];
+            NSBezierPath *swatch = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:5 yRadius:5];
+            [swatch fill];
+            if (texture) {
+                [NSGraphicsContext saveGraphicsState];
+                [swatch addClip];
+                [texture drawInRect:rect fromRect:NSMakeRect(0,0,288,129)
+                          operation:NSCompositingOperationSourceOver fraction:1];
+                [NSGraphicsContext restoreGraphicsState];
+            }
             return YES;
         }];
         NSButton *choice = [NSButton buttonWithTitle:BackgroundLabels[index] image:thumbnail
@@ -182,7 +201,7 @@
         choice.state = [key isEqualToString:self.backgroundPreset] ? NSControlStateValueOn : NSControlStateValueOff;
         if (choice.state == NSControlStateValueOn) choice.title = [choice.title stringByAppendingString:@" ✓"];
         [choice.heightAnchor constraintEqualToConstant:64].active = YES;
-        [choices addArrangedSubview:choice];
+        [row addArrangedSubview:choice];
         [self.backgroundButtons addObject:choice];
     }
     return [self settingsGroup:@"桌面背景" containing:choices];

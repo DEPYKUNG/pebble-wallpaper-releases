@@ -21,7 +21,7 @@
     NSURL *staticDirectory = [self.wallpaperSupportDirectory URLByAppendingPathComponent:@"Static Wallpapers" isDirectory:YES];
     NSMutableArray *ownedURLs = [NSMutableArray array];
     NSURL *background = nil;
-    for (NSString *preset in @[@"nord0", @"nord3"]) {
+    for (NSString *preset in @[@"nord0", @"nord3", @"charcoal"]) {
         NSString *name = [@"desktop-base-" stringByAppendingString:preset];
         NSURL *bundled = [NSBundle.mainBundle URLForResource:name withExtension:@"png"];
         NSURL *stable = [directory URLByAppendingPathComponent:[name stringByAppendingString:@".png"]];
@@ -217,7 +217,7 @@
             NSDictionary *options = [workspace desktopImageOptionsForScreen:screen] ?: @{};
             NSString *key = [screen.deviceDescription[@"NSScreenNumber"] stringValue];
             NSMutableArray *owned = [NSMutableArray array];
-            for (NSString *preset in @[@"nord0", @"nord3"]) {
+            for (NSString *preset in @[@"nord0", @"nord3", @"charcoal"]) {
                 NSString *name = [@"desktop-base-" stringByAppendingString:preset];
                 NSURL *bundled = [NSBundle.mainBundle URLForResource:name withExtension:@"png"];
                 if (bundled) [owned addObject:bundled];
