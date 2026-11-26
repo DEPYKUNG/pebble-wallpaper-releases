@@ -223,7 +223,18 @@
                 self.paused = wasPaused;
                 [self forEachRenderer:^(WKWebView *web) { [self applyPauseTo:web]; }];
                 NSLog(@"Per-screen rethrow/previous routing and all export menu targets verified on %lu screen(s).", (unsigned long)displays.count);
-                next();
+                self.staticWallpaperMode = YES;
+                if (![self validateMenuItem:target]) exit(14);
+                self.verifyStaticInstallation = ^(NSData *png, NSArray<NSScreen *> *screens) {
+                    NSBitmapImageRep *image = [NSBitmapImageRep imageRepWithData:png];
+                    if (image.pixelsWide != 3840 || image.pixelsHigh != 2160 || screens.count != 1 ||
+                        ![screens.firstObject.deviceDescription[@"NSScreenNumber"] isEqual:target.representedObject]) exit(14);
+                    self.verifyStaticInstallation = nil;
+                    self.staticWallpaperMode = NO;
+                    NSLog(@"Static menu rethrow exported 4K and routed to the selected display.");
+                    next();
+                };
+                [self rethrowMenuScreen:target];
             }];
         }];
     });

@@ -287,7 +287,12 @@
 
 - (void)rethrowDisplay:(NSNumber *)display {
     NSWindow *window = display ? self.desktopWindows[display] : nil;
-    if (!window || (!window.isVisible && !self.petPreview)) return;
+    if (!window || self.petOnlyMode) return;
+    if (self.staticWallpaperMode) {
+        [self rethrowStaticWallpaperForDisplay:display];
+        return;
+    }
+    if (!window.isVisible && !self.petPreview) return;
     [self performWallpaperScript:@"window.pebbleThrow()" inWeb:(WKWebView *)window.contentView reportErrors:YES completion:nil];
 }
 
@@ -318,9 +323,12 @@
         return NO;
     }
     if (item.action == @selector(rethrowMenuScreen:)) {
-        return self.desktopWindows[item.representedObject].isVisible;
+        NSWindow *window = self.desktopWindows[item.representedObject];
+        return !self.petOnlyMode && window && (self.staticWallpaperMode || window.isVisible);
     }
     if (item.action == @selector(changePebble:)) {
+        if (self.petOnlyMode) return NO;
+        if (self.staticWallpaperMode) return self.connectedDisplayIdentifiers.count > 0;
         for (NSWindow *window in self.desktopWindows.allValues) {
             if (window.isVisible) return YES;
         }
