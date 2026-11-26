@@ -159,6 +159,14 @@
     if (!web) { [self showWallpaperError:@"所选屏幕已断开，请重新选择屏幕。"]; return; }
     NSString *path = [NSUserDefaults.standardUserDefaults stringForKey:StaticWallpaperPathKey];
     if (self.staticWallpaperMode && path) {
+        NSURL *directory = [self.wallpaperSupportDirectory URLByAppendingPathComponent:@"Static Wallpapers" isDirectory:YES];
+        for (NSScreen *screen in NSScreen.screens) {
+            if (![screen.deviceDescription[@"NSScreenNumber"] isEqual:display]) continue;
+            NSURL *current = [NSWorkspace.sharedWorkspace desktopImageURLForScreen:screen];
+            if (current.isFileURL && [current.URLByDeletingLastPathComponent.path isEqual:directory.path])
+                path = current.path;
+            break;
+        }
         NSData *png = [self resizeStaticWallpaperPNG:[NSData dataWithContentsOfFile:path] size:size];
         if (png) completion(png);
         else [self showWallpaperError:@"保存的静态壁纸无法读取，请恢复动态壁纸后重新设置。"];
@@ -196,54 +204,88 @@
     }
     [self withWallpaperPNGForSize:WallpaperSizes[0] completion:^(NSData *png) {
         if (self.petOnlyMode) return;
-        NSFileManager *files = NSFileManager.defaultManager;
-        NSURL *directory = [[files URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject
-                            URLByAppendingPathComponent:@"Pebble Wallpaper/Static Wallpapers" isDirectory:YES];
-        NSURL *url = [directory URLByAppendingPathComponent:[NSUUID.UUID.UUIDString stringByAppendingString:@".png"]];
-        NSError *error = nil;
-        if (![files createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:&error] ||
-            ![png writeToURL:url options:NSDataWritingAtomic error:&error]) {
-            [self showWallpaperError:error.localizedDescription];
+        [self installStaticWallpaperPNG:png onScreens:NSScreen.screens];
+    }];
+}
+
+- (void)installStaticWallpaperPNG:(NSData *)png onScreens:(NSArray<NSScreen *> *)screens {
+    if (!screens.count) return;
+    if (self.testPreviewPath && self.verifyStaticInstallation) {
+        self.verifyStaticInstallation(png, screens);
+        return;
+    }
+    NSFileManager *files = NSFileManager.defaultManager;
+    NSURL *directory = [[files URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject
+                        URLByAppendingPathComponent:@"Pebble Wallpaper/Static Wallpapers" isDirectory:YES];
+    NSURL *url = [directory URLByAppendingPathComponent:[NSUUID.UUID.UUIDString stringByAppendingString:@".png"]];
+    NSError *error = nil;
+    if (![files createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:&error] ||
+        ![png writeToURL:url options:NSDataWritingAtomic error:&error]) {
+        [self showWallpaperError:error.localizedDescription];
+        return;
+    }
+
+    NSWorkspace *workspace = NSWorkspace.sharedWorkspace;
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSDictionary *savedOriginals = [defaults dictionaryForKey:OriginalDesktopImagesKey] ?: @{};
+    NSMutableDictionary *originals = [savedOriginals mutableCopy];
+    NSMutableArray<void (^)(void)> *undo = [NSMutableArray array];
+    for (NSScreen *screen in screens) {
+        NSURL *previous = [workspace desktopImageURLForScreen:screen];
+        NSDictionary *options = [workspace desktopImageOptionsForScreen:screen] ?: @{};
+        NSString *key = [screen.deviceDescription[@"NSScreenNumber"] stringValue];
+        NSMutableArray *owned = [NSMutableArray array];
+        for (NSString *preset in @[@"nord0", @"nord3", @"charcoal"]) {
+            NSString *name = [@"desktop-base-" stringByAppendingString:preset];
+            NSURL *bundled = [NSBundle.mainBundle URLForResource:name withExtension:@"png"];
+            if (bundled) [owned addObject:bundled];
+            [owned addObject:[[self.wallpaperSupportDirectory URLByAppendingPathComponent:@"Desktop Backgrounds"]
+                URLByAppendingPathComponent:[name stringByAppendingString:@".png"]]];
+        }
+        NSDictionary *managed = [defaults dictionaryForKey:@"ManagedDesktopImageURLs"] ?: @{};
+        BOOL wasManaged = PebbleWallpaperURLIsManaged(previous, owned, managed[key], directory);
+        if (previous && key && !wasManaged) {
+            NSData *encoded = [NSKeyedArchiver archivedDataWithRootObject:options requiringSecureCoding:YES error:nil];
+            originals[key] = @{@"url":previous.absoluteString, @"options":encoded ?: NSData.data};
+            [defaults setObject:originals forKey:OriginalDesktopImagesKey];
+        }
+        if (![workspace setDesktopImageURL:url forScreen:screen
+                                   options:@{NSWorkspaceDesktopImageScalingKey:@(NSImageScaleProportionallyUpOrDown),
+                                             NSWorkspaceDesktopImageAllowClippingKey:@YES} error:&error]) {
+            for (void (^restore)(void) in undo.reverseObjectEnumerator) restore();
+            [defaults setObject:savedOriginals forKey:OriginalDesktopImagesKey];
+            [self showWallpaperError:error.localizedDescription ?: @"macOS 无法设置这张壁纸。"];
             return;
         }
+        if (previous) [undo addObject:^{ [workspace setDesktopImageURL:previous forScreen:screen options:options error:nil]; }];
+    }
+    [NSUserDefaults.standardUserDefaults setObject:url.path forKey:StaticWallpaperPathKey];
+    if (!self.staticWallpaperMode) [self refreshDisplays:nil];
+}
 
-        NSWorkspace *workspace = NSWorkspace.sharedWorkspace;
-        NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
-        NSDictionary *savedOriginals = [defaults dictionaryForKey:OriginalDesktopImagesKey] ?: @{};
-        NSMutableDictionary *originals = [savedOriginals mutableCopy];
-        NSMutableArray<void (^)(void)> *undo = [NSMutableArray array];
-        for (NSScreen *screen in NSScreen.screens) {
-            NSURL *previous = [workspace desktopImageURLForScreen:screen];
-            NSDictionary *options = [workspace desktopImageOptionsForScreen:screen] ?: @{};
-            NSString *key = [screen.deviceDescription[@"NSScreenNumber"] stringValue];
-            NSMutableArray *owned = [NSMutableArray array];
-            for (NSString *preset in @[@"nord0", @"nord3", @"charcoal"]) {
-                NSString *name = [@"desktop-base-" stringByAppendingString:preset];
-                NSURL *bundled = [NSBundle.mainBundle URLForResource:name withExtension:@"png"];
-                if (bundled) [owned addObject:bundled];
-                [owned addObject:[[self.wallpaperSupportDirectory URLByAppendingPathComponent:@"Desktop Backgrounds"]
-                    URLByAppendingPathComponent:[name stringByAppendingString:@".png"]]];
-            }
-            NSDictionary *managed = [defaults dictionaryForKey:@"ManagedDesktopImageURLs"] ?: @{};
-            BOOL wasManaged = PebbleWallpaperURLIsManaged(previous, owned, managed[key], directory);
-            if (previous && key && !wasManaged) {
-                NSData *encoded = [NSKeyedArchiver archivedDataWithRootObject:options requiringSecureCoding:YES error:nil];
-                originals[key] = @{@"url":previous.absoluteString, @"options":encoded ?: NSData.data};
-                [defaults setObject:originals forKey:OriginalDesktopImagesKey];
-            }
-            if (![workspace setDesktopImageURL:url forScreen:screen
-                                       options:@{NSWorkspaceDesktopImageScalingKey:@(NSImageScaleProportionallyUpOrDown),
-                                                 NSWorkspaceDesktopImageAllowClippingKey:@YES} error:&error]) {
-                for (void (^restore)(void) in undo.reverseObjectEnumerator) restore();
-                [defaults setObject:savedOriginals forKey:OriginalDesktopImagesKey];
-                [self showWallpaperError:error.localizedDescription ?: @"macOS 无法设置这张壁纸。"];
+- (void)rethrowStaticWallpaperForDisplay:(NSNumber *)display {
+    WKWebView *web = (WKWebView *)self.desktopWindows[display].contentView;
+    if (!web || !self.staticWallpaperMode || self.petOnlyMode) return;
+    WallpaperExportSize size = WallpaperSizes[0];
+    NSString *script = [NSString stringWithFormat:
+        @"if (typeof window.pebbleThrow !== 'function') throw new Error('renderer not ready');"
+         "window.pebbleThrow(); await window.pebbleBackdrop?.decode().catch(() => {});"
+         "return window.pebbleExport(%lu,%lu);", (unsigned long)size.width, (unsigned long)size.height];
+    [web callAsyncJavaScript:script arguments:@{} inFrame:nil inContentWorld:WKContentWorld.pageWorld
+        completionHandler:^(id result, NSError *error) {
+            if (!self.staticWallpaperMode || self.petOnlyMode || self.desktopWindows[display].contentView != web) return;
+            NSData *png = error ? nil : [self wallpaperPNGFromBase64:result size:size];
+            if (!png) {
+                [self showWallpaperError:@"暂时无法生成新的静态壁纸，请稍后再试。"];
                 return;
             }
-            if (previous) [undo addObject:^{ [workspace setDesktopImageURL:previous forScreen:screen options:options error:nil]; }];
-        }
-        [NSUserDefaults.standardUserDefaults setObject:url.path forKey:StaticWallpaperPathKey];
-        [self refreshDisplays:nil];
-    }];
+            for (NSScreen *screen in NSScreen.screens) {
+                if ([screen.deviceDescription[@"NSScreenNumber"] isEqual:display]) {
+                    [self installStaticWallpaperPNG:png onScreens:@[screen]];
+                    break;
+                }
+            }
+        }];
 }
 
 - (void)enablePetOnlyMode:(id)sender {
