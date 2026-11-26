@@ -142,7 +142,7 @@
                         break;
                     }
                 }
-                NSLog(@"All four solid backgrounds applied without replacing the stone.");
+                NSLog(@"All eight backgrounds applied without replacing the stone.");
                 next();
             }];
         }];
@@ -157,12 +157,15 @@
     [self.backgroundButtons[index] performClick:nil];
     NSString *read = @"window.pebbleRedraw(); ({frame: document.querySelector('canvas').toDataURL(),"
                      "preset: document.documentElement.dataset.pebbleBackground,"
-                     "color: getComputedStyle(document.body).backgroundColor})";
+                     "color: getComputedStyle(document.body).backgroundColor,"
+                     "texture: getComputedStyle(document.body).backgroundImage !== 'none'})";
     [web evaluateJavaScript:read completionHandler:^(NSDictionary *result, NSError *error) {
         NSUInteger rgb = BackgroundColors[index];
         NSString *color = [NSString stringWithFormat:@"rgb(%lu, %lu, %lu)",
             (unsigned long)((rgb >> 16) & 255), (unsigned long)((rgb >> 8) & 255), (unsigned long)(rgb & 255)];
-        if (error || ![result[@"preset"] isEqual:@(BackgroundKeys[index])] ||
+        NSString *asset = [@"background-" stringByAppendingString:@(BackgroundKeys[index])];
+        BOOL expectedTexture = [NSBundle.mainBundle URLForResource:asset withExtension:@"jpg"] != nil;
+        if (error || [result[@"texture"] boolValue] != expectedTexture || ![result[@"preset"] isEqual:@(BackgroundKeys[index])] ||
             ![result[@"color"] isEqual:color] || ![result[@"frame"] isEqual:frame]) exit(8);
         [self verifyBackgroundAtIndex:index + 1 initialFrame:frame web:web then:next];
     }];

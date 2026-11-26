@@ -1,5 +1,5 @@
 
-    html[data-pebble-background] body { background-color: var(--wallpaper-background, #eeeee7); }
+    html[data-pebble-background] body { background-color: var(--wallpaper-background, #eeeee7); background-image: var(--wallpaper-texture, none); background-size: 512px 512px; }
     #desktop-question, #pass-card, #pass-number, #pass-stone { display: none; }
     .pebble-pass body {
         --card-width: min(100vw, 79.518dvh);

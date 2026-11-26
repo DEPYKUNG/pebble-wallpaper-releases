@@ -54,9 +54,9 @@ static const NSInteger TiltPresets[] = {-30, -15, 0, 15, 30};
 static const double RotationRates[] = {.5, 1, 1.5, 2};
 static NSString *const OriginalDesktopImagesKey = @"OriginalDesktopImages";
 static NSString *const BackgroundPreference = @"WallpaperBackground";
-static const char *const BackgroundKeys[] = {"paper", "nord0", "nord3", "nord6"};
-static NSString *const BackgroundLabels[] = {@"纸白", @"深蓝灰", @"石板灰", @"雾白"};
-static const NSUInteger BackgroundColors[] = {0xEEEEE7, 0x2E3440, 0x4C566A, 0xECEFF4};
+static const char *const BackgroundKeys[] = {"nord6", "paper", "oat", "mistblue", "moss", "nord3", "charcoal", "nord0"};
+static NSString *const BackgroundLabels[] = {@"雾白", @"纸白", @"燕麦米", @"雾蓝", @"苔灰绿", @"石板灰", @"炭灰", @"深蓝灰"};
+static const NSUInteger BackgroundColors[] = {0xECEFF4, 0xEEEEE7, 0xDCD1BE, 0xA8B9C6, 0xA2AD9D, 0x4C566A, 0x383B3E, 0x2E3440};
 static const NSUInteger BackgroundCount = sizeof(BackgroundKeys) / sizeof(BackgroundKeys[0]);
 static NSString *const PassPreference = @"WallpaperPassNumber";
 // No. 01 belongs to the author of the original pebble and No. 02 to this app's
