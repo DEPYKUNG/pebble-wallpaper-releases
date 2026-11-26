@@ -13,7 +13,10 @@ def build_icon(source, resources, scratch):
             for scale, suffix in ((1, ''), (2, '@2x')):
                 pixels = size * scale
                 image = original.resize((pixels, pixels), Image.Resampling.LANCZOS)
-                image.save(iconset / f'icon_{size}x{size}{suffix}.png')
+                # Indexed colour keeps the Retina sizes while shrinking the icon.
+                if pixels >= 128:
+                    image = image.quantize(colors=256, method=Image.Quantize.FASTOCTREE)
+                image.save(iconset / f'icon_{size}x{size}{suffix}.png', optimize=True)
     icon = resources / 'Pebble.icns'
     subprocess.run(['iconutil', '-c', 'icns', str(iconset), '-o', str(icon)], check=True)
     return icon
