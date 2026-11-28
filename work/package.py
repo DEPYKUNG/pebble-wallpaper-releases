@@ -109,6 +109,12 @@ with (contents / 'Info.plist').open('wb') as info:
         'LSMinimumSystemVersion': '13.0',
         'LSUIElement': True,
         'NSHighResolutionCapable': True,
+        'NSServices': [{
+            'NSMenuItem': {'default': '让石头丢进废纸篓'},
+            'NSMessage': 'pebbleTrashDesktopFile',
+            'NSPortName': 'Pebble Wallpaper',
+            'NSSendTypes': ['public.file-url', 'NSFilenamesPboardType'],
+        }],
         **({
             'SUFeedURL': args.update_feed,
             'SUPublicEDKey': args.update_key,

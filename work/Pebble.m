@@ -109,6 +109,10 @@ static NSMenu *AddSubmenu(NSMenu *menu, NSString *title) {
         });
         return;
     }
+    if (!self.testPreviewPath && !self.petPreview) {
+        NSApp.servicesProvider = self;
+        NSUpdateDynamicServices();
+    }
     if (!self.testPreviewPath) [self observeSmartPause];
     [self refreshDisplays:nil];
     [self updatePetPresentation];
