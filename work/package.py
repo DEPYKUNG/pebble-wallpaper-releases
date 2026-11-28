@@ -114,6 +114,11 @@ with (contents / 'Info.plist').open('wb') as info:
             'NSMessage': 'pebbleTrashDesktopFile',
             'NSPortName': 'Pebble Wallpaper',
             'NSSendTypes': ['public.file-url', 'NSFilenamesPboardType'],
+        }, {
+            'NSMenuItem': {'default': '让石头收好'},
+            'NSMessage': 'pebbleFileAway',
+            'NSPortName': 'Pebble Wallpaper',
+            'NSSendTypes': ['public.file-url', 'NSFilenamesPboardType'],
         }],
         **({
             'SUFeedURL': args.update_feed,

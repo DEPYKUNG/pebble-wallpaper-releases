@@ -1,5 +1,6 @@
 #import "PebbleAppInternal.h"
 
+static NSString *const PetFilingFolderKey = @"PetFilingFolder";
 static NSString *const PetEnabledKey=@"DesktopPetEnabled";
 
 @implementation PebbleApp (Pet)
@@ -11,6 +12,7 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     [self addItem:@"回到落脚点" action:@selector(summonPet:) toMenu:petMenu];
     [self addItem:@"打个水漂" action:@selector(skipPet:) toMenu:petMenu];
     [self addItem:@"说句话" action:@selector(sayPet:) toMenu:petMenu];
+    [self addItem:@"选择收纳文件夹…" action:@selector(choosePetFilingFolder:) toMenu:petMenu];
     [self addItem:@"桌宠设置…" action:@selector(showPetSettings:) toMenu:petMenu];
     [self syncPetControls];
 }
@@ -126,7 +128,66 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     }
     [self.pet summon:sender];[self syncPetStone];
 }
+- (void)choosePetFilingFolder:(id)sender {
+    NSOpenPanel *panel = [NSOpenPanel openPanel];
+    panel.title = @"选择石头的收纳文件夹";
+    panel.prompt = @"选定";
+    panel.canChooseDirectories = YES;
+    panel.canChooseFiles = NO;
+    NSString *path = [NSUserDefaults.standardUserDefaults stringForKey:PetFilingFolderKey];
+    if (path.length) panel.directoryURL = [NSURL fileURLWithPath:path isDirectory:YES];
+    [NSApp activateIgnoringOtherApps:YES];
+    if ([panel runModal] == NSModalResponseOK && panel.URL.isFileURL)
+        [NSUserDefaults.standardUserDefaults setObject:panel.URL.path forKey:PetFilingFolderKey];
+}
+
+- (void)finishPetFiling:(NSURL *)file toFolder:(NSURL *)folder folderIdentifier:(id)folderIdentifier {
+    NSFileManager *files = NSFileManager.defaultManager;
+    NSURL *currentFolder = [NSURL fileURLWithPath:folder.path isDirectory:YES];
+    id currentFolderIdentifier = nil;
+    if (![currentFolder getResourceValue:&currentFolderIdentifier forKey:NSURLFileResourceIdentifierKey error:nil] ||
+        ![currentFolderIdentifier isEqual:folderIdentifier]) {
+        [self showWallpaperError:@"收纳文件夹已变动，请重新选择。"];
+        return;
+    }
+    NSURL *destination = [currentFolder URLByAppendingPathComponent:file.lastPathComponent];
+    NSError *error = nil;
+    if (![files moveItemAtURL:file toURL:destination error:&error]) {
+        [self showWallpaperError:error.localizedDescription ?: @"无法收纳这个文件。"];
+        return;
+    }
+    id movedIdentifier = nil;
+    [destination getResourceValue:&movedIdentifier forKey:NSURLFileResourceIdentifierKey error:nil];
+    NSAlert *alert = [NSAlert new];
+    alert.messageText = @"石头已把文件收好";
+    alert.informativeText = destination.path;
+    [alert addButtonWithTitle:@"完成"];
+    if (movedIdentifier) [alert addButtonWithTitle:@"撤销"];
+    [NSApp activateIgnoringOtherApps:YES];
+    if ([alert runModal] != NSAlertSecondButtonReturn || !movedIdentifier) return;
+    NSURL *current = [NSURL fileURLWithPath:destination.path];
+    id currentIdentifier = nil;
+    if (![current getResourceValue:&currentIdentifier forKey:NSURLFileResourceIdentifierKey error:nil] ||
+        ![movedIdentifier isEqual:currentIdentifier]) {
+        [self showWallpaperError:@"收纳后的文件已变动，无法撤销。"];
+        return;
+    }
+    if (![files moveItemAtURL:current toURL:file error:&error]) {
+        [self showWallpaperError:error.localizedDescription ?: @"无法把文件移回桌面。"];
+        return;
+    }
+    [self.pet showMessage:@"已移回桌面。" priority:PebblePetMessageInteraction duration:4];
+}
+
 - (void)pebbleTrashDesktopFile:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error {
+    [self carryDesktopFileFromPasteboard:pasteboard filing:NO error:error];
+}
+
+- (void)pebbleFileAway:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error {
+    [self carryDesktopFileFromPasteboard:pasteboard filing:YES error:error];
+}
+
+- (void)carryDesktopFileFromPasteboard:(NSPasteboard *)pasteboard filing:(BOOL)filing error:(NSString **)error {
     NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[NSURL.class]
         options:@{NSPasteboardURLReadingFileURLsOnlyKey:@YES}];
     if (!urls.count) {
@@ -149,6 +210,30 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if (error) *error = @"暂时无法确认桌面文件，请重试。";
         return;
     }
+    NSURL *folder = nil;
+    id folderIdentifier = nil;
+    if (filing) {
+        NSString *path = [NSUserDefaults.standardUserDefaults stringForKey:PetFilingFolderKey];
+        if (!path.length) {
+            [self choosePetFilingFolder:nil];
+            path = [NSUserDefaults.standardUserDefaults stringForKey:PetFilingFolderKey];
+            if (!path.length) return;
+        }
+        folder = [[NSURL fileURLWithPath:path isDirectory:YES] URLByResolvingSymlinksInPath];
+        NSNumber *directory = nil;
+        NSString *source = file.URLByResolvingSymlinksInPath.path;
+        if ([folder.path isEqualToString:parent] || [folder.path isEqualToString:source] ||
+            [folder.path hasPrefix:[source stringByAppendingString:@"/"]] ||
+            ![folder getResourceValue:&directory forKey:NSURLIsDirectoryKey error:nil] || !directory.boolValue ||
+            ![folder getResourceValue:&folderIdentifier forKey:NSURLFileResourceIdentifierKey error:nil] || !folderIdentifier) {
+            if (error) *error = @"请选择仍可访问的其他文件夹作为收纳位置。";
+            return;
+        }
+        if ([NSFileManager.defaultManager fileExistsAtPath:[folder URLByAppendingPathComponent:file.lastPathComponent].path]) {
+            if (error) *error = @"收纳文件夹已有同名文件。";
+            return;
+        }
+    }
     NSImage *icon = [NSWorkspace.sharedWorkspace iconForFile:file.path];
     if (![self.pet carryTrashIcon:icon fromPoint:NSEvent.mouseLocation completion:^{
         NSURL *current = [NSURL fileURLWithPath:file.path];
@@ -156,6 +241,10 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
         if (![current getResourceValue:&currentIdentifier forKey:NSURLFileResourceIdentifierKey error:nil] ||
             ![fileIdentifier isEqual:currentIdentifier]) {
             [self showWallpaperError:@"桌面上的文件已经变动，请重新选中它。"];
+            return;
+        }
+        if (folder) {
+            [self finishPetFiling:current toFolder:folder folderIdentifier:folderIdentifier];
             return;
         }
         [NSWorkspace.sharedWorkspace recycleURLs:@[current] completionHandler:^(NSDictionary *moved,NSError *failure) {
