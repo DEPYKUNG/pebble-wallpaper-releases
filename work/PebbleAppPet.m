@@ -126,6 +126,52 @@ static NSString *const PetEnabledKey=@"DesktopPetEnabled";
     }
     [self.pet summon:sender];[self syncPetStone];
 }
+- (void)pebbleTrashDesktopFile:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error {
+    NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[NSURL.class]
+        options:@{NSPasteboardURLReadingFileURLsOnlyKey:@YES}];
+    if (!urls.count) {
+        id names = [pasteboard propertyListForType:@"NSFilenamesPboardType"];
+        if ([names isKindOfClass:NSArray.class] && [names count] == 1 &&
+            [[names firstObject] isKindOfClass:NSString.class] && [[names firstObject] hasPrefix:@"/"])
+            urls = @[[NSURL fileURLWithPath:[names firstObject]]];
+    }
+    NSURL *file = urls.count == 1 ? urls.firstObject : nil;
+    NSURL *desktop = [NSFileManager.defaultManager URLsForDirectory:NSDesktopDirectory
+        inDomains:NSUserDomainMask].firstObject;
+    NSString *parent = file.URLByDeletingLastPathComponent.URLByResolvingSymlinksInPath.path;
+    if (!file.isFileURL || ![parent isEqualToString:desktop.URLByResolvingSymlinksInPath.path] ||
+        ![file checkResourceIsReachableAndReturnError:nil]) {
+        if (error) *error = @"请在 Finder 桌面上选中一个文件，再使用这项服务。";
+        return;
+    }
+    id fileIdentifier = nil;
+    if (![file getResourceValue:&fileIdentifier forKey:NSURLFileResourceIdentifierKey error:nil] || !fileIdentifier) {
+        if (error) *error = @"暂时无法确认桌面文件，请重试。";
+        return;
+    }
+    NSImage *icon = [NSWorkspace.sharedWorkspace iconForFile:file.path];
+    if (![self.pet carryTrashIcon:icon fromPoint:NSEvent.mouseLocation completion:^{
+        NSURL *current = [NSURL fileURLWithPath:file.path];
+        id currentIdentifier = nil;
+        if (![current getResourceValue:&currentIdentifier forKey:NSURLFileResourceIdentifierKey error:nil] ||
+            ![fileIdentifier isEqual:currentIdentifier]) {
+            [self showWallpaperError:@"桌面上的文件已经变动，请重新选中它。"];
+            return;
+        }
+        [NSWorkspace.sharedWorkspace recycleURLs:@[current] completionHandler:^(NSDictionary *moved,NSError *failure) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (failure || !moved.count) {
+                    [self showWallpaperError:failure.localizedDescription ?: @"无法把文件移到废纸篓。"];
+                } else {
+                    [self.pet showMessage:@"已送到废纸篓。" priority:PebblePetMessageInteraction duration:4];
+                }
+            });
+        }];
+    }]) {
+        if (error) *error = @"请先打开桌宠，等石头空闲后再试。";
+    }
+}
+
 - (void)syncPetControls {
     BOOL enabled=self.pet!=nil || (!self.petPreview && !self.settingsPreview && !self.shotPath && !self.testPreviewPath && [NSUserDefaults.standardUserDefaults boolForKey:PetEnabledKey]);
     BOOL roaming=self.pet ? self.pet.roaming : ![NSUserDefaults.standardUserDefaults boolForKey:@"DesktopPetQuiet"];

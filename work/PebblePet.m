@@ -46,6 +46,7 @@ typedef NS_ENUM(NSInteger, PebblePetActivity) {
 @property (copy) NSArray *quotes;
 @property NSUInteger lastQuoteIndex;
 @property BOOL skipEnding;
+@property BOOL carryingTrash;
 @property NSUInteger finishedSkips;
 @property CGFloat skipDistance;
 @property NSTimeInterval nextSpeech,impactUntil;
@@ -447,7 +448,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
 @end
 
 @implementation PebblePetController
-- (BOOL)interacting {return self.dragging || self.menuOpen || self.skipState.active || self.skipEnding;}
+- (BOOL)interacting {return self.dragging || self.menuOpen || self.skipState.active || self.skipEnding || self.carryingTrash;}
 - (BOOL)skipping {return self.skipState.active;}
 - (instancetype)initWithDefaults:(NSUserDefaults *)defaults {
     if (!(self=[super init])) return nil;
@@ -815,7 +816,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     double now=CACurrentMediaTime(),dt=MIN(.05,MAX(0,now-self.lastTick));self.lastTick=now;
     BOOL reduced=NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion||NSProcessInfo.processInfo.lowPowerModeEnabled;
     NSRect visible=(self.panel.screen ?: NSScreen.screens.firstObject).visibleFrame;
-    if(!self.dragging && !self.menuOpen) {
+    if(!self.dragging && !self.menuOpen && !self.carryingTrash) {
         if (self.focusDeadline && self.focusDeadline.timeIntervalSinceNow <= 0) {
             BOOL finishedBreak = self.takingFocusBreak;
             BOOL newBadge = !finishedBreak && self.earnBadge && self.earnBadge(@"focus");
@@ -932,7 +933,7 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     if(!reduced || !self.body.resting || self.celebrateUntil>now ||
        (self.focusDeadline && !self.takingFocusBreak)) self.petView.needsDisplay=YES;
 }
-- (void)beginDrag {[self beginDragAtPoint:NSEvent.mouseLocation time:CACurrentMediaTime()];}
+- (void)beginDrag {if (self.carryingTrash) return; [self beginDragAtPoint:NSEvent.mouseLocation time:CACurrentMediaTime()];}
 - (void)beginDragAtPoint:(NSPoint)point time:(NSTimeInterval)now {
     self.justWoke=self.activity==PebblePetActivitySleep;
     [self cancelPlay];
@@ -978,6 +979,54 @@ static void DrawFocusHourglass(NSRect frame, CGFloat remaining) {
     self.body=(PebblePetBody){self.panel.frame.origin,reduced?NSZeroPoint:NSMakePoint(0,205),reduced};
     self.celebrateUntil=CACurrentMediaTime()+.7;self.nextWander=CACurrentMediaTime()+12;self.petView.needsDisplay=YES;
 }
+- (BOOL)carryTrashIcon:(NSImage *)icon fromPoint:(NSPoint)point completion:(void (^)(void))completion {
+    if (!self.stoneImage || self.suspended || self.invalidated || self.interacting) return NO;
+    NSScreen *screen = self.panel.screen ?: NSScreen.mainScreen;
+    for (NSScreen *candidate in NSScreen.screens) {
+        if (NSPointInRect(point,candidate.frame)) { screen = candidate; break; }
+    }
+    if (!screen) return NO;
+    [self cancelPlay];
+    self.carryingTrash = YES;
+    NSRect original = self.panel.frame, pickup = original;
+    pickup.origin = NSMakePoint(point.x-NSWidth(pickup)/2,point.y-NSHeight(pickup)/2);
+    pickup = PebblePetConstrainFrame(pickup,screen.visibleFrame);
+    NSRect drop = pickup;
+    drop.origin = NSMakePoint(NSMaxX(screen.visibleFrame)-NSWidth(drop),NSMinY(screen.visibleFrame));
+    BOOL reduced = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+    [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+        context.duration = reduced ? 0 : .32;
+        [self.panel.animator setFrame:pickup display:YES];
+    } completionHandler:^{
+        if (self.invalidated || self.suspended) { self.carryingTrash = NO; return; }
+        NSRect parcel = NSMakeRect(NSMidX(pickup)+8,NSMinY(pickup)+28,34,34);
+        NSPanel *parcelPanel = [[PebblePetPanel alloc] initWithContentRect:parcel
+            styleMask:NSWindowStyleMaskBorderless|NSWindowStyleMaskNonactivatingPanel backing:NSBackingStoreBuffered defer:NO];
+        parcelPanel.opaque = NO;
+        parcelPanel.backgroundColor = NSColor.clearColor;
+        parcelPanel.level = NSFloatingWindowLevel+1;
+        parcelPanel.ignoresMouseEvents = YES;
+        parcelPanel.contentView = [NSImageView imageViewWithImage:icon];
+        [parcelPanel orderFrontRegardless];
+        NSRect destination = NSOffsetRect(parcel,NSMinX(drop)-NSMinX(pickup),NSMinY(drop)-NSMinY(pickup));
+        [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+            context.duration = reduced ? 0 : .5;
+            [self.panel.animator setFrame:drop display:YES];
+            [parcelPanel.animator setFrame:destination display:YES];
+        } completionHandler:^{
+            [parcelPanel orderOut:nil];
+            self.carryingTrash = NO;
+            if (self.invalidated || self.suspended) return;
+            [self.panel setFrame:original display:YES];
+            self.body = (PebblePetBody){original.origin,NSZeroPoint,YES};
+            self.nextWander = CACurrentMediaTime()+10;
+            completion();
+            if (self.interactionEnded) self.interactionEnded();
+        }];
+    }];
+    return YES;
+}
+
 - (void)summon:(id)sender {
     [self cancelPlay];
     NSArray<NSScreen *> *screens = NSScreen.screens;
